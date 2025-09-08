@@ -29,7 +29,8 @@
         android:layout_height="wrap_content"
         android:text="Toggle Message"
         android:background = "@drawable/btn_style"
-        android:textColor= "#FFFFFF"/>
+        android:textColor= "#FFFFFF"
+        android:layout_gravity="center"/>
 
     <!-- New Counter -->
 
@@ -39,7 +40,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="Count: 0"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:layout_gravity="center"/>
 
     <!-- Reset Button -->
 
@@ -50,6 +52,7 @@
         android:text ="Reset"
         android:background = "@drawable/btn_style"
         android:textColor = "#FFFFFF"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"/>
 
 </androidx.appcompat.widget.LinearLayoutCompat>
