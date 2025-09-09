@@ -18,11 +18,21 @@
         android:textColor="#3F51B5">
     </TextView>
 
+    <!-- newly added -->
+    <TextView
+        android:id = "@+id/tvLastResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text = "last result: -"
+        android:textSize = "22sp"
+        android:layout_marginTop="12dp"
+        android:layout_gravity="center"/>
+
     <Button
         android:id="@+id/main_counter_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="5dp"
         android:layout_gravity="center"
         android:text="To the Counter Activity"
         android:textSize="20sp"
