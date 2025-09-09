@@ -17,6 +17,9 @@ public class CounterActivity extends AppCompatActivity {
 
     private int counter = 0;    // counter variable
 
+    public static final String EXTRA_START_COUNT = "start_count";
+    public static final String EXTRA_FINAL_COUNT = "final_count";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,6 +31,11 @@ public class CounterActivity extends AppCompatActivity {
         decreaseBtn = findViewById(R.id.counter_decrease_btn);
         backBtn = findViewById(R.id.counter_back_btn);
 
+        /* get starting count from main activity, default is 0*/
+        counter = getIntent().getIntExtra(EXTRA_START_COUNT, 0);
+        numberTxt.setText(String.valueOf(counter));
+
+
         /* when increase btn is pressed, counter++, reset number textview */
         increaseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -36,21 +44,20 @@ public class CounterActivity extends AppCompatActivity {
             }
         });
 
-        /* when decrease btn is pressed, counter--, reset number textview */
-        decreaseBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                numberTxt.setText(String.valueOf(--counter));
-            }
+        /* when decrease btn is pressed, counter--, reset number textview, this cannot go below 0 */
+        decreaseBtn.setOnClickListener(view -> {
+            if(counter > 0) counter--;
+            numberTxt.setText(String.valueOf(counter));
         });
 
         /* when back btn is pressed, switch back to MainActivity */
         backBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(CounterActivity.this, MainActivity.class);
-                intent.putExtra("NUM", String.valueOf(counter));  // key-value to pass to the MainActivity
-                startActivity(intent);
+               Intent data = new Intent();
+               data.putExtra(EXTRA_FINAL_COUNT, counter);
+               setResult(RESULT_OK, data);
+               finish(); // we can now close CounterActivity
             }
         });
 
