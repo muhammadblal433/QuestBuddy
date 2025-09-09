@@ -50,7 +50,7 @@ public class CounterActivity extends AppCompatActivity {
             numberTxt.setText(String.valueOf(counter));
         });
 
-        /* when back btn is pressed, switch back to MainActivity */
+        /* when back btn is pressed, final counter value is returned and CounterActivity is closed */
         backBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
