@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +44,7 @@ class OwnerController {
     private final Logger logger = LoggerFactory.getLogger(OwnerController.class);
 
     @RequestMapping(method = RequestMethod.POST, path = "/owners/new")
-    public String saveOwner(Owners owner) {
+    public String saveOwner(@RequestBody Owners owner) {
         ownersRepository.save(owner);
         return "New Owner "+ owner.getFirstName() + " Saved";
     }
@@ -76,4 +77,26 @@ class OwnerController {
         return results;
     }
 
+    // THIS IS A FUNFACT OPERATION
+    // Returns a playful message about an owner’s address
+    // If owner not found, returns a silly error
+    @RequestMapping(method = RequestMethod.GET, path = "/owners/funfact/{ownerId}")
+    public String ownerFunFact(@PathVariable("ownerId") int id) {
+        Optional<Owners> owner = ownersRepository.findById(id);
+        if (owner.isEmpty()) {
+            return "No fun fact — owner with ID " + id + " must be hiding!";
+        }
+        Owners o = owner.get();
+        return o.getFirstName() + " lives at \"" + o.getAddress() + "\" and probably orders pizza to that place way too often!";
+    }
+
+    // THIS IS A SEARCH OPERATION
+    // Returns all owners whose last name contains the given string
+    @RequestMapping(method = RequestMethod.GET, path = "/owners/search/{lastName}")
+    public List<Owners> searchByLastName(@PathVariable("lastName") String lastName) {
+        return ownersRepository.findAll()
+                .stream()
+                .filter(o -> o.getLastName().toLowerCase().contains(lastName.toLowerCase()))
+                .toList();
+    }
 }
