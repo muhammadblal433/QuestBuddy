@@ -1,7 +1,6 @@
 package coms309.players;
 
 import java.time.Instant;
-import java.util.Objects;
 
 /**
  * This is the definition for a hypothetical player class
@@ -17,7 +16,6 @@ public class Player
     private String platform; // e.g., PC/PS/Xbox (optional)
     private Instant createdAt; // time of creation
 
-    // ---- constructors ----
     public Player()
     {
         this.createdAt = Instant.now();
@@ -31,30 +29,33 @@ public class Player
         setElo(elo);
         setRank(rank);
         setPlatform(platform);
-        this.createdAt = (createdAt != null) ? createdAt : Instant.now();
+        if (createdAt == null)
+        {
+            this.createdAt = Instant.now();
+        }
+        else
+        {
+            this.createdAt = createdAt;
+        }
     }
 
     // ---- getters/setters (with basic validation) ----
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Long id)
-    {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getGamertag()
-    {
+    public String getGamertag() {
         return gamertag;
     }
 
-    public void setGamertag(String gamertag)
-    {
+    public void setGamertag(String gamertag) {
         if (gamertag == null || gamertag.isBlank())
         {
-            throw new IllegalArgumentException("gamertag must not be blank");
+            throw new IllegalArgumentException("gamertag is required");
         }
         if (gamertag.length() > 24)
         {
@@ -88,10 +89,6 @@ public class Player
 
     public void setElo(Integer elo)
     {
-        if (elo != null && (elo < 0 || elo > 5000))
-        {
-            throw new IllegalArgumentException("elo must be between 0 and 5000");
-        }
         this.elo = elo;
     }
 
@@ -130,10 +127,16 @@ public class Player
 
     public void setCreatedAt(Instant createdAt)
     {
-        this.createdAt = (createdAt != null) ? createdAt : Instant.now();
+        if (createdAt == null)
+        {
+            this.createdAt = Instant.now();
+        }
+        else
+        {
+            this.createdAt = createdAt;
+        }
     }
 
-    // ---- object methods ----
     @Override
     public String toString()
     {
@@ -146,32 +149,5 @@ public class Player
                 ", platform='" + platform + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) return true;
-        if (!(o instanceof Player)) return false;
-        Player other = (Player) o;
-
-        // If both have IDs, compare by ID
-        if (this.id != null && other.id != null) return this.id.equals(other.id);
-
-        // Otherwise compare by natural keys (gamertag+email)
-        String gtA = this.gamertag == null ? null : this.gamertag.toLowerCase();
-        String gtB = other.gamertag == null ? null : other.gamertag.toLowerCase();
-        String emA = this.email == null ? null : this.email.toLowerCase();
-        String emB = other.email == null ? null : other.email.toLowerCase();
-        return Objects.equals(gtA, gtB) && Objects.equals(emA, emB);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        if (id != null) return id.hashCode();
-        String gt = gamertag == null ? null : gamertag.toLowerCase();
-        String em = email == null ? null : email.toLowerCase();
-        return Objects.hash(gt, em);
     }
 }
