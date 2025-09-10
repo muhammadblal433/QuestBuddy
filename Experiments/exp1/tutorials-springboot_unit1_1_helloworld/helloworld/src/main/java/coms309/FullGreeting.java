@@ -4,12 +4,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.DateTimeException;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Map;
 
+/**
+ * Time Based Greeting with name
+ *
+ * @author Ayaan Syed
+ */
+
+/**
+ * Endpoints for exp1
+ */
 @RestController
+@RequestMapping("/api/v1")
+
 class FullGreetingController {
 
     private static final String DEFAULT_TZ = "America/Chicago";
