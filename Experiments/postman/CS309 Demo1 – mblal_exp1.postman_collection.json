@@ -1,0 +1,98 @@
+{
+	"info": {
+		"_postman_id": "f117eab8-4d83-46b8-920e-2210d1f164f4",
+		"name": "CS309 Demo1 – mblal_exp1",
+		"description": "These are requests for my exp1 Spring Boot HelloWorld backend.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44510417",
+		"_collection_link": "https://muhammadblal.postman.co/workspace/Muhammad-Blal's-Workspace~958e11e6-f060-45a4-852d-637381581ca7/collection/44510417-f117eab8-4d83-46b8-920e-2210d1f164f4?action=share&source=collection_link&creator=44510417"
+	},
+	"item": [
+		{
+			"name": "GET Root Welcome",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Welcome by Name",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/Muhammad",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"Muhammad"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Hello JSON",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/v1/hello?name=Muhammad",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"v1",
+						"hello"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Muhammad"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/v1/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"v1",
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
