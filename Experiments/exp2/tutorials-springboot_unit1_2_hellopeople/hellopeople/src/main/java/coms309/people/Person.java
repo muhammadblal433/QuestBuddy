@@ -23,15 +23,14 @@ public class Person {
 
     private String telephone;
 
-//    public Person(){
-//
-//    }
+    private String favoriteFood;
 
-    public Person(String firstName, String lastName, String address, String telephone){
+    public Person(String firstName, String lastName, String address, String telephone, String favoriteFood){
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
         this.telephone = telephone;
+        this.favoriteFood = favoriteFood;
     }
 
 
@@ -71,6 +70,12 @@ public class Person {
     public void setTelephone(String telephone) {
         this.telephone = telephone;
     }
+
+    public String getFavoriteFood() {
+        return favoriteFood; }
+
+    public void setFavoriteFood(String favoriteFood) {
+        this.favoriteFood = favoriteFood; }
 
     @Override
     public String toString() {

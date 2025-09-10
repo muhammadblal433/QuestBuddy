@@ -43,9 +43,23 @@ public class PeopleController {
     // Note: To CREATE we use POST method
     @PostMapping("/people")
     public  String createPerson(@RequestBody Person person) {
-        System.out.println(person);
+        if (person.getFirstName() == null || person.getFirstName().isBlank()) {
+            return "Error: firstName cannot be empty!";
+        }
+        if (person.getFavoriteFood() == null) {
+            person.setFavoriteFood("Mystery food ");
+        }
         peopleList.put(person.getFirstName(), person);
-        return "New person "+ person.getFirstName() + " Saved";
+        return "Saved " + person.getFirstName() + " who loves " + person.getFavoriteFood();
+    }
+
+    // THIS IS THE FUNFACT OPERATION
+    // This version does not depend on whether the person was added to the HashMap.
+    // It simply takes the {firstName} from the URL and returns a fun fact string.
+    // Note: To READ this fun fact, we use the GET method
+    @GetMapping("/people/funfact/{firstName}")
+    public String funFact(@PathVariable String firstName) {
+        return firstName + " is so cool that they could eat pizza every day and not gain weight!";
     }
 
     // THIS IS THE READ OPERATION
