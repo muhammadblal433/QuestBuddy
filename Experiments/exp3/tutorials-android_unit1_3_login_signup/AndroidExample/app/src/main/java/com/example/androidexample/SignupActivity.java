@@ -1,13 +1,13 @@
 package com.example.androidexample;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -50,12 +50,36 @@ public class SignupActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString();
                 String confirm = confirmEditText.getText().toString();
 
-                if (password.equals(confirm)){
-                    Toast.makeText(getApplicationContext(), "Signing up", Toast.LENGTH_LONG).show();
+                // chekcs if empty fields exist
+                if(username.isEmpty() || password.isEmpty() || confirm.isEmpty()){
+                    Toast.makeText(getApplicationContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show();
                 }
-                else {
-                    Toast.makeText(getApplicationContext(), "Password don't match", Toast.LENGTH_LONG).show();
+
+                boolean hasMinLen = password.length() >=6; // must have at least 6 characters
+                boolean hasDigit = password.matches(".*\\d.*"); // ex: abc123de, any number of characters before and after the number
+
+                // must have at least 6 characters or error msessage comes up
+                if(!hasMinLen){
+                    passwordEditText.setError("Password must be at least 6 characters");
+                    return;
                 }
+
+                // if the password doesn't have a digit, error message comes up
+                if(!hasDigit){
+                    passwordEditText.setError("Password must contain at least one number");
+                    return;
+                }
+
+                // passwords have to match
+                if(!password.equals(confirm)){
+                    confirmEditText.setError("Passwords do not match");
+                    Toast.makeText(getApplicationContext(), "Passwords don't match", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // after successful signup this pops up
+                Toast.makeText(getApplicationContext(), "Welcome, " + username + "!", Toast.LENGTH_LONG).show();
+
             }
         });
     }
