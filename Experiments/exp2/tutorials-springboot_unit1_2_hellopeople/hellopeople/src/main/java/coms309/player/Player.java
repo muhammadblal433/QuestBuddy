@@ -5,6 +5,7 @@ import java.time.Instant;
 /**
  * This is the definition for a hypothetical player class
  *
+ * @author Ayaan Syed
  */
 public class Player
 {
@@ -82,13 +83,17 @@ public class Player
         this.email = email;
     }
 
-    public Integer getElo()
-    {
+    public Integer getElo() {
+
         return elo;
     }
 
     public void setElo(Integer elo)
     {
+        if (elo != null && elo < 0) {
+            throw new IllegalArgumentException("elo must be >= 0");
+        }
+
         this.elo = elo;
     }
 
@@ -106,8 +111,7 @@ public class Player
         this.rank = rank;
     }
 
-    public String getPlatform()
-    {
+    public String getPlatform() {
         return platform;
     }
 
@@ -120,13 +124,11 @@ public class Player
         this.platform = platform;
     }
 
-    public Instant getCreatedAt()
-    {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt)
-    {
+    public void setCreatedAt(Instant createdAt) {
         if (createdAt == null)
         {
             this.createdAt = Instant.now();
@@ -138,8 +140,7 @@ public class Player
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Player{" +
                 "id=" + id +
                 ", gamertag='" + gamertag + '\'' +
