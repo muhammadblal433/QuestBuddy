@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -34,6 +35,12 @@ public class LoginActivity extends AppCompatActivity {
                 /* grab strings from user inputs */
                 String username = usernameEditText.getText().toString();
                 String password = passwordEditText.getText().toString();
+
+                /* check if the fields are empty */
+                if(username.isEmpty() || password.isEmpty()){
+                    Toast.makeText(getApplicationContext(), "Please fill in all the fields", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 /* when login button is pressed, use intent to switch to Login Activity */
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
