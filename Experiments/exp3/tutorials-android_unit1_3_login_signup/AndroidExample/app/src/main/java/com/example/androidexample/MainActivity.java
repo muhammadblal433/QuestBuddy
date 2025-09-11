@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
@@ -35,10 +36,15 @@ public class MainActivity extends AppCompatActivity {
             usernameText.setVisibility(View.INVISIBLE);             // set username text invisible initially
         } else {
             messageText.setText("Welcome");
-            usernameText.setText(extras.getString("USERNAME")); // this will come from LoginActivity
+            String username = extras.getString("USERNAME");
+            usernameText.setText(username);
             loginButton.setVisibility(View.INVISIBLE);              // set login button invisible
             signupButton.setVisibility(View.INVISIBLE);             // set signup button invisible
+
+            // a toast popsup when a user is logged in successfully
+            Toast.makeText(getApplicationContext(), "Welcome back. " + username + "!", Toast.LENGTH_SHORT).show();
         }
+
 
         /* click listener on login button pressed */
         loginButton.setOnClickListener(new View.OnClickListener() {
