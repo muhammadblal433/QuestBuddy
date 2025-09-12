@@ -1,11 +1,13 @@
 package coms309.people;
 
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Controller used to showcase Create and Read from a LIST
@@ -149,7 +151,3 @@ public class PeopleController {
         return ResponseEntity.ok(people.get(rand.nextInt(people.size())));
     }
 }
-
-    }
-} // end of people controller
-
