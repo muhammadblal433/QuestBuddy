@@ -23,6 +23,11 @@ public class Person {
 
     private String telephone;
 
+    // New variables
+    private int age;
+    private String favoriteFood;
+    private String funFact;
+
 //    public Person(){
 //
 //    }
@@ -32,6 +37,9 @@ public class Person {
         this.lastName = lastName;
         this.address = address;
         this.telephone = telephone;
+        this.age = age;
+        this.favoriteFood = favoriteFood;
+        this.funFact = funFact;
     }
 
 
@@ -74,9 +82,8 @@ public class Person {
 
     @Override
     public String toString() {
-        return firstName + " " 
-               + lastName + " "
-               + address + " "
-               + telephone;
+        return firstName + " " + lastName + " (" + age + " yrs) " +
+                "lives at " + address + ", phone: " + telephone +
+                ", loves " + favoriteFood + ". Fun fact: " + funFact;
     }
 }

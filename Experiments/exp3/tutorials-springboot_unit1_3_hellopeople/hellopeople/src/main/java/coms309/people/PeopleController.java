@@ -95,9 +95,61 @@ public class PeopleController {
     // Note: To DELETE we use delete method
     
     @DeleteMapping("/people/{firstName}")
-    public HashMap<String, Person> deletePerson(@PathVariable String firstName) {
-        peopleList.remove(firstName);
-        return peopleList;
+    public ResponseEntity<String> deletePerson(@PathVariable String firstName) {
+        if (peopleList.remove(firstName) == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No person found with name: " + firstName);
+        }
+        return ResponseEntity.ok("Deleted person: " + firstName);
+    }
+
+    // EXTRA 1: FUN FACT OPERATION/endpoint
+    // Gets a fun fact for a Person using the PATHVARIABLE {firstName}.
+    // If the Person or their funFact does not exist, return NOT_FOUND.
+    // Note: To READ this, we use the GET method.
+
+    @GetMapping("/people/funfact/{firstName}")
+    public ResponseEntity<String> funFact(@PathVariable String firstName) {
+        Person p = peopleList.get(firstName);
+        if (p == null || p.getFunFact() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No fun fact found for " + firstName);
+        }
+        return ResponseEntity.ok(firstName + "'s fun fact: " + p.getFunFact());
+    }
+
+    // EXTRA 2: OLDER THAN OPERATION
+    // Gets all people older than the given {age}.
+    // Example: /people/olderthan/20
+    // Note: To FILTER, we use the GET method.
+
+    @GetMapping("/people/olderthan/{age}")
+    public List<Person> getPeopleOlderThan(@PathVariable int age) {
+        List<Person> result = new ArrayList<>();
+        for (Person p : peopleList.values()) {
+            if (p.getAge() > age) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    // EXTRA 3: RANDOM PERSON OPERATION
+    // Returns a random Person from the list.
+    // If no Person exists, returns NOT_FOUND.
+    // Note: To GET RANDOM, we use the GET method.
+
+    @GetMapping("/people/random")
+    public ResponseEntity<Person> getRandomPerson() {
+        if (peopleList.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        List<Person> people = new ArrayList<>(peopleList.values());
+        Random rand = new Random();
+        return ResponseEntity.ok(people.get(rand.nextInt(people.size())));
+    }
+}
+
     }
 } // end of people controller
 
