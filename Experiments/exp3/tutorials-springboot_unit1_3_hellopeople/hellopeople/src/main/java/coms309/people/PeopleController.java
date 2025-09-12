@@ -113,11 +113,12 @@ public class PeopleController {
     @GetMapping("/people/funfact/{firstName}")
     public ResponseEntity<String> funFact(@PathVariable String firstName) {
         Person p = peopleList.get(firstName);
-        if (p == null || p.getFunFact() == null) {
+        if (p == null || p.getFunFacts() == null || p.getFunFacts().isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No fun fact found for " + firstName);
         }
-        return ResponseEntity.ok(firstName + "'s fun fact: " + p.getFunFact());
+        String facts = String.join("; ", p.getFunFacts());
+        return ResponseEntity.ok(firstName + "'s fun facts: " + facts);
     }
 
     // EXTRA 2: OLDER THAN OPERATION

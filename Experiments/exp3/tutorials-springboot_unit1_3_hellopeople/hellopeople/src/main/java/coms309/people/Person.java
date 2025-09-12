@@ -26,7 +26,7 @@ public class Person {
     // New variables
     private int age;
     private String favoriteFood;
-    private String funFact;
+    private List<String> funFacts;
 
 //    public Person(){
 //
@@ -78,6 +78,14 @@ public class Person {
 
     public void setTelephone(String telephone) {
         this.telephone = telephone;
+    }
+
+    public List<String> getFunFacts() {
+        return funFacts;
+    }
+
+    public void setFunFacts(List<String> funFacts) {
+        this.funFacts = funFacts;
     }
 
     @Override
