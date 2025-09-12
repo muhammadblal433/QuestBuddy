@@ -98,6 +98,31 @@ public class ArtistController {
     }
 
     /**
+     * CREATE
+     *
+     * enforces unique names across artists (in batches)
+     * @param name
+     */
+    @PostMapping(value="/artists/batch", consumes="application/json", produces="application/json")
+    public ResponseEntity<List<Artist>> createArtistsBatch(@RequestBody List<Artist> bodies) {
+        List<Artist> created = new ArrayList<>();
+        for (Artist body : bodies) {
+            String key = body.getName().toLowerCase();
+            if (nameIndex.containsKey(key)) {
+                // skip duplicates, or return 409—your call
+                continue;
+            }
+            long id = artistSeq.getAndIncrement();
+            body.setId(id);
+            artists.put(id, body);
+            nameIndex.put(key, id);
+            songSeq.put(id, new AtomicLong(1));
+            created.add(body);
+        }
+        return ResponseEntity.created(URI.create("/api/v1/artists")).body(created);
+    }
+
+    /**
      * READ
      *
      * @param id
@@ -193,6 +218,34 @@ public class ArtistController {
         body.setId(next);
         a.getSongs().put(next, body);
         return ResponseEntity.created(URI.create("/api/v1/artists/" + id + "/songs/" + next)).body(body);
+    }
+
+    /**
+     * CREATE
+     *
+     *      * Creates a song under an artist; assigns per-artist song id (by batch)
+     * @param id
+     * @param bodies
+     */
+    @PostMapping(value="/artists/{id}/songs/batch", consumes="application/json", produces="application/json")
+    public ResponseEntity<List<Song>> createSongsBatch(@PathVariable Long id, @RequestBody List<Song> bodies) {
+        Artist a = artists.get(id);
+        if (a == null) return ResponseEntity.notFound().build();
+
+        AtomicLong counter = songSeq.get(id);
+        if (counter == null) {
+            counter = new AtomicLong(1);
+            songSeq.put(id, counter);
+        }
+
+        List<Song> created = new ArrayList<>();
+        for (Song body : bodies) {
+            long next = counter.getAndIncrement();
+            body.setId(next);
+            a.getSongs().put(next, body);
+            created.add(body);
+        }
+        return ResponseEntity.created(URI.create("/api/v1/artists/" + id + "/songs")).body(created);
     }
 
     /**
