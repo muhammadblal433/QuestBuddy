@@ -69,6 +69,35 @@ public class PlayerController {
     }
 
     /**
+     * CREATE
+     *
+     * allows to create players by a list of players
+     * @param bodies
+     * @return ResponseEntity w/ default header and body as player
+     */
+    @PostMapping(value = "/batch", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<List<Player>> createMany(@RequestBody List<Player> bodies) {
+        List<Player> created = new ArrayList<>();
+        for (Player body : bodies) {
+            Long id = seq.getAndIncrement();
+
+            Player p = new Player();
+            p.setId(id);
+            p.setGamertag(body.getGamertag());
+            p.setEmail(body.getEmail());
+            p.setElo(body.getElo());
+            p.setRank(body.getRank());
+            p.setPlatform(body.getPlatform());
+
+            playerList.put(id, p);
+            created.add(p);
+        }
+        // 201 Created with the list in the body
+        return ResponseEntity.created(URI.create("/api/v1/players"))
+                .body(created);
+    }
+
+    /**
      * READ
      *
      * allows to look up players via ID
