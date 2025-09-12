@@ -40,10 +40,10 @@ public class Song {
         this.releaseDate = releaseDate;
     }
 
-    public Long getPlays() {
+    public Integer getPlays() {
         return plays;
     }
-    public void setPlays(Long plays) {
+    public void setPlays(Integer plays) {
         if (plays != null && plays < 0) {
             throw new IllegalArgumentException("plays >= 0");
         }
