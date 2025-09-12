@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Provides the Definition/Structure for the people row
  *
@@ -32,14 +34,14 @@ public class Person {
 //
 //    }
 
-    public Person(String firstName, String lastName, String address, String telephone){
+    public Person(String firstName, String lastName, String address, String telephone, int age, String favoriteFood, List<String> funFacts) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
         this.telephone = telephone;
         this.age = age;
         this.favoriteFood = favoriteFood;
-        this.funFact = funFact;
+        this.funFacts = funFacts;
     }
 
 
@@ -92,6 +94,6 @@ public class Person {
     public String toString() {
         return firstName + " " + lastName + " (" + age + " yrs) " +
                 "lives at " + address + ", phone: " + telephone +
-                ", loves " + favoriteFood + ". Fun fact: " + funFact;
+                ", loves " + favoriteFood + ". Fun facts: " + funFacts;
     }
 }

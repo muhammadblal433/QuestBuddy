@@ -41,17 +41,30 @@ public class PeopleController {
     // the method below enters it into the list.
     // It returns a string message in THIS example.
     // Note: To CREATE we use POST method
+//    @PostMapping("/people")
+//    public  String createPerson(@RequestBody Person person) {
+//        System.out.println(person);
+//        peopleList.put(person.getFirstName(), person);
+//        String s = "New person "+ person.getFirstName() + " Saved";
+//        return s;
+//        //public  ResponseEntity<Map<String, String>>  //unused
+//        // createPerson(@RequestBody Person person) { // unused
+//        //Map <String, String> body = new HashMap<>();// unused
+//        //body.put("message", s); // unused
+//        //ResponseEntity<>(body, HttpStatus.OK); // unused
+//    }
+
+    // THIS IS THE CREATE OPERATION (Batch Insert)
+    // Accepts a JSON array of Person objects and stores them all in the HashMap.
+    // Returns a message with the number of people saved.
+    // Note: To CREATE, we use POST method.
+
     @PostMapping("/people")
-    public  String createPerson(@RequestBody Person person) {
-        System.out.println(person);
-        peopleList.put(person.getFirstName(), person);
-        String s = "New person "+ person.getFirstName() + " Saved";
-        return s;
-        //public  ResponseEntity<Map<String, String>>  //unused
-        // createPerson(@RequestBody Person person) { // unused
-        //Map <String, String> body = new HashMap<>();// unused
-        //body.put("message", s); // unused
-        //ResponseEntity<>(body, HttpStatus.OK); // unused
+    public String createPeople(@RequestBody List<Person> people) {
+        for (Person person : people) {
+            peopleList.put(person.getFirstName(), person);
+        }
+        return "Saved " + people.size() + " people!";
     }
 
     // THIS IS THE READ OPERATION
@@ -59,10 +72,10 @@ public class PeopleController {
     // We extract the person from the HashMap.
     // springboot automatically converts Person to JSON format when we return it
     // Note: To READ we use GET method
+
     @GetMapping("/people/{firstName}")
     public Person getPerson(@PathVariable String firstName) {
-        Person p = peopleList.get(firstName);
-        return p;
+        return peopleList.get(firstName);
     }
 
     // THIS IS A GET METHOD
@@ -110,10 +123,10 @@ public class PeopleController {
     // If the Person or their funFact does not exist, return NOT_FOUND.
     // Note: To READ this, we use the GET method.
 
-    @GetMapping("/people/funfact/{firstName}")
-    public ResponseEntity<String> funFact(@PathVariable String firstName) {
+    @GetMapping("/people/funfacts/{firstName}")
+    public ResponseEntity<String> funFacts(@PathVariable String firstName) {
         Person p = peopleList.get(firstName);
-        if (p == null || p.getFunFacts() == null || p.getFunFacts().isEmpty()) {
+        if (p == null || p.getFunFacts() == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No fun fact found for " + firstName);
         }
