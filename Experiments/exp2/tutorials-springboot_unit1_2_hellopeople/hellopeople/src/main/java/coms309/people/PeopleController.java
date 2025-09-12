@@ -35,12 +35,13 @@ public class PeopleController {
         return peopleList;
     }
 
-    // THIS IS THE CREATE OPERATION
+    // THIS IS THE CREATE OPERATION - added
     // springboot automatically converts JSON input into a person object and 
     // the method below enters it into the list.
     // It returns a string message in THIS example.
     // in this case because of @ResponseBody
     // Note: To CREATE we use POST method
+
     @PostMapping("/people")
     public  String createPerson(@RequestBody Person person) {
         if (person.getFirstName() == null || person.getFirstName().isBlank()) {
