@@ -1,4 +1,4 @@
-package coms309.music;
+package coms309.artist;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +8,10 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
+
+import coms309.artist.Artist;
+import coms309.artist.Song;
+import coms309.artist.Genre;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -355,6 +359,7 @@ public class ArtistController {
      * @param id
      * @return the most recent song
      */
+    @GetMapping("/artists/{id}/songs/latest")
     public ResponseEntity<Map<String, Object>> latestSong(@PathVariable Long id) {
         // find artist
         Artist artist = artists.get(id);
