@@ -14,10 +14,10 @@ public class Artist {
     private String name;          // required, unique (case-insensitive), <= 60
     private Instant joined;       // default now
     private Genre genre;          // required
-    private Integer plays;    // >= 0
+    private int plays;  // default 0
 
     // Discography: songs only, keyed by per-artist song id
-    private final Map<Long, Song> songs = new LinkedHashMap<>();
+    private final Map<Long, Song> songs = new LinkedHashMap<>(); // linkedHashMap preseves insertion order
 
     public Artist() {
         this.joined = Instant.now();
@@ -68,18 +68,14 @@ public class Artist {
         this.genre = genre;
     }
 
-    public Long getPlays() {
+    public int getPlays() {
         return plays;
     }
-    public void setPlays(Long plays) {
-        if (monthlyPlays != null && monthlyPlays < 0) {
-            throw new IllegalArgumentException("monthlyPlays >= 0");
+    public void setPlays(int plays) {
+        if (plays < 0) {
+            throw new IllegalArgumentException("plays >= 0");
         }
-        if (monthlyPlays == null) {
-            this.plays = 0L;
-        } else {
-            this.plays = plays;
-        }
+        this.plays = plays;
     }
 
     public Map<Long, Song> getSongs() {

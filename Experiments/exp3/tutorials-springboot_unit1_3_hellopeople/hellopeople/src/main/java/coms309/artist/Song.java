@@ -6,7 +6,7 @@ public class Song {
     private Long id;                // server-assigned per-artist
     private String title;           // required, <= 80
     private LocalDate releaseDate;  // required (YYYY-MM-DD)
-    private Integer plays;             // >= 0
+    private int plays;
 
 
     // Getters and Setters
@@ -40,17 +40,13 @@ public class Song {
         this.releaseDate = releaseDate;
     }
 
-    public Integer getPlays() {
+    public int getPlays() {
         return plays;
     }
-    public void setPlays(Integer plays) {
-        if (plays != null && plays < 0) {
+    public void setPlays(int plays) {
+        if (plays < 0) {
             throw new IllegalArgumentException("plays >= 0");
         }
-        if (plays == null) {
-            this.plays = 0L;
-        } else {
-            this.plays = plays;
-        }
+        this.plays = plays;
     }
 }
