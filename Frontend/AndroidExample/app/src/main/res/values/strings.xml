@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">AndroidExample</string>
+    <string name="back"><![CDATA[<-]]></string>
+    <string name="forward"><![CDATA[->]]></string>
     <string name="dark_mode">Dark Mode</string>
     <string name="light_mode">Light Mode</string>
 </resources>
