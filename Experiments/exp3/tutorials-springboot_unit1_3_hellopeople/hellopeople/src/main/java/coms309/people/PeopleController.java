@@ -81,6 +81,7 @@ public class PeopleController {
     // THIS IS A GET METHOD
     // RequestParam is expected from the request under the key "name"
     // returns all names that contains value passed to the key "name"
+
     @GetMapping("/people/contains")
     public List<Person> getPersonByParam(@RequestParam("name") String name) {
         List<Person> res = new ArrayList<>(); 
@@ -97,6 +98,7 @@ public class PeopleController {
     // Springboot gets the PATHVARIABLE from the URL
     // Here we are returning what we sent to the method
     // Note: To UPDATE we use PUT method
+
     @PutMapping("/people/{firstName}")
     public Person updatePerson(@PathVariable String firstName, @RequestBody Person p) {
         peopleList.replace(firstName, p);

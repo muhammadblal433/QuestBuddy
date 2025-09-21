@@ -58,6 +58,7 @@ public class PeopleController {
     // This version does not depend on whether the person was added to the HashMap.
     // It simply takes the {firstName} from the URL and returns a fun fact string.
     // Note: To READ this fun fact, we use the GET method
+
     @GetMapping("/people/funfact/{firstName}")
     public String funFact(@PathVariable String firstName) {
         return firstName + " is so cool that they could eat pizza every day and not gain weight!";
@@ -102,6 +103,7 @@ public class PeopleController {
     }
 
     // UPDATE using RequestParam and ResponseBody with alternate style of declaring params
+
     @PutMapping(
             value="/people",
             params = { "firstName" }
@@ -116,7 +118,6 @@ public class PeopleController {
     // We return the entire list -- converted to JSON
     // in this case because of @ResponseBody
     // Note: To DELETE we use delete method
-    
     @DeleteMapping("/people/{firstName}")
     public HashMap<String, Person> deletePerson(@PathVariable String firstName) {
         peopleList.remove(firstName);
