@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name = "qb_primary">#0A84FF</color>   <!--ocean blue-->
+    <color name = "qb_secondary">#00B894</color>  <!-- teal -->
+    <color name = "qb_accent">#FF8A00</color>  <!--sunset-->
+    <color name = "qb_bg_light">#F5FAFF</color> <!--sky color-->
+    <color name = "qb_text">#102A43</color>  <!--navy blue-->
+    <color name="qb_hint">#6B7C93</color>
+    <color name="white">#FFFFFF</color>
 </resources>

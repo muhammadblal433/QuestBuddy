@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_travel">
+
+    <!-- LinearLayout to stack elements vertically-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- title of the app-->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QuestBuddy"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/qb_text"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp"/>
+
+        <!-- welcome message-->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome back, traveler "
+            android:textColor="@color/qb_hint"
+            android:paddingBottom="20dp"/>
+        
+        <!-- field to enter email-->
+        <EditText
+            android:id="@+id/etEmailLogin"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint = "Email"
+            android:inputType="textEmailAddress"
+            android:padding = "12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="@color/qb_text"
+            android:textColorHint="@color/qb_hint"/>
+
+        <!-- field to enter password-->
+        <EditText
+            android:id="@+id/etPasswordLogin"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint = "password"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            android:layout_marginTop="12dp"
+            android:background="@android:drawable/edit_text"
+            android:textColor="@color/qb_text"
+            android:textColorHint="@color/qb_hint"/>
+
+        <!-- login button-->
+        <Button
+            android:id = "@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text = "Log in"
+            android:layout_marginTop="20dp"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:backgroundTint="@color/qb_primary"
+            android:textColor="@color/white"/>
+
+        <!-- navigates to signup screen-->
+        <TextView
+            android:id="@+id/tvSignupLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text = "Don't have an account? Sign Up"
+            android:textColor = "@color/qb_accent"
+            android:paddingTop="16dp"/>
+    </LinearLayout>
+</ScrollView>
