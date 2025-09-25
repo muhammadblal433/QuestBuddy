@@ -28,10 +28,13 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
         setContentView(R.layout.calendar_interface);
 
         initWidgets();
+        // initializes to the current month
         selectedDate = LocalDate.now();
         setMonthView();
     }
 
+    // initializes the views for calendarRecycler, the monthYear Text, the back and forward buttons
+    // Also changes the month based on if the forward or backward button is pressed
     private void initWidgets() {
         calendarRecyclerView = findViewById(R.id.calendarRecyclerView);
         monthYearText = findViewById(R.id.monthYearTV);
@@ -49,6 +52,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
         });
     }
 
+    // Sets the header text and sets up the grid of cells using CalendarAdapter and also sets up the RecyclerView grid
     private void setMonthView() {
         monthYearText.setText(monthYearFromDate(selectedDate));
         ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
@@ -59,6 +63,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
         calendarRecyclerView.setAdapter(calendarAdapter);
     }
 
+    // This basically decides how many blanks there are each month and also where they occur in each month
     private ArrayList<String> daysInMonthArray(LocalDate date) {
         ArrayList<String> daysInMonthArray = new ArrayList<>();
         YearMonth yearMonth = YearMonth.from(date);
@@ -77,21 +82,14 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
         return daysInMonthArray;
     }
 
+    // formats how the heading should look like
     private String monthYearFromDate(LocalDate date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM yyyy");
         return date.format(formatter);
     }
- /*
-    public void previousMonthAction(View view) {
-        selectedDate = selectedDate.minusMonths(1);
-        setMonthView();
-    }
 
-    public void nextMonthAction(View view) {
-        selectedDate = selectedDate.plusMonths(1);
-        setMonthView();
-    }
-*/
+
+    // when a cell is clicked, it displays a message saying which date is selected (needs to be changed for our task)
     @Override
     public void onItemClick(int position, String dayText) {
         if (!dayText.equals("")) {
