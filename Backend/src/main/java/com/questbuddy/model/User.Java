@@ -25,6 +25,10 @@ public class User {
     private String username;        // required, unique (case-insensitive), 3-32
     private String passwordHash;    // need to use something called BCrypt hash for passwords?
 
+    // Role related
+    private Role role = Role.TRIP_MEMBER;  // set deafault role to memeber for now
+    private boolean active = true;         // represents if account is active
+
     // Optional Variables - can have no value
     private String firstName;
     private String lastName;
@@ -130,6 +134,28 @@ public class User {
         }
     }
 
+    /** @return this user's role */
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        if (this.role == null) {
+            this.role = Role.TRIP_MEMBER;
+        } else {
+            this.role = role;
+        touch();
+    }
+
+    /** @return users' status on app */
+    public boolean isActive() { return active; }
+
+    /** sets status of user
+     * @param active/not active - boolean value */
+    public void setActive(boolean active) {
+        this.active = active;
+        touch();
+    }
     /** @return the user's first name (optional). */
     public String getFirstName() {
         return firstName;
