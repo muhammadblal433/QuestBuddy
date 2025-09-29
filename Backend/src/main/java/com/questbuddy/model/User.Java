@@ -1,18 +1,17 @@
 package com.questbuddy.model;
 
 import java.time.Instant;
-import java.util.Objects;
+import jakarta.persistence.*;
 
-/**
- * User Class for app
- * In-memory User Model
- */
 
-package com.questbuddy.model;
-
-import java.time.Instant;
-import java.util.Objects;
-
+@Entity
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "email"),
+                @UniqueConstraint(columnNames = "username")
+        }
+)
 /**
  * In-memory User model for Issue C (Login & Edit).
  * Mirrors Demo1 style: plain POJO with simple validation in setters.
@@ -20,21 +19,41 @@ import java.util.Objects;
 public class User {
 
     // Minimal Variables - cannot be empty
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;                // server-assigned
+
+    @Column(nullable = false, length = 255)
     private String email;           // required, unique (case-insensitive)
+
+    @Column(nullable = false, length = 32)
     private String username;        // required, unique (case-insensitive), 3-32
+
+    @Column(nullable = false, length = 100)
     private String passwordHash;    // need to use something called BCrypt hash for passwords?
 
     // Role related
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Role role = Role.TRIP_MEMBER;  // set deafault role to memeber for now
+
+    @Column(nullable = false)
     private boolean active = true;         // represents if account is active
 
     // Optional Variables - can have no value
+    @Column(length = 60)
     private String firstName;
+
+    @Column(length = 60)
     private String lastName;
+
+    @Column(length = 512)
     private String avatarUrl;
 
+    @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    @Column(nullable = false)
     private Instant updatedAt = Instant.now();
 
     /** Default constructor. */
@@ -144,6 +163,7 @@ public class User {
             this.role = Role.TRIP_MEMBER;
         } else {
             this.role = role;
+        }
         touch();
     }
 
