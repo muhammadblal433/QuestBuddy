@@ -1,5 +1,4 @@
 com/questbuddy/Demo2Application.class
-com/questbuddy/TestController.class
 com/questbuddy/controller/UserController.class
 com/questbuddy/model/User.class
 com/questbuddy/repository/UserRepository.class
