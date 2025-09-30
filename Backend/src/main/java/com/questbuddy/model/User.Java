@@ -13,8 +13,7 @@ import jakarta.persistence.*;
         }
 )
 /**
- * In-memory User model for Issue C (Login & Edit).
- * Mirrors Demo1 style: plain POJO with simple validation in setters.
+ * JPA User Model
  */
 public class User {
 
