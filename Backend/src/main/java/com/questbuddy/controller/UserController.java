@@ -58,4 +58,22 @@ public class UserController {
         return ResponseEntity.ok(updated);
     }
 
+    // GET - for testing purposes - add users in batches
+    @PostMapping(value = "/auth/signup/batch", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> signupBatch(@RequestBody java.util.List<java.util.Map<String, String>> bodies) {
+        java.util.List<User> created = new java.util.ArrayList<>();
+        for (var body : bodies) {
+            String email = body.get("email");
+            String username = body.get("username");
+            String password = body.get("password");
+            String firstName = body.get("firstName");
+            String lastName  = body.get("lastName");
+            if (email == null || username == null || password == null) {
+                continue; // skip bad rows; keep it simple for dev
+            }
+            created.add(users.signup(email, username, password, firstName, lastName));
+        }
+        return ResponseEntity.created(URI.create("/api/v1/users")).body(created);
+    }
+
 }
