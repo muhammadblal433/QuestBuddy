@@ -11,6 +11,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -22,6 +30,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
     private RecyclerView calendarRecyclerView;
     private LocalDate selectedDate;
     private Button backBtn, forwardBtn;
+    private static final String TASKS_URL = "https://ec3fa688-a6b1-4c54-a258-487e5dd20160.mock.pstmn.io";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +40,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
         initWidgets();
         // initializes to the current month
         selectedDate = LocalDate.now();
-        setMonthView();
+        fetchTasksFromServer();
     }
 
     // initializes the views for calendarRecycler, the monthYear Text, the back and forward buttons
@@ -44,21 +53,49 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
 
         backBtn.setOnClickListener(v -> {
             selectedDate = selectedDate.minusMonths(1);
-            setMonthView();
+            fetchTasksFromServer();
         });
 
         forwardBtn.setOnClickListener(v -> {
             selectedDate = selectedDate.plusMonths(1);
-            setMonthView();
+            fetchTasksFromServer();
         });
     }
 
+    private void fetchTasksFromServer() {
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, TASKS_URL, null,
+                response -> {
+                    ArrayList<String> taskDates = new ArrayList<>();
+
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            JSONObject taskObject = response.getJSONObject(i);
+                            String date = taskObject.getString("date");
+                            taskDates.add(date);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    // Now that we have task dates, load the calendar view
+                    setMonthView(taskDates);
+                },
+                error -> {
+                    Toast.makeText(this, "Failed to fetch tasks: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+
+        queue.add(jsonArrayRequest);
+    }
+
     // Sets the header text and sets up the grid of cells using CalendarAdapter and also sets up the RecyclerView grid
-    private void setMonthView() {
+    private void setMonthView(ArrayList<String> taskDates) {
         monthYearText.setText(monthYearFromDate(selectedDate));
         ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
+        String monthYear = monthYearFromDate(selectedDate);
 
-        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, this);
+        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, this, monthYear, taskDates);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 7);
         calendarRecyclerView.setLayoutManager(layoutManager);
         calendarRecyclerView.setAdapter(calendarAdapter);

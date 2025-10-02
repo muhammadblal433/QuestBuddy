@@ -17,10 +17,16 @@ class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
     private final ArrayList<String> daysOfMonth;
     private final OnItemListener onItemListener;
 
-    public CalendarAdapter(ArrayList<String> daysOfMonth, OnItemListener onItemListener)
+    private final ArrayList<String> taskDates;
+
+    private String monthYear;
+
+    public CalendarAdapter(ArrayList<String> daysOfMonth, OnItemListener onItemListener, String monthYear, ArrayList<String> taskDates)
     {
         this.daysOfMonth = daysOfMonth;
         this.onItemListener = onItemListener;
+        this.monthYear = monthYear;
+        this.taskDates = taskDates;
     }
 
     @NonNull
@@ -39,7 +45,19 @@ class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
     @Override
     public void onBindViewHolder(@NonNull CalendarViewHolder holder, int position)
     {
-        holder.dayOfMonth.setText(daysOfMonth.get(position));
+        String dayText = daysOfMonth.get(position);
+        holder.dayOfMonth.setText(dayText);
+
+        if (!dayText.equals("")) {
+            String fullDate = dayText + " " + monthYear;
+            if (taskDates.contains(fullDate)) {
+                holder.taskIndicator.setVisibility(View.VISIBLE); // show orange line
+            } else {
+                holder.taskIndicator.setVisibility(View.GONE); // hide otherwise
+            }
+        } else {
+            holder.taskIndicator.setVisibility(View.GONE);
+        }
     }
 
     // returns the size of our ArrayList containing all the days

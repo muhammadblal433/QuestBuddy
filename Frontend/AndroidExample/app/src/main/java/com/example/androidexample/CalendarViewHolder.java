@@ -14,6 +14,7 @@ public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.
     // displays the number on each cell
     public final TextView dayOfMonth;
     private final CalendarAdapter.OnItemListener onItemListener;
+    public final View taskIndicator;
 
     // Stores calendar cell info in itemView and sets up how to deal with clicks.
     public CalendarViewHolder(@NonNull View itemView, CalendarAdapter.OnItemListener onItemListener)
@@ -21,11 +22,12 @@ public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.
         super(itemView);
         dayOfMonth = itemView.findViewById(R.id.cellDayText);
         this.onItemListener = onItemListener;
+        this.taskIndicator = itemView.findViewById(R.id.taskIndicator);
         itemView.setOnClickListener(this);
     }
 
 
-    // Tells the activity when this cell is clicked and what it contains
+    // Tells the activity which cell is clicked and what it contains
     @Override
     public void onClick(View view)
     {
