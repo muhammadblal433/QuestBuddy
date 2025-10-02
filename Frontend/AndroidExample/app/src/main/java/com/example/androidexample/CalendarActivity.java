@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -93,8 +94,10 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
     @Override
     public void onItemClick(int position, String dayText) {
         if (!dayText.equals("")) {
-            String message = "Selected Date " + dayText + " " + monthYearFromDate(selectedDate);
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            String selectedFullDate = dayText + " " + monthYearFromDate(selectedDate);
+            Intent intent = new Intent(this, AddTaskActivity.class);
+            intent.putExtra("selectedDate", selectedFullDate);
+            startActivity(intent);
         }
     }
 }
