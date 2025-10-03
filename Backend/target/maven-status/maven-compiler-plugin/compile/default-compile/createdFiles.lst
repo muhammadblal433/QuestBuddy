@@ -1,0 +1,8 @@
+com/questbuddy/Demo2Application.class
+com/questbuddy/service/UserService.class
+com/questbuddy/service/UserServiceImplemented.class
+com/questbuddy/controller/UserController.class
+com/questbuddy/model/Role.class
+com/questbuddy/model/User.class
+com/questbuddy/repository/UserRepository.class
+com/questbuddy/security/PasswordConfig.class

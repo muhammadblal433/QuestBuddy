@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
@@ -58,7 +57,7 @@ public class UserController {
         return ResponseEntity.ok(updated);
     }
 
-    // GET - for testing purposes - add users in batches
+    // PUT - for testing purposes - add users in batches
     @PostMapping(value = "/auth/signup/batch", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> signupBatch(@RequestBody java.util.List<java.util.Map<String, String>> bodies) {
         java.util.List<User> created = new java.util.ArrayList<>();

@@ -9,5 +9,7 @@ public interface UserService {
 
     Optional<User> getById(Long id);
 
-    User updateProfile(Long id, String email, String username, String password, String firstName, String lastName, String avatarUrl);
+    User updateProfile(Long id, String email, String username, String firstName, String lastName, String avatarUrl);
+
+    Optional<User> login(String email, String rawPassword);
 }
