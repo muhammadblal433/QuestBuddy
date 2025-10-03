@@ -1,8 +1,13 @@
+com/questbuddy/controller/AuthController.class
 com/questbuddy/Demo2Application.class
 com/questbuddy/service/UserService.class
-com/questbuddy/service/UserServiceImplemented.class
 com/questbuddy/controller/UserController.class
 com/questbuddy/model/Role.class
+com/questbuddy/security/PasswordConfig.class
+com/questbuddy/controller/UserController$UpdateProfileRequest.class
+com/questbuddy/service/UserServiceImplemented.class
+com/questbuddy/controller/UserController$SignupRequest.class
 com/questbuddy/model/User.class
 com/questbuddy/repository/UserRepository.class
-com/questbuddy/security/PasswordConfig.class
+com/questbuddy/controller/AuthController$LoginRequest.class
+com/questbuddy/controller/UserController$UserDto.class
