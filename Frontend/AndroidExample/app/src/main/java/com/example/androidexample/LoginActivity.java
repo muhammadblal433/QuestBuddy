@@ -10,7 +10,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 public class LoginActivity extends AppCompatActivity{
     private EditText etEmail, etPassword;
 
@@ -31,6 +30,10 @@ public class LoginActivity extends AppCompatActivity{
             if (TextUtils.isEmpty(pw)) { etPassword.setError("Password required"); return; }
 
             Toast.makeText(this, "Login clicked: " + email, Toast.LENGTH_SHORT).show();
+
+            // delete method starter
+            startActivity(new Intent(LoginActivity.this, AccountActivity.class));
+            finish();
         });
 
         tvSignupLink.setOnClickListener(v ->
