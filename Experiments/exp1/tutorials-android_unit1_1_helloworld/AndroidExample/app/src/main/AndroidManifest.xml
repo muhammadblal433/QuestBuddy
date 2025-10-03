@@ -2,9 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- internet permission for https-->
-    <uses-permission android:name="android.permission.INTERNET" />
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -15,28 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidExample"
         tools:targetApi="31">
-
-        <!-- Launcher is LoginActivity -->
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!-- Signup screen -->
-        <activity android:name=".SignupActivity" />
-
-        <!-- Keep MainActivity for later (not launcher) -->
-        <activity android:name=".MainActivity" />
-
-        <!-- new screen for delete user-->
-        <activity android:name=".AccountActivity" />
-    </application>
-
-
         <activity
             android:name=".MainActivity"
             android:exported="true">
