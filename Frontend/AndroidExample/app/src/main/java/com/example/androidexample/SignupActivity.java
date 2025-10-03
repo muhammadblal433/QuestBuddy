@@ -11,8 +11,17 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+
 public class SignupActivity extends AppCompatActivity {
     private EditText etEmail, etPassword, etConfirmPassword;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,12 +54,48 @@ public class SignupActivity extends AppCompatActivity {
                 return;
             }
 
-            Toast.makeText(this, "Signup successful!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(SignupActivity.this, "Signup clicked: " + email, Toast.LENGTH_SHORT).show();
+
+            signupUser(email, pw);
+            finish();
         });
         tvLoginLink.setOnClickListener(v ->
                 startActivity(new Intent(SignupActivity.this, LoginActivity.class)));
 
     }
+
+    private void signupUser(String email, String password) {
+        JSONObject userJson = new JSONObject();
+        try {
+            userJson.put("email", email);
+            userJson.put("password", password);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        String url = "https://7e3a174b-bdb2-4e74-b53f-b245e9400d84.mock.pstmn.io/user_info";
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                userJson,
+                response -> {
+                    Toast.makeText(this,
+                            "POST Success: " + response.toString(),
+                            Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    Toast.makeText(this,
+                            "POST Error: " + error.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(request);
+    }
+
     // regex for email
     private boolean isValidEmail(String email) {
         return !TextUtils.isEmpty(email) && Patterns.EMAIL_ADDRESS.matcher(email).matches();
@@ -60,5 +105,13 @@ public class SignupActivity extends AppCompatActivity {
     private boolean isValidPassword(String password) {
         return password.matches("^(?=.*[A-Za-z])(?=.*\\d).{6,}$");
     }
-
 }
+
+
+
+
+
+
+
+
+
