@@ -43,15 +43,24 @@ import org.w3c.dom.Text;
 public class MainActivity extends AppCompatActivity {
 
     private TextView messageText;   // define message textview variable
+    private Button btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);             // link to Main activity XML
-
+        /*super.onCreate(savedInstanceState);
+        setContentView(R.layout.calendar_interface);             // link to Main activity XML
         /* initialize UI elements */
-        messageText = findViewById(R.id.main_msg_txt); // link to message textview in the Main activity XML
-        messageText.setText("Hello World");
+        //messageText = findViewById(R.id.main_msg_txt); // link to message textview in the Main activity XML
+        //messageText.setText("Hello World");*/
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        btn = findViewById(R.id.open);
+
+        btn.setOnClickListener(v ->{
+            Intent intent = new Intent(MainActivity.this, CalendarActivity.class);
+            startActivity(intent);
+        });
+
     }
 
 }

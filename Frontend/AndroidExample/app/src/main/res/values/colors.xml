@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="gray">#888</color>
+    <color name="blue">#0000FF</color>
     <color name = "orange_medium">#FF8A00</color>  <!--sunset orange-->
     <color name = "orange_light">#FFB866</color>
     <color name = "orange_dark">#E65100</color>
