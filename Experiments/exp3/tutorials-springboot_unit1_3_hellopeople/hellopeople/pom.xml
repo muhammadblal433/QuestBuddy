@@ -22,6 +22,8 @@
     <!-- Generic properties -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+      <!--  Spring 3.4.3 requires atleast Java 17-23-->
+      <maven.compiler.release>17</maven.compiler.release>
 
   </properties>
 

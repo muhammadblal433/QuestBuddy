@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Provides the Definition/Structure for the people row
  *
@@ -23,14 +25,23 @@ public class Person {
 
     private String telephone;
 
+    // New variables
+    private int age;
     private String favoriteFood;
+    private List<String> funFacts;
 
-    public Person(String firstName, String lastName, String address, String telephone, String favoriteFood){
+//    public Person(){
+//
+//    }
+
+    public Person(String firstName, String lastName, String address, String telephone, int age, String favoriteFood, List<String> funFacts) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
         this.telephone = telephone;
+        this.age = age;
         this.favoriteFood = favoriteFood;
+        this.funFacts = funFacts;
     }
 
 
@@ -71,17 +82,18 @@ public class Person {
         this.telephone = telephone;
     }
 
-    public String getFavoriteFood() {
-        return favoriteFood; }
+    public List<String> getFunFacts() {
+        return funFacts;
+    }
 
-    public void setFavoriteFood(String favoriteFood) {
-        this.favoriteFood = favoriteFood; }
+    public void setFunFacts(List<String> funFacts) {
+        this.funFacts = funFacts;
+    }
 
     @Override
     public String toString() {
-        return firstName + " " 
-               + lastName + " "
-               + address + " "
-               + telephone;
+        return firstName + " " + lastName + " (" + age + " yrs) " +
+                "lives at " + address + ", phone: " + telephone +
+                ", loves " + favoriteFood + ". Fun facts: " + funFacts;
     }
 }
