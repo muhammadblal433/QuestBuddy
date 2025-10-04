@@ -1,77 +1,175 @@
 package com.questbuddy.controller;
 
 import com.questbuddy.model.User;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.net.URI;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1")
 public class UserController {
 
-    private final UserRepository userRepo;
+    private final UserService users;
 
-    public UserController(UserRepository userRepo) {
-        this.userRepo = userRepo;
+    public UserController(UserService users) {
+        this.users = users;
     }
 
-    // Single user signup
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody User newUser) {
-        if (userRepo.existsByEmail(newUser.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already in use!");
-        }
-        if (userRepo.existsByUsername(newUser.getUsername())) {
-            return ResponseEntity.badRequest().body("Username already in use!");
-        }
-        User savedUser = userRepo.save(newUser);
-        return ResponseEntity.ok(savedUser);
+    // Make Data Transfer Object  - excluding password
+    public record UserDto(Long id, String email, String username,
+                          String firstName, String lastName, String avatarUrl,
+                          String role, boolean active,
+                          java.time.Instant createdAt, java.time.Instant updatedAt) {}
+
+    private static UserDto toDto(User u) {
+        return new UserDto(
+                u.getId(), u.getEmail(), u.getUsername(),
+                u.getFirstName(), u.getLastName(), u.getAvatarUrl(),
+                u.getRole().name(), u.isActive(),
+                u.getCreatedAt(), u.getUpdatedAt()
+        );
     }
 
-    // DELETE USER
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        if (!userRepo.existsById(id)) {
+    public record SignupRequest(String email, String username, String password,
+                                String firstName, String lastName) {}
+
+    public record UpdateProfileRequest(String email, String username,
+                                       String firstName, String lastName,
+                                       String avatarUrl, String newPassword) {}
+
+//    // POST -> create new user  (dev helper; OK to remove when teammate owns signup)
+//    @PostMapping(value = "/auth/signup", consumes = "application/json", produces = "application/json")
+//    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
+//        String email = body.get("email");
+//        String username = body.get("username");
+//        String password = body.get("password");       // raw; encryption handled in service
+//        String firstName = body.get("firstName");
+//        String lastName  = body.get("lastName");
+//
+//        if (email == null || username == null || password == null) {
+//            return ResponseEntity.badRequest().body(Map.of("error", "missing_fields"));
+//        }
+//
+//        User u = users.signup(email, username, password, firstName, lastName);
+//        return ResponseEntity.created(URI.create("/api/v1/users/" + u.getId())).body(toDto(u));
+//    }
+
+    // GET -> fetch user by id
+    @GetMapping(value = "/users/{id}", produces = "application/json")
+    public ResponseEntity<UserDto> get(@PathVariable Long id) {
+        Optional<User> opt = users.getById(id);
+        if (opt.isPresent()) {
+            User u = opt.get();
+            UserDto dto = toDto(u);
+            return ResponseEntity.ok(dto);
+        } else {
             return ResponseEntity.notFound().build();
         }
-        userRepo.deleteById(id);
-        return ResponseEntity.ok("User deleted successfully!");
     }
 
-    // GET all users
-    @GetMapping
-    public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok(userRepo.findAll());
+    // PUT -> edit user profile (path version; forbid if header doesn’t match)
+    @PutMapping(value = "/users/{id}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> update(@PathVariable Long id,
+                                    @RequestHeader(value = "X-User-Id", required = false) Long userId,
+                                    @RequestBody UpdateProfileRequest body) {
+
+        if (userId == null) {
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "missing_user");
+            return ResponseEntity.status(401).body(err);
+        }
+        if (!id.equals(userId)) {
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "forbidden");
+            return ResponseEntity.status(403).body(err);
+        }
+
+        User updated = users.updateProfile(
+                id,
+                body.email(),
+                body.username(),
+                body.firstName(),
+                body.lastName(),
+                body.avatarUrl()
+        );
+
+        UserDto dto = toDto(updated);
+        return ResponseEntity.ok(dto);
     }
 
-    // GET user by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        return userRepo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    // POST - for testing purposes - add users in batches
+    @PostMapping(value = "/auth/signup/batch", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<List<UserDto>> signupBatch(@RequestBody List<SignupRequest> bodies) {
+
+        List<UserDto> created = new ArrayList<>();
+
+        for (SignupRequest b : bodies) {
+            boolean hasRequired = b != null
+                    && b.email() != null
+                    && b.username() != null
+                    && b.password() != null;
+
+            if (hasRequired) {
+                User u = users.signup(
+                        b.email(),
+                        b.username(),
+                        b.password(),
+                        b.firstName(),
+                        b.lastName()
+                );
+                UserDto dto = toDto(u);
+                created.add(dto);
+            }
+        }
+
+        URI location = URI.create("/api/v1/users");
+        return ResponseEntity.created(location).body(created);
     }
 
-    // UPDATE USER
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        return userRepo.findById(id)
-                .map(user -> {
-                    user.setUsername(updatedUser.getUsername());
-                    user.setEmail(updatedUser.getEmail());
-                    user.setPassword(updatedUser.getPassword());
-                    user.setRole(updatedUser.getRole());
-                    userRepo.save(user);
-                    return ResponseEntity.ok(user);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    // GET - current profile (that is logged in)  — header-based auth for mini-assignment
+    @GetMapping(value = "/users/me", produces = "application/json")
+    public ResponseEntity<?> me(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
+
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error","missing_user"));
+        }
+
+        Optional<User> opt = users.getById(userId);
+        if (opt.isPresent()) {
+            User u = opt.get();
+            UserDto dto = toDto(u);
+            return ResponseEntity.ok(dto);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @GetMapping("/ping")
-    public String ping() {
-        return "UserController is alive!";
-    }
+    // PUT -> update currently logged in profile  — header-based auth for mini-assignment
+    @PutMapping(value = "/users/me", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> updateMe(@RequestHeader(value = "X-User-Id", required = false) Long userId,
+                                      @RequestBody UpdateProfileRequest body) {
 
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error","missing_user"));
+        }
+
+        User updated = users.updateProfile(
+                userId,
+                body.email(),
+                body.username(),
+                body.firstName(),
+                body.lastName(),
+                body.avatarUrl()
+        );
+
+        UserDto dto = toDto(updated);
+        return ResponseEntity.ok(dto);
+    }
 }
