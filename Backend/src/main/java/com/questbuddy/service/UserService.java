@@ -12,4 +12,10 @@ public interface UserService {
     User updateProfile(Long id, String email, String username, String firstName, String lastName, String avatarUrl);
 
     Optional<User> login(String email, String rawPassword);
+
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
+
+    User save(User user);
 }

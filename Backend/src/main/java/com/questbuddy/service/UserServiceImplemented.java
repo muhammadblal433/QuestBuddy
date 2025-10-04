@@ -5,6 +5,7 @@ import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -21,27 +22,34 @@ public class UserServiceImplemented implements UserService {
     }
 
     @Override
+    @Transactional
     public User signup(String email, String username, String password, String firstName, String lastName) {
-        if (user_repo.existsByEmail(email)) {
-            throw new IllegalArgumentException("User with email " + email + " already exists");
-        } else if (user_repo.existsByUsername(username)) {
-            throw new IllegalArgumentException("User with username " + username + " already exists");
+        String e = email == null ? null : email.trim();
+        String u = username == null ? null : username.trim();
+        if (e == null || e.isBlank()) throw new IllegalArgumentException("email required");
+        if (u == null || u.isBlank()) throw new IllegalArgumentException("username required");
+        if (password == null || password.isBlank()) throw new IllegalArgumentException("password required");
+
+        if (user_repo.existsByEmail(e)) {
+            throw new IllegalArgumentException("User with email " + e + " already exists");
+        } else if (user_repo.existsByUsername(u)) {
+            throw new IllegalArgumentException("User with username " + u + " already exists");
         }
 
-        User u = new User();
-        u.setEmail(email);
-        u.setUsername(username);
-        u.setPasswordHash(encoder.encode(password));
-        if (firstName != null) {
-            u.setFirstName(firstName);
-        }
-        if (lastName  != null) {
-            u.setLastName(lastName);
-        }
-        u.setRole(Role.TRIP_MEMBER);
-        u.setActive(true);
-        return user_repo.save(u);
+        User x = new User();
+        x.setEmail(e);
+        x.setUsername(u);
+        String hash = encoder.encode(password);
+        x.setPasswordHash(hash);          // <-- required by DB
+        x.setPassword(hash);              // <-- required by DB (legacy NOT NULL column)
+
+        if (firstName != null) x.setFirstName(firstName);
+        if (lastName  != null) x.setLastName(lastName);
+        x.setRole(Role.TRIP_MEMBER);
+        x.setActive(true);
+        return user_repo.save(x);
     }
+
 
     @Override
     public Optional<User> getById(Long id) {
@@ -49,32 +57,55 @@ public class UserServiceImplemented implements UserService {
     }
 
     @Override
+    @Transactional
     public User updateProfile(Long id, String email, String username, String firstName, String lastName, String avatarUrl) {
-        User u = user_repo.findById(id).orElseThrow(() -> new NoSuchElementException("No such user found."));
+        User x = user_repo.findById(id).orElseThrow(() -> new NoSuchElementException("No such user found."));
 
-        if (email != null && !email.equalsIgnoreCase(u.getEmail())) {
-            if (user_repo.existsByEmail(email)) throw new IllegalArgumentException("This email has been taken.");
-            u.setEmail(email);
+        if (email != null) {
+            String e = email.trim();
+            if (!e.equalsIgnoreCase(x.getEmail())) {
+                if (user_repo.existsByEmail(e)) throw new IllegalArgumentException("This email has been taken.");
+                x.setEmail(e);
+            }
         }
-        if (username != null && !username.equalsIgnoreCase(u.getUsername())) {
-            if (user_repo.existsByUsername(username)) throw new IllegalArgumentException("This username has been taken.");
-            u.setUsername(username);
+        if (username != null) {
+            String u = username.trim();
+            if (!u.equalsIgnoreCase(x.getUsername())) {
+                if (user_repo.existsByUsername(u)) throw new IllegalArgumentException("This username has been taken.");
+                x.setUsername(u);
+            }
         }
-        if (firstName != null) {
-            u.setFirstName(firstName);
-        }
-        if (lastName != null) {
-            u.setLastName(lastName);
-        }
-        if (avatarUrl != null) {
-            u.setAvatarUrl(avatarUrl);
-        }
+        if (firstName != null) x.setFirstName(firstName);
+        if (lastName  != null) x.setLastName(lastName);
+        if (avatarUrl != null) x.setAvatarUrl(avatarUrl);
 
-        return user_repo.save(u);
+        return user_repo.save(x);
     }
 
     @Override
     public Optional<User> login(String email, String rawPassword) {
-        return user_repo.findByEmailIgnoreCase(email).filter(u -> encoder.matches(rawPassword, u.getPasswordHash()));
+        if (email == null || rawPassword == null) return Optional.empty();
+        return user_repo.findByEmailIgnoreCase(email.trim())
+                .filter(u -> encoder.matches(rawPassword, u.getPasswordHash()));
+    }
+
+    // ---- Methods required by your UserService interface ----
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        if (email == null) return Optional.empty();
+        return user_repo.findByEmailIgnoreCase(email.trim());
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        if (username == null) return Optional.empty();
+        return user_repo.findByUsernameIgnoreCase(username.trim());
+    }
+
+    @Override
+    @Transactional
+    public User save(User user) {
+        return user_repo.save(user);
     }
 }

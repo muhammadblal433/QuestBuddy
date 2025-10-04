@@ -44,22 +44,22 @@ public class UserController {
                                        String firstName, String lastName,
                                        String avatarUrl, String newPassword) {}
 
-    // POST -> create new user  (dev helper; OK to remove when teammate owns signup)
-    @PostMapping(value = "/auth/signup", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String username = body.get("username");
-        String password = body.get("password");       // raw; encryption handled in service
-        String firstName = body.get("firstName");
-        String lastName  = body.get("lastName");
-
-        if (email == null || username == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "missing_fields"));
-        }
-
-        User u = users.signup(email, username, password, firstName, lastName);
-        return ResponseEntity.created(URI.create("/api/v1/users/" + u.getId())).body(toDto(u));
-    }
+//    // POST -> create new user  (dev helper; OK to remove when teammate owns signup)
+//    @PostMapping(value = "/auth/signup", consumes = "application/json", produces = "application/json")
+//    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
+//        String email = body.get("email");
+//        String username = body.get("username");
+//        String password = body.get("password");       // raw; encryption handled in service
+//        String firstName = body.get("firstName");
+//        String lastName  = body.get("lastName");
+//
+//        if (email == null || username == null || password == null) {
+//            return ResponseEntity.badRequest().body(Map.of("error", "missing_fields"));
+//        }
+//
+//        User u = users.signup(email, username, password, firstName, lastName);
+//        return ResponseEntity.created(URI.create("/api/v1/users/" + u.getId())).body(toDto(u));
+//    }
 
     // GET -> fetch user by id
     @GetMapping(value = "/users/{id}", produces = "application/json")

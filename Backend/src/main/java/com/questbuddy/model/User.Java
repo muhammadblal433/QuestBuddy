@@ -18,18 +18,21 @@ import jakarta.persistence.*;
 public class User {
 
     // Minimal Variables - cannot be empty
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;                // server-assigned
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long id;                   // server-assigned
 
     @Column(nullable = false, length = 255)
-    private String email;           // required, unique (case-insensitive)
+    private String email;               // required, unique (case-insensitive)
 
     @Column(nullable = false, length = 32)
-    private String username;        // required, unique (case-insensitive), 3-32
+    private String username;            // required, unique (case-insensitive), 3-32
 
-    @Column(nullable = false, length = 100)
-    private String passwordHash;    // need to use something called BCrypt hash for passwords?
+    @Column(name = "password_hash", nullable = false, length = 100)
+    private String passwordHash;      // need to use something called BCrypt hash for passwords?
+
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;          // stored to satisfy existing DB NOT NULL column (not exposed in DTOs)
 
     // Role related
     @Enumerated(EnumType.STRING)
@@ -40,19 +43,19 @@ public class User {
     private boolean active = true;         // represents if account is active
 
     // Optional Variables - can have no value
-    @Column(length = 60)
+    @Column(name = "first_name", length = 60)
     private String firstName;
 
-    @Column(length = 60)
+    @Column(name = "last_name", length = 60)
     private String lastName;
 
-    @Column(length = 512)
+    @Column(name = "avatar_url", length = 512)
     private String avatarUrl;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
     /** Default constructor. */
@@ -64,19 +67,14 @@ public class User {
     }
 
     /** @return the server-assigned unique id of the user. */
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
     /**
      * Sets the server-assigned unique id of the user.
      * Updates the last-modified timestamp.
      * @param id the new id value
      */
-    public void setId(Long id) {
-        this.id = id;
-        touch();
-    }
+    public void setId(Long id) { this.id = id; touch(); }
 
     /** @return the user's email address (required, unique). */
     public String getEmail() {
@@ -131,9 +129,7 @@ public class User {
     }
 
     /** @return the stored BCrypt password hash */
-    public String getPasswordHash() {
-        return passwordHash;
-    }
+    public String getPasswordHash() { return passwordHash; }
 
     /**
      * Sets the stored BCrypt password hash. Must be non-blank.
@@ -150,6 +146,17 @@ public class User {
             this.passwordHash = passwordHash;
             touch();
         }
+    }
+
+
+    // keep password field private to persistence layer (no DTO exposure)
+    public String getPassword() { return password; }
+    public void setPassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("password required");
+        }
+        this.password = password;
+        touch();
     }
 
     /** @return this user's role */
