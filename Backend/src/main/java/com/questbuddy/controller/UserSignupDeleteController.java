@@ -20,7 +20,7 @@ public class UserSignupDeleteController {
         this.userRepo = userRepo;
     }
 
-    // POST → Signup
+    // POST - Signup user
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody User newUser) {
         if (userRepo.existsByEmail(newUser.getEmail())) {
@@ -29,6 +29,12 @@ public class UserSignupDeleteController {
         if (userRepo.existsByUsername(newUser.getUsername())) {
             return ResponseEntity.badRequest().body("Username already in use!");
         }
+
+        // Autofill passwordHash if it is missing
+        if (newUser.getPassword() != null && newUser.getPasswordHash() == null) {
+            newUser.setPasswordHash(newUser.getPassword()); // temp placeholder
+        }
+
         User savedUser = userRepo.save(newUser);
         return ResponseEntity.ok(savedUser);
     }
@@ -46,7 +52,13 @@ public class UserSignupDeleteController {
     // GET - All users
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok(userRepo.findAll());
+        try {
+            List<User> users = userRepo.findAll();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            e.printStackTrace(); // logs the issue
+            return ResponseEntity.internalServerError().body("Error fetching users: " + e.getMessage());
+        }
     }
 
     // GET - User by ID
@@ -72,7 +84,7 @@ public class UserSignupDeleteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Health/test check
+    // Health/test check to make sure that the file is being read
     @GetMapping("/ping")
     public String ping() {
         return "UserSignupDeleteController is alive!";
