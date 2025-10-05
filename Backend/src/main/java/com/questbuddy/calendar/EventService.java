@@ -3,6 +3,8 @@ package com.questbuddy.calendar;
 import com.questbuddy.calendar.dto.*;
 import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -42,7 +44,7 @@ public class EventService {
         } else {
             events = repo.findAllByUserId(userId, ascending);
         }
-        return events.stream().map(mapper::toDto).toList()
+        return events.stream().map(mapper::toDto).toList();
     }
 
     // New Error for if event not found
