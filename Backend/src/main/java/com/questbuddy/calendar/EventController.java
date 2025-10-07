@@ -15,7 +15,7 @@ import java.util.List;
  * Note that all CRUD logic was handled in EventService.java (so that code is more streamlined here)
  */
 @RestController
-@RequestMapping("/api/v1/calendar/events")
+@RequestMapping("/api/v4/calendar/events")
 public class EventController {
     private final EventService service;
 
