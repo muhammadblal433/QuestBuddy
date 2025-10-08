@@ -3,6 +3,7 @@ package com.questbuddy.service;
 import com.questbuddy.model.Task;
 import com.questbuddy.repository.TaskRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -32,17 +33,18 @@ public class TaskServiceImplemented implements TaskService {
 
     @Override
     public List<Task> getTasksByUserId(Long userId) {
-        return taskRepo.findByUserId(userId);
+        return taskRepo.findByUser_Id(userId);
     }
 
     @Override
     public Task updateTask(Long id, Task updatedTask) {
         return taskRepo.findById(id)
                 .map(task -> {
-                    task.setTitle(updatedTask.getTitle());
-                    task.setDescription(updatedTask.getDescription());
-                    task.setStatus(updatedTask.getStatus());
-                    task.setDueDate(updatedTask.getDueDate());
+                    if (updatedTask.getTitle() != null)       task.setTitle(updatedTask.getTitle());
+                    if (updatedTask.getDescription() != null)  task.setDescription(updatedTask.getDescription());
+                    if (updatedTask.getStatus() != null)       task.setStatus(updatedTask.getStatus());
+                    if (updatedTask.getDueDate() != null)      task.setDueDate(updatedTask.getDueDate());
+                    // keep same user and setUser only if you want reassignment
                     return taskRepo.save(task);
                 })
                 .orElseThrow(() -> new RuntimeException("Task not found"));

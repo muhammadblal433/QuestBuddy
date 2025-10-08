@@ -1,3 +1,4 @@
+com/questbuddy/controller/TaskController$TaskRes.class
 com/questbuddy/service/TaskService.class
 com/questbuddy/Demo2Application.class
 com/questbuddy/service/UserService.class
@@ -5,6 +6,7 @@ com/questbuddy/controller/AuthController$SignupRequest.class
 com/questbuddy/model/Role.class
 com/questbuddy/repository/TaskRepository.class
 com/questbuddy/service/UserServiceImplemented.class
+com/questbuddy/controller/TaskController$TaskReq.class
 com/questbuddy/controller/UserSignupDeleteController.class
 com/questbuddy/controller/UserController$SignupRequest.class
 com/questbuddy/model/User.class
@@ -15,6 +17,8 @@ com/questbuddy/model/Task.class
 com/questbuddy/controller/TaskController.class
 com/questbuddy/controller/UserController.class
 com/questbuddy/security/PasswordConfig.class
+com/questbuddy/controller/TaskController$UserLite.class
 com/questbuddy/controller/UserController$UpdateProfileRequest.class
+com/questbuddy/controller/UserSignupDeleteController$UserDto.class
 com/questbuddy/controller/AuthController$LoginRequest.class
 com/questbuddy/controller/UserController$UserDto.class
