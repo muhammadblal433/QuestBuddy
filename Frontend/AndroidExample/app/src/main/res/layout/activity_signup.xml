@@ -35,12 +35,24 @@
 
         <!-- field to enter the email-->>
         <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Username"
+            android:inputType="textEmailAddress"
+            android:padding="12dp"
+            android:background="@drawable/rounded_edittext"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray"/>
+
+        <EditText
             android:id="@+id/etEmailSignup"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:hint="Email"
             android:inputType="textEmailAddress"
             android:padding="12dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/rounded_edittext"
             android:textColor="@android:color/black"
             android:textColorHint="@android:color/darker_gray"/>

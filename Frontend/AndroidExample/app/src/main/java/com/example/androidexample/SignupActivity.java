@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
@@ -18,9 +19,11 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+
 
 public class SignupActivity extends AppCompatActivity {
-    private EditText etEmail, etPassword, etConfirmPassword;
+    private EditText etEmail, etPassword, etConfirmPassword, etUserName;
 
 
     @Override
@@ -31,11 +34,13 @@ public class SignupActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmailSignup);
         etPassword = findViewById(R.id.etPasswordSignup);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
+        etUserName = findViewById(R.id.etUsername);
         Button btnSignup = findViewById(R.id.btnSignup);
         TextView tvLoginLink = findViewById(R.id.tvLoginLink);
 
         btnSignup.setOnClickListener(v ->{
             String email = etEmail.getText().toString().trim();
+            String username = etUserName.getText().toString().trim();
             String pw = etPassword.getText().toString().trim();
             String confirmPw = etConfirmPassword.getText().toString().trim();
 
@@ -54,41 +59,77 @@ public class SignupActivity extends AppCompatActivity {
                 return;
             }
 
-            Toast.makeText(SignupActivity.this, "Signup clicked: " + email, Toast.LENGTH_SHORT).show();
+            signupUser(username, email, pw);
 
-            signupUser(email, pw);
-            finish();
         });
         tvLoginLink.setOnClickListener(v ->
                 startActivity(new Intent(SignupActivity.this, LoginActivity.class)));
 
     }
 
-    private void signupUser(String email, String password) {
+    private void signupUser(String username, String email, String password) {
         JSONObject userJson = new JSONObject();
         try {
+            userJson.put("username", username);
             userJson.put("email", email);
             userJson.put("password", password);
+            userJson.put("role", "TRIP_MEMBER");
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-        String url = "https://7e3a174b-bdb2-4e74-b53f-b245e9400d84.mock.pstmn.io/user_info";
-
+        String url = "http://coms-3090-026.class.las.iastate.edu:8080/api/v1/auth/signup";
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
                 url,
                 userJson,
                 response -> {
-                    Toast.makeText(this,
-                            "POST Success: " + response.toString(),
-                            Toast.LENGTH_SHORT).show();
+                    // Successful signup response
+                    Toast.makeText(this, "Signup Successful!", Toast.LENGTH_SHORT).show();
+
+                    // Move to Login screen
+                    startActivity(new Intent(SignupActivity.this, LoginActivity.class));
+                    finish();
                 },
                 error -> {
-                    Toast.makeText(this,
-                            "POST Error: " + error.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    // Parse server error for specific message
+                    String errorMessage = "Signup failed.";
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        try {
+                            String responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                            responseBody = responseBody.trim();
+
+                            // Try parsing JSON manually
+                            if (responseBody.startsWith("{")) {
+                                JSONObject data = new JSONObject(responseBody);
+                                if (data.has("error")) {
+                                    String errorCode = data.getString("error");
+
+                                    switch (errorCode) {
+                                        case "username_exists":
+                                            etUserName.setError("Username already exists");
+                                            errorMessage = "Username already exists";
+                                            break;
+                                        case "email_exists":
+                                            etEmail.setError("Email already registered");
+                                            errorMessage = "Email already registered";
+                                            break;
+                                        default:
+                                            errorMessage = "Signup failed: " + errorCode;
+                                            break;
+                                    }
+                                }
+                            } else {
+                                // Handle non-JSON plain text errors
+                                errorMessage = responseBody;
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
                 }
         );
 
