@@ -1,13 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:padding="20dp">
 
-    <Button
-        android:id="@+id/btnDelete"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/tvUserInfo"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Delete User" />
+        android:text="User Info"
+        android:textSize="18sp"
+        android:padding="10dp" />
+
+    <Button
+        android:id="@+id/btnViewProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Profile" />
+
+    <Button
+        android:id="@+id/btnUpdateProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Update Profile" />
+
+    <Button
+        android:id="@+id/btnDeleteProfile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete Profile"
+        android:textColor="@android:color/holo_red_dark" />
+
 </LinearLayout>
