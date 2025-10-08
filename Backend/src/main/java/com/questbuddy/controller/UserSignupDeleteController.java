@@ -43,7 +43,7 @@ public class UserSignupDeleteController {
         );
     }
 
-//    // POST - Signup user - refer to AuthController.java. // POST /api/v1/auth/signup
+    // POST - Signup user - refer to AuthController.java. // POST /api/v1/auth/signup
 
     // DELETE - Delete user
     @DeleteMapping("/{id}")

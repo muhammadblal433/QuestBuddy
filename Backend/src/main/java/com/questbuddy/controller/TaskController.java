@@ -43,7 +43,7 @@ public class TaskController {
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
     }
 
-    // CREATE
+    // CREATE TASK
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> createTask(@RequestBody TaskReq body) {
         if (body == null || body.userId() == null || body.title() == null) {
@@ -64,14 +64,14 @@ public class TaskController {
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(toRes(saved));
     }
 
-    // READ ALL
+    // READ ALL TASKS
     @GetMapping(produces = "application/json")
     public ResponseEntity<java.util.List<TaskRes>> getAllTasks() {
         var out = taskService.getAllTasks().stream().map(this::toRes).toList();
         return ResponseEntity.ok(out);
     }
 
-    // READ BY ID
+    // READ BY TASK ID
     @GetMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<?> getTaskById(@PathVariable Long id) {
         return taskService.getTaskById(id)
@@ -91,8 +91,6 @@ public class TaskController {
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody TaskReq body) {
         var patch = new com.questbuddy.model.Task();
-        // if you later want to allow reassignment:
-        // if (body.userId() != null) patch.setUser(userRepo.findById(body.userId()).orElseThrow(...));
         patch.setTitle(body.title());
         patch.setDescription(body.description());
         patch.setStatus(body.status());
@@ -102,14 +100,14 @@ public class TaskController {
         return ResponseEntity.ok(toRes(saved));
     }
 
-    // DELETE
+    // DELETE TASK
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
         return ResponseEntity.ok(Map.of("message", "Task deleted successfully"));
     }
 
-    // Health Check
+    // HEALTH CHECK TO MAKE SURE IF THIS FILE IS EVEN BEING READ
     @GetMapping("/ping")
     public String ping() {
         return "TaskController DTO v3";
