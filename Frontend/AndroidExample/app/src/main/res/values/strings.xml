@@ -4,4 +4,15 @@
     <string name="forward"><![CDATA[->]]></string>
     <string name="dark_mode">Dark Mode</string>
     <string name="light_mode">Light Mode</string>
+    <string-array name="drawer_items">
+        <item>Home</item>
+        <item>Profile</item>
+        <item>Tasks Manager</item>
+        <item>Calendar</item>
+        <item>Settings</item>
+        <item>Logout</item>
+    </string-array>
+    <string name="navigation_drawer_open">Open Navigation</string>
+    <string name="navigation_drawer_close">Close Navigation</string>
+
 </resources>
