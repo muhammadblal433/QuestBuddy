@@ -37,6 +37,8 @@
         <activity android:name=".CalendarActivity" />
         <activity android:name=".AddTaskActivity" />
         <activity android:name=".UpdateProfileActivity"/>
+        <activity android:name=".TaskManagerActivity"
+            android:exported="true"/>
     </application>
 
 </manifest>
