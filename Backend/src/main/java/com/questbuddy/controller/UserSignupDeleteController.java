@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
  * Handles basic signup, delete, and CRUD operations for testing/demo purposes.
  */
 @RestController
-@RequestMapping("/api/v2/users") // Different base path to avoid route conflicts
+@RequestMapping("/api/v2/users") // separate base path to avoid conflicts with /api/v1 auth/profile routes
 public class UserSignupDeleteController {
 
     private final UserRepository userRepo;
-    private final PasswordEncoder encoder; // add this to properly encypt passwrd
+    private final PasswordEncoder encoder; // this is to properly encypt passwrd
 
     public UserSignupDeleteController(UserRepository userRepo, PasswordEncoder encoder) {
         this.userRepo = userRepo;
@@ -33,6 +33,7 @@ public class UserSignupDeleteController {
             String role, boolean active, Instant createdAt, Instant updatedAt
     ) {}
 
+    // Centralized mapping from entity, goes to DTO (keeps controller responses consistent)
     private static UserDto toDto(User u) {
         return new UserDto(
                 u.getId(), u.getEmail(), u.getUsername(),
