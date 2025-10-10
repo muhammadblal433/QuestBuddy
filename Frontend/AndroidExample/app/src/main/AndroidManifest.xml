@@ -35,8 +35,8 @@
         <activity android:name=".AccountActivity" />
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CalendarActivity" />
-        <activity android:name=".AddTaskActivity" />
         <activity android:name=".UpdateProfileActivity"/>
+        <activity android:name=".DayViewActivity"/>
     </application>
 
 </manifest>

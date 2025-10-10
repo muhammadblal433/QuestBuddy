@@ -46,8 +46,6 @@ public class HomeActivity extends AppCompatActivity {
 
 
         toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));
-
-
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Home");
 

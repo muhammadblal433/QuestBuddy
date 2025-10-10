@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +22,8 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CalendarActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener {
 
@@ -30,12 +31,33 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
     private RecyclerView calendarRecyclerView;
     private LocalDate selectedDate;
     private Button backBtn, forwardBtn;
-    private static final String TASKS_URL = "https://ec3fa688-a6b1-4c54-a258-487e5dd20160.mock.pstmn.io";
+    private int userId;
+
+
+    private static final String TASKS_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v4/calendar/events";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.calendar_interface);
+        userId = getIntent().getIntExtra("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Invalid user session", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+        TextView navHome = findViewById(R.id.nav_home);
+
+
+        navHome.setOnClickListener(v -> {
+            Intent intent = new Intent(CalendarActivity.this, HomeActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);
+            finish();
+        });
+
 
         initWidgets();
         // initializes to the current month
@@ -72,19 +94,30 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
                     for (int i = 0; i < response.length(); i++) {
                         try {
                             JSONObject taskObject = response.getJSONObject(i);
-                            String date = taskObject.getString("date");
-                            taskDates.add(date);
+                            String startAt = taskObject.optString("startAt", "");
+
+                            if (startAt.length() >= 10) {
+                                // Extract just the date part, e.g., 2025-10-06
+                                String datePart = startAt.substring(0, 10);
+                                taskDates.add(datePart);
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
 
-                    // Now that we have task dates, load the calendar view
                     setMonthView(taskDates);
                 },
-                error -> {
-                    Toast.makeText(this, "Failed to fetch tasks: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                error -> Toast.makeText(this, "Failed to fetch tasks: " + error.getMessage(), Toast.LENGTH_SHORT).show()
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json");
+                headers.put("X-User-Id", String.valueOf(userId));
+                return headers;
+            }
+        };
 
         queue.add(jsonArrayRequest);
     }
@@ -95,7 +128,7 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
         ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
         String monthYear = monthYearFromDate(selectedDate);
 
-        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, this, monthYear, taskDates);
+        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, this, selectedDate, taskDates);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 7);
         calendarRecyclerView.setLayoutManager(layoutManager);
         calendarRecyclerView.setAdapter(calendarAdapter);
@@ -127,13 +160,14 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
     }
 
 
-    // when a cell is clicked, it displays a message saying which date is selected (needs to be changed for our task)
+    // when a cell is clicked, it displays a message saying which date is selected
     @Override
     public void onItemClick(int position, String dayText) {
         if (!dayText.equals("")) {
             String selectedFullDate = dayText + " " + monthYearFromDate(selectedDate);
-            Intent intent = new Intent(this, AddTaskActivity.class);
+            Intent intent = new Intent(this, DayViewActivity.class);
             intent.putExtra("selectedDate", selectedFullDate);
+            intent.putExtra("userId", userId);
             startActivity(intent);
         }
     }
