@@ -92,7 +92,8 @@ public class TaskManagerActivity extends AppCompatActivity {
 
     // GET all tasks
     public void getTasks() {
-        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, BASE_URL, null,
+        String url = BASE_URL + "/user/" + userId;
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
                     taskList.clear();
                     for (int i = 0; i < response.length(); i++) {

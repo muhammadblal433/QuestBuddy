@@ -2,6 +2,7 @@ package com.example.androidexample;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.graphics.Bitmap;
@@ -15,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.Request;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
@@ -22,7 +24,7 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 
-public class SetttingsActivity extends AppCompatActivity {
+public class SettingsActivity extends AppCompatActivity {
 
     private TextView tvName, tvUsername, tvEmail;
     private ImageView ivAvatar;
@@ -38,6 +40,7 @@ public class SetttingsActivity extends AppCompatActivity {
         tvEmail = findViewById(R.id.tvEmail);
         ivAvatar = findViewById(R.id.ivAvatar);
         Button btnHome = findViewById(R.id.btnBackHome);
+        Button delete = findViewById(R.id.deleteAccount);
 
         userId = getIntent().getIntExtra("userId", -1);
 
@@ -54,10 +57,11 @@ public class SetttingsActivity extends AppCompatActivity {
         tvUsername.setOnClickListener(v -> showEditDialog("Username"));
         tvEmail.setOnClickListener(v -> showEditDialog("Email"));
         btnHome.setOnClickListener(v -> {
-            Intent intent = new Intent(SetttingsActivity.this, HomeActivity.class);
+            Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);
             intent.putExtra("userId", userId);
             startActivity(intent);
         });
+        delete.setOnClickListener(v -> showDeleteConfirmation());
 
     }
 
@@ -76,10 +80,17 @@ public class SetttingsActivity extends AppCompatActivity {
                     String avatarUrl = response.optString("avatarUrl", "");
 
                     String fullName;
-                    if (firstName.equals("null") || lastName.equals("null"))
+                    if (firstName.equals("null") && lastName.equals("null")){
                         fullName = "None";
-                    else
+                    }
+
+                    else if(lastName.equals("null")){
+                        fullName = firstName;
+                    }
+                    else{
                         fullName = firstName + " " + lastName;
+                    }
+
 
                     tvName.setText(fullName);
                     tvUsername.setText("@" + username);
@@ -131,7 +142,7 @@ public class SetttingsActivity extends AppCompatActivity {
 
     /** PUT request to update single field **/
     private void updateUserField(String field, String value) {
-        String url = "http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/" + userId;
+        String url = "http://coms-3090-026.class.las.iastate.edu:8080/api/v1/users/" + userId;
 
         JSONObject updateJson = new JSONObject();
         try {
@@ -162,7 +173,7 @@ public class SetttingsActivity extends AppCompatActivity {
                 updateJson,
                 response -> {
                     Toast.makeText(this, field + " updated successfully!", Toast.LENGTH_SHORT).show();
-                    loadUserProfile(userId); // refresh profile info
+                    loadUserProfile(userId);
                 },
                 error -> {
                     String msg = "Update failed.";
@@ -171,8 +182,49 @@ public class SetttingsActivity extends AppCompatActivity {
                     }
                     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                 }
-        );
+        ) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                java.util.Map<String, String> headers = new java.util.HashMap<>();
+                headers.put("Content-Type", "application/json");
+                headers.put("X-User-Id", String.valueOf(userId));
+                return headers;
+            }
+        };
 
         Volley.newRequestQueue(this).add(putRequest);
+    }
+
+    private void showDeleteConfirmation() {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Account")
+                .setMessage("Are you sure you want to permanently delete your account? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> deleteUserAccount())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deleteUserAccount() {
+        String url = "http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/" + userId;
+
+        StringRequest request = new StringRequest(
+                Request.Method.DELETE,
+                url,
+                response -> {
+                    Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(SettingsActivity.this, SignupActivity.class));
+                    finish();
+                },
+                error -> {
+                    String msg = "Delete failed.";
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        msg = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                    }
+                    Log.e("DELETE_ERROR", msg);
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
     }
 }

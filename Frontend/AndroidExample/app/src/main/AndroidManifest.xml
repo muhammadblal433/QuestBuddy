@@ -12,12 +12,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:theme="@style/Base.Theme.AndroidExample"
         tools:targetApi="31"
+        android:usesCleartextTraffic="true"
         >
-
-
 
         <activity
             android:name=".SignupActivity"
@@ -29,7 +27,7 @@
         </activity>
         <!-- Signup screen -->
         <activity android:name=".HomeActivity" />
-        <activity android:name=".SetttingsActivity" />
+        <activity android:name=".SettingsActivity" />
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CalendarActivity" />
         <activity android:name=".DayViewActivity"/>

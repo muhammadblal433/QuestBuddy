@@ -86,7 +86,7 @@ public class HomeActivity extends AppCompatActivity {
                 finish();
             }
             else if(drawerItems[position].equals("Settings")){
-                Intent intent = new Intent(HomeActivity.this, SetttingsActivity.class);
+                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
                 intent.putExtra("userId", userId);
                 startActivity(intent);
                 finish();

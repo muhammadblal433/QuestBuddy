@@ -3,6 +3,7 @@ package com.example.androidexample;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
@@ -95,6 +96,10 @@ public class SignupActivity extends AppCompatActivity {
                 error -> {
                     // Parse server error for specific message
                     String errorMessage = "Signup failed.";
+                    if (error.networkResponse != null) {
+                        Log.e("VolleyError", "Status Code: " + error.networkResponse.statusCode);
+                        Log.e("VolleyError", "Response: " + new String(error.networkResponse.data, StandardCharsets.UTF_8));
+                    }
                     if (error.networkResponse != null && error.networkResponse.data != null) {
                         try {
                             String responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);
@@ -147,12 +152,3 @@ public class SignupActivity extends AppCompatActivity {
         return password.matches("^(?=.*[A-Za-z])(?=.*\\d).{6,}$");
     }
 }
-
-
-
-
-
-
-
-
-
