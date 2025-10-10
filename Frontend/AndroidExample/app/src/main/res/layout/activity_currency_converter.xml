@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="#FFF7E6">
+
+    <TextView
+        android:id="@+id/tvHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Currency Converter"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        android:textSize="22sp"
+        android:textColor="#FF9800"
+        android:paddingBottom="16dp" />
+
+    <EditText
+        android:id="@+id/etBaseCurrency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Base Currency (e.g., USD)"
+        android:inputType="textCapCharacters"
+        android:padding="10dp"
+        android:background="@android:drawable/edit_text" />
+
+    <EditText
+        android:id="@+id/etTargetCurrency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Target Currency (e.g., INR)"
+        android:inputType="textCapCharacters"
+        android:padding="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@android:drawable/edit_text" />
+
+    <Button
+        android:id="@+id/btnFetchRate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="GET Conversion Rate"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#FF9800"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/tvRateResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Exchange Rate: --"
+        android:textSize="18sp"
+        android:textColor="#000000"
+        android:layout_marginTop="16dp"
+        android:textAlignment="center" />
+
+    <EditText
+        android:id="@+id/etNewRate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="New Exchange Rate"
+        android:inputType="numberDecimal"
+        android:padding="10dp"
+        android:layout_marginTop="20dp"
+        android:background="@android:drawable/edit_text" />
+
+    <Button
+        android:id="@+id/btnUpdateRate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PUT Update Rate"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#F57C00"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/btnBackHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Return Home"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_button"
+        android:backgroundTint="#FB8C00"
+        android:paddingHorizontal="12dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="100dp"/>
+
+</LinearLayout>
