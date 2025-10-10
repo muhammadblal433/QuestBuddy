@@ -16,5 +16,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findByIdAndUserId(Long id, Long userId);
 
+    // find ALL events by everyone from start to end
+    List<Event> findAllByStartAtBetween(Instant from, Instant to);
+
     long deleteByIdAndUserId(Long id, Long userId);
 }
