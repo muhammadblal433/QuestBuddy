@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- internet permission for https-->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -19,7 +18,7 @@
         >
 
 
-        <!-- Launcher is LoginActivity -->
+
         <activity
             android:name=".SignupActivity"
             android:exported="true">
@@ -28,15 +27,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- Signup screen -->
         <activity android:name=".MainActivity" />
-        <!-- new screen for delete user-->
         <activity android:name=".AccountActivity" />
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CalendarActivity" />
         <activity android:name=".AddTaskActivity" />
         <activity android:name=".UpdateProfileActivity"/>
+        <activity android:name=".TaskManagerActivity"
+            android:exported="true"/>
+        <activity android:name=".PackingChecklistActivity"
+            android:exported="true"/>
     </application>
 
 </manifest>
