@@ -2,29 +2,44 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
 
 <!-- input fields, add button, and task list layout for manging tasks-->
 
-    <EditText
-        android:id="@+id/etTitle"
-        android:hint="Task title"
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:background="#FF9800"
+        android:text="Task Manager"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp" />
 
-    <EditText
-        android:id="@+id/etDescription"
-        android:hint="Task description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+    <TextView
+        android:id="@+id/tvAddHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add a task below:"
+        android:textSize="20sp"
+        android:textColor="#808080"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp" />
 
     <Button
         android:id="@+id/btnAddTask"
+        android:background = "@drawable/rounded_button"
         android:text="Add Task"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="10dp"
+        android:backgroundTint="#FF9800"
+        android:gravity = "center"
+        android:layout_gravity="center_horizontal"
+        android:textColor="#FFFFFF" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerTasks"

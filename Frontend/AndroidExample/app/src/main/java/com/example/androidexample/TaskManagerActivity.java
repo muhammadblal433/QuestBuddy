@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,6 +37,9 @@ public class TaskManagerActivity extends AppCompatActivity {
     private EditText etTitle, etDescription;  // inputs field for new task
     private RequestQueue queue; // handles the network requests(Volley)
 
+    private TextView tvAddHint;
+
+
 
     private final String BASE_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v3/tasks";
 
@@ -44,8 +48,6 @@ public class TaskManagerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_manager);
 
-        etTitle = findViewById(R.id.etTitle);
-        etDescription = findViewById(R.id.etDescription);
         Button btnAdd = findViewById(R.id.btnAddTask);
 
         recyclerTasks = findViewById(R.id.recyclerTasks);
@@ -62,8 +64,11 @@ public class TaskManagerActivity extends AppCompatActivity {
             }
         });
 
-        btnAdd.setOnClickListener(v -> addTask());
+
+        btnAdd.setOnClickListener(v -> showAddTaskDialog());
         getTasks();
+
+        tvAddHint = findViewById(R.id.tvAddHint);
     }
 
     // GET all tasks
@@ -88,32 +93,39 @@ public class TaskManagerActivity extends AppCompatActivity {
                         }
                     }
                     adapter.notifyDataSetChanged();
+
                 },
                 error -> Toast.makeText(this, "GET Error: " + error.getMessage(), Toast.LENGTH_SHORT).show());
         queue.add(request);
     }
 
     // POST - Add new task
-    private void addTask() {
+     private void addTask(String title, String description) {
         JSONObject taskJson = new JSONObject();
         try {
             taskJson.put("userId", 22);
-            taskJson.put("title", etTitle.getText().toString());
-            taskJson.put("description", etDescription.getText().toString());
+            taskJson.put("title", title);
+            taskJson.put("description", description);
             taskJson.put("status", "Pending");
             taskJson.put("dueDate", "2025-10-15");
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, BASE_URL, taskJson,
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                BASE_URL,
+                taskJson,
                 response -> {
                     Toast.makeText(this, "Task added!", Toast.LENGTH_SHORT).show();
-                    getTasks();
+                    getTasks(); // refresh after adding
+                    tvAddHint.setVisibility(View.GONE); // hide hint text
                 },
-                error -> Toast.makeText(this, "POST Error: " + error.getMessage(), Toast.LENGTH_SHORT).show());
+                error -> Toast.makeText(this, "POST Error: " + error.getMessage(), Toast.LENGTH_SHORT).show()
+        );
         queue.add(request);
     }
+
 
     // PUT - Update task status
     public void updateTask(long taskId, String title, String status, String dueDate) {
@@ -147,12 +159,21 @@ public class TaskManagerActivity extends AppCompatActivity {
     // DELETE - Remove task
     public void deleteTask(long taskId) {
         String url = BASE_URL + "/" + taskId;
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.DELETE,
+                url,
+                null,
                 response -> {
                     Toast.makeText(this, "Task deleted!", Toast.LENGTH_SHORT).show();
                     getTasks();
+                    recyclerTasks.postDelayed(() -> {
+                        if (taskList.isEmpty()) {
+                            tvAddHint.setVisibility(View.VISIBLE);
+                        }
+                    }, 500);
                 },
-                error -> Toast.makeText(this, "DELETE Error: " + error.getMessage(), Toast.LENGTH_SHORT).show());
+                error -> Toast.makeText(this, "DELETE Error: " + error.getMessage(), Toast.LENGTH_SHORT).show()
+        );
         queue.add(request);
     }
 
@@ -184,5 +205,27 @@ public class TaskManagerActivity extends AppCompatActivity {
                 .create()
                 .show();
     }
+
+    private void showAddTaskDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_task, null);
+        EditText etTitle = dialogView.findViewById(R.id.etTaskTitle);
+        EditText etDesc = dialogView.findViewById(R.id.etTaskDescription);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Add New Task")
+                .setView(dialogView)
+                .setPositiveButton("Add", (dialog, which) -> {
+                    String title = etTitle.getText().toString().trim();
+                    String desc = etDesc.getText().toString().trim();
+                    if (title.isEmpty() || desc.isEmpty()) {
+                        Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    addTask(title,desc);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
 }
 
