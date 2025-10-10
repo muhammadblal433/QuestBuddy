@@ -33,7 +33,7 @@ public class DayViewActivity extends AppCompatActivity {
     private FrameLayout taskColumn;
     private int userId;
 
-    // ✅ Keep track of event IDs mapped to task blocks
+    // Keep track of event IDs mapped to task blocks
     private final Map<Integer, JSONObject> taskMap = new HashMap<>();
 
     private static final String TASKS_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v4/calendar/events";
