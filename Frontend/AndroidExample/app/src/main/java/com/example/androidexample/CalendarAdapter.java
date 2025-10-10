@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 /**
@@ -19,13 +21,12 @@ class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
 
     private final ArrayList<String> taskDates;
 
-    private String monthYear;
+    private LocalDate monthDate;
 
-    public CalendarAdapter(ArrayList<String> daysOfMonth, OnItemListener onItemListener, String monthYear, ArrayList<String> taskDates)
-    {
+    public CalendarAdapter(ArrayList<String> daysOfMonth, OnItemListener onItemListener, LocalDate monthDate, ArrayList<String> taskDates) {
         this.daysOfMonth = daysOfMonth;
         this.onItemListener = onItemListener;
-        this.monthYear = monthYear;
+        this.monthDate = monthDate;
         this.taskDates = taskDates;
     }
 
@@ -43,17 +44,21 @@ class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder>
 
     // Binds each cell in the grid to the holder (which consists of the UI for each day cell) and sets the text as the day number
     @Override
-    public void onBindViewHolder(@NonNull CalendarViewHolder holder, int position)
-    {
+    public void onBindViewHolder(@NonNull CalendarViewHolder holder, int position) {
         String dayText = daysOfMonth.get(position);
         holder.dayOfMonth.setText(dayText);
 
         if (!dayText.equals("")) {
-            String fullDate = dayText + " " + monthYear;
-            if (taskDates.contains(fullDate)) {
-                holder.taskIndicator.setVisibility(View.VISIBLE); // show orange line
+            int day = Integer.parseInt(dayText);
+
+            // Build a LocalDate safely using the month/year we already know
+            LocalDate cellDate = monthDate.withDayOfMonth(day);
+            String formattedDate = cellDate.toString();
+
+            if (taskDates.contains(formattedDate)) {
+                holder.taskIndicator.setVisibility(View.VISIBLE);
             } else {
-                holder.taskIndicator.setVisibility(View.GONE); // hide otherwise
+                holder.taskIndicator.setVisibility(View.GONE);
             }
         } else {
             holder.taskIndicator.setVisibility(View.GONE);

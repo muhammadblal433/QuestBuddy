@@ -68,7 +68,7 @@ public class LoginActivity extends AppCompatActivity{
                             Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
 
                             // Go to AccountActivity with userId
-                            Intent intent = new Intent(LoginActivity.this, AccountActivity.class);
+                            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                             intent.putExtra("userId", userId);
                             startActivity(intent);
                             finish();
