@@ -48,7 +48,7 @@ public class TripService {
 
     // Get a trip by id and ownerId
     public TripResponseDTO get(long ownerId, Long id) {
-        Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new ResourceNotFound("Trip not found"));
+        Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new ResourceNotFound("Trip not found!"));
         return mapper.toDto(t);
     }
 
@@ -59,6 +59,46 @@ public class TripService {
         if (n == 0) {
             throw new ResourceNotFound("Trip not found!");
         }
+    }
+
+    // Update an event
+    public void update(Long ownerId, Long id, TripUpdateDTO dto) {
+        Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new ResourceNotFound("Trip not found!"));
+
+        // Compute new values for params
+        LocalDate newstart;
+        LocalDate newend;
+
+        if (dto.startDate() != null) {
+            newstart = dto.startDate();
+        } else {
+            newstart = t.startDate();
+        }
+
+        if (dto.endDate() != null) {
+            newend = dto.endDate();
+        } else {
+            newend = t.endDate();
+        }
+        checkRange(newstart, newend); // check logic
+        Double newLat;
+        Double newLon;
+
+        if (dto.startLat() != null) {
+            newLat = dto.startLat();
+        } else {
+            newLat = t.startLat();
+        }
+
+        if (dto.endLon() != null) {
+            newLon = dto.startLon();
+        } else {
+            newLon = dto.endLon();
+        }
+        checkStartPoint(newLat, newLon);
+
+        mapper.applyUpdate(t, dto);
+        return mapper.toDto(repo.save(t));
     }
 
     // Local Exception

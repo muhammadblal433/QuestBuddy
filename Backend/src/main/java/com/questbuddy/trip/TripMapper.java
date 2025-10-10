@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
  *
  * 1) Create a trip based on a CreateDTO
  * 2) Create a responseDTO based on a trip
+ * 3) Update an event based on a UpdateDTO
  */
 @Component
 public class TripMapper {
@@ -43,5 +44,16 @@ public class TripMapper {
                 t.getCreatedAt(),
                 t.getUpdatedAt()
         );
+    }
+
+    // 3) Update an event based on a UpdateDTO
+    public void applyUpdate(Trip t, TripUpdateDTO dto) {
+        if (dto.name() != null)               t.setName(dto.name());
+        if (dto.destination() != null)        t.setDestination(dto.destination());
+        if (dto.startLocationName() != null)  t.setStartLocationName(dto.startLocationName());
+        if (dto.startLat() != null)           t.setStartLat(dto.startLat());
+        if (dto.startLon() != null)           t.setStartLon(dto.startLon());
+        if (dto.startDate() != null)          t.setStartDate(dto.startDate());
+        if (dto.endDate() != null)            t.setEndDate(dto.endDate());
     }
 }
