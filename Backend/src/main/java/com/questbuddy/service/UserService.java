@@ -4,6 +4,11 @@ import com.questbuddy.model.User;
 
 import java.util.Optional;
 
+/**
+ * Service boundary for user-related operations.
+ * Defines registration, authentication, profile updates, lookups, and persistence helpers.
+ * Implementations should handle validation, password hashing, and transactional consistency.
+ */
 public interface UserService {
     User signup(String email, String username, String password, String firstName, String lastName);
 

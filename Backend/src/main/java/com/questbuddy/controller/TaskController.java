@@ -4,6 +4,7 @@ import com.questbuddy.model.Task;
 import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
 import com.questbuddy.service.TaskService;
+import jakarta.persistence.Converts;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +27,16 @@ public class TaskController {
     }
 
     // DTOs
+    // Request body for create/update operations (flat userId; not nested)
     public record TaskReq(Long userId, String title, String description, String status, java.time.LocalDate dueDate) {}
 
+    // Minimal user info included on task responses (no secrets)
     public record UserLite(Long id, String email, String username, String firstName, String lastName) {}
 
+    // Outbound shape returned to clients
     public record TaskRes(Long taskId, UserLite user, String title, String description, String status, java.time.LocalDate dueDate) {}
 
+    // Maps a Task entity to its response DTO (User goes to UserLite)
     private TaskRes toRes(com.questbuddy.model.Task t) {
         var u = t.getUser();
         var owner = (u == null) ? null : new UserLite(u.getId(), u.getEmail(), u.getUsername(), u.getFirstName(), u.getLastName());
@@ -43,7 +48,8 @@ public class TaskController {
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
     }
 
-    // CREATE TASK
+    // CREATE TASK for the given user. If status is missing/blank, defaults to "Pending"
+    // The errors that can occur are 400 if required fields are missing (userId, title), 404 if the userId does not exist, Returns: 201 + TaskRes
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> createTask(@RequestBody TaskReq body) {
         if (body == null || body.userId() == null || body.title() == null) {
@@ -113,12 +119,13 @@ public class TaskController {
         return "TaskController DTO v3";
     }
 
-    // Simple exceptions for better client messages (optional)
+    // Converts thrown NoSuchElementException into a 404 JSON body
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<?> onNotFound(NoSuchElementException e) {
         return ResponseEntity.status(404).body(Map.of("error", "not_found", "message", e.getMessage()));
     }
 
+    // Converts IllegalArgumentException into a 400 JSON body
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> onBadRequest(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("error", "bad_request", "message", e.getMessage()));
