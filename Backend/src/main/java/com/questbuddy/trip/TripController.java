@@ -13,7 +13,7 @@ public class TripController {
     private final TripService trips;
 
     // constructor
-    public TripController(TripController trips) {
+    public TripController(TripService trips) {
         this.trips = trips;
     }
 
@@ -34,7 +34,7 @@ public class TripController {
     // GET - specific event by tripId
     @GetMapping("/{id}")
     public TripResponseDTO get(
-            @ResponseHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id
     ) {
         return trips.get(userId, id);

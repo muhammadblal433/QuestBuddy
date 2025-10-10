@@ -38,20 +38,13 @@ public class EventService {
         }
     }
 
-    private void checkStartPoint(Double lat, Double lon) {
-        if ((lat == null) ^ (lon == null)) {
-            throw new jakarta.validation.ValidationException("Provide both startLat and startLon together, or leave both null.");
-        }
-    }
-
-
     @Transactional // if fail, do nothing
-    public TripResponseDTO create(Long ownerId, TripCreateDTO dto) {
-        checkRange(dto.startDate(), dto.endDate());
-        checkStartPoint(dto.startLat(), dto.startLon());
-        Trip t = mapper.toEntity(ownerId, dto);
-        return mapper.toDto(repo.save(t));
+    public EventResponseDTO create(Long userId, EventCreateDTO dto) {
+        checkRange(dto.startAt(), dto.endAt());
+        Event e = mapper.toEntity(userId, dto);
+        return mapper.toDto(repo.save(e));
     }
+
 
 
     // list (by user w/ optional range)

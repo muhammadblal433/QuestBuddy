@@ -25,5 +25,10 @@
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/service/UserService.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/service/UserServiceImplemented.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/Trip.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripController.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripCreateDTO.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripMapper.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripResponseDTO.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripService.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/trip/TripUpdateDTO.java
