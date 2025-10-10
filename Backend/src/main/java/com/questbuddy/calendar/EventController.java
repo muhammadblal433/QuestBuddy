@@ -95,6 +95,7 @@ public class EventController {
 
 
     // PUT - update event by id
+    @PutMapping("/{id}")
     public EventResponseDTO update(
             @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id,
@@ -105,6 +106,7 @@ public class EventController {
 
 
     // DELETE - Delete event by id
+    @DeleteMapping("/{id}")
     public void delete(
             @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id
