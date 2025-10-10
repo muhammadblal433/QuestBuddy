@@ -20,11 +20,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v4/calendar/events")
 public class EventController {
-    private final EventService service;
+    private final EventService eventService;
 
 
     public EventController(EventService service) {
-        this.service = service;
+        eventService = service;
     }
 
 
