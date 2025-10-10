@@ -30,6 +30,7 @@ public class PackingChecklistActivity extends AppCompatActivity {
     private List<PackingItem> itemList = new ArrayList<>();
     private RequestQueue queue;
     private TextView tvAddHint;
+    //base url for api requests(mock server)
     private final String BASE_URL = "https://9d69c0d2-75cf-44b1-9f47-913ed20bc612.mock.pstmn.io/packing";
 
     @Override
@@ -37,21 +38,27 @@ public class PackingChecklistActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_packing_checklist);
 
+        // connect the layut views
         recyclerPacking = findViewById(R.id.recyclerPacking);
         recyclerPacking.setLayoutManager(new LinearLayoutManager(this));
 
         tvAddHint = findViewById(R.id.tvAddHint);
         queue = Volley.newRequestQueue(this);
+
+        //setup the adapter for recycler view
         adapter = new PackingAdapter(this, itemList, this);
         recyclerPacking.setAdapter(adapter);
 
+        // setup the buttons
         Button btnAddItem = findViewById(R.id.btnAddItem);
         Button btnBackHome = findViewById(R.id.btnBackHome);
 
+        //open dialog to add a new item
         btnAddItem.setOnClickListener(v -> showAddItemDialog());
         btnBackHome.setOnClickListener(v -> finish()); // goes back to previous screen
     }
 
+    //shows the dialog for the user to edit
     private void showAddItemDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_item, null);
         EditText etItemName = dialogView.findViewById(R.id.etItemName);
@@ -71,6 +78,7 @@ public class PackingChecklistActivity extends AppCompatActivity {
                 .show();
     }
 
+    // sends post request to add new item in the mock server and it updates locally as well
     private void addItem(String itemName) {
         JSONObject itemJson = new JSONObject();
         try {
@@ -97,6 +105,7 @@ public class PackingChecklistActivity extends AppCompatActivity {
         queue.add(request);
     }
 
+    // sends delete request to api and removes items from list
     public void deleteItem(long itemId) {
 
         JsonObjectRequest request = new JsonObjectRequest(

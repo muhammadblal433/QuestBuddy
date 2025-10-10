@@ -10,6 +10,7 @@
     android:minHeight="50dp"
     android:gravity="center_vertical">
 
+    <!-- shows the name of the packing item-->
     <TextView
         android:id="@+id/tvName"
         android:layout_width="0dp"
@@ -20,6 +21,7 @@
         android:text="Item Name"
         android:layout_marginEnd="8dp"/>
 
+    <!-- delete button for removing an item from the list -->
     <Button
         android:id="@+id/btnDelete"
         android:layout_width="wrap_content"

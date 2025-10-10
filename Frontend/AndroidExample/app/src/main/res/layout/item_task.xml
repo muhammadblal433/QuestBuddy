@@ -10,6 +10,7 @@
     android:background="@drawable/task_item_bg"
     android:elevation="4dp">
 
+    <!-- task title shown at the tp of the card-->
     <TextView
         android:id="@+id/tvTitle"
         android:textSize="18sp"
@@ -18,6 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <!-- short description of the task -->
     <TextView
         android:id="@+id/tvDescription"
         android:textSize="15sp"
@@ -26,6 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <!--current status of the task-->
     <TextView
         android:id="@+id/tvStatus"
         android:textSize="13sp"
@@ -34,6 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <!-- task due date -->
     <TextView
         android:id="@+id/tvDueDate"
         android:textSize="13sp"
@@ -42,12 +46,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <!--horizonta section for edit nd delete buttons-->
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp">
 
+        <!-- button to edit task details-->
         <Button
             android:id="@+id/btnEdit"
             android:text="Edit"
@@ -57,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="6dp"/>
-
+        <!-- button to delete the task-->
         <Button
             android:id="@+id/btnDelete"
             android:text="Delete"
