@@ -22,11 +22,32 @@
             android:titleTextColor="@color/white" />
 
         <!-- Main content area -->
-        <FrameLayout
+        <LinearLayout
             android:id="@+id/content_frame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#f4f4f4" />
+            android:background="#f4f4f4"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Welcome!"
+                android:textSize="80dp"
+                android:textStyle="bold"
+                android:textColor="#f97316"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Username"
+                android:textSize="25dp"
+                android:textColor="#333333" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Drawer Menu (simple ListView) -->

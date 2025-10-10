@@ -28,7 +28,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome back, traveler "
+            android:text="Welcome back, Traveler "
             android:textColor="#444444"
             android:textSize = "30sp"
             android:paddingBottom="60dp"/>

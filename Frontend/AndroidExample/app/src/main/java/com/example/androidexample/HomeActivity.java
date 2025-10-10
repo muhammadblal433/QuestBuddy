@@ -2,19 +2,20 @@ package com.example.androidexample;
 
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -48,6 +49,7 @@ public class HomeActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Home");
+        loadUserProfile(userId);
 
         // Enable home button as drawer toggle
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -71,12 +73,31 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+            else if(drawerItems[position].equals("Tasks Manager")){
+                Intent intent = new Intent(HomeActivity.this, TaskManagerActivity.class);
+                intent.putExtra("userId", userId);
+                startActivity(intent);
+                finish();
+            }
+            else if(drawerItems[position].equals("Settings")){
+                Intent intent = new Intent(HomeActivity.this, SetttingsActivity.class);
+                intent.putExtra("userId", userId);
+                startActivity(intent);
+                finish();
+            }
+            else if(drawerItems[position].equals("Packing CheckList")){
+                Intent intent = new Intent(HomeActivity.this, PackingChecklistActivity.class);
+                intent.putExtra("userId", userId);
+                startActivity(intent);
+                finish();
+            }
             else if(drawerItems[position].equals("Logout")){
                 Intent intent = new Intent(HomeActivity.this, SignupActivity.class);
                 startActivity(intent);
                 finish();
                 Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
             }
+
             else{
                 Toast.makeText(this, drawerItems[position] + " clicked", Toast.LENGTH_SHORT).show();
                 drawerLayout.closeDrawer(GravityCompat.START);
@@ -101,5 +122,25 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    private void loadUserProfile(int userId) {
+        String url = "http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/" + userId;
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    // Extract only username
+                    String username = response.optString("username", "N/A");
+
+                    TextView tvUsername = findViewById(R.id.tvUsername);
+                    tvUsername.setText(username.equals("null") ? "N/A" : username);
+                },
+                error -> Toast.makeText(this, "Failed to load username", Toast.LENGTH_SHORT).show()
+        );
+
+        Volley.newRequestQueue(this).add(request);
     }
 }

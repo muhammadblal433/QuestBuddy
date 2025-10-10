@@ -93,7 +93,6 @@ public class LoginActivity extends AppCompatActivity{
                                 JSONObject data = new JSONObject(responseBody);
                                 if (data.has("error")) {
                                     String errorCode = data.getString("error");
-
                                     switch (errorCode) {
                                         case "invalid_credentials":
                                             errorMessage = "Invalid email or password";

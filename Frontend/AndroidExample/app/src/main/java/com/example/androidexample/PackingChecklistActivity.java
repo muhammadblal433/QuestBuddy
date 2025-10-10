@@ -30,6 +30,7 @@ public class PackingChecklistActivity extends AppCompatActivity {
     private List<PackingItem> itemList = new ArrayList<>();
     private RequestQueue queue;
     private TextView tvAddHint;
+    private int userId;
     //base url for api requests(mock server)
     private final String BASE_URL = "https://9d69c0d2-75cf-44b1-9f47-913ed20bc612.mock.pstmn.io/packing";
 
@@ -38,9 +39,19 @@ public class PackingChecklistActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_packing_checklist);
 
+        userId = getIntent().getIntExtra("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Invalid user session", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
+
         // connect the layut views
         recyclerPacking = findViewById(R.id.recyclerPacking);
         recyclerPacking.setLayoutManager(new LinearLayoutManager(this));
+
 
         tvAddHint = findViewById(R.id.tvAddHint);
         queue = Volley.newRequestQueue(this);
@@ -55,7 +66,10 @@ public class PackingChecklistActivity extends AppCompatActivity {
 
         //open dialog to add a new item
         btnAddItem.setOnClickListener(v -> showAddItemDialog());
-        btnBackHome.setOnClickListener(v -> finish()); // goes back to previous screen
+        btnBackHome.setOnClickListener(v -> {
+            Intent intent = new Intent(PackingChecklistActivity.this, HomeActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);}); // goes back to previous screen
     }
 
     //shows the dialog for the user to edit

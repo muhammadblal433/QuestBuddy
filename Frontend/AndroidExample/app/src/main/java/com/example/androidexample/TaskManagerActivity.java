@@ -1,5 +1,6 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -39,6 +40,8 @@ public class TaskManagerActivity extends AppCompatActivity {
 
     private TextView tvAddHint;
 
+    private int userId;
+
 
 
     private final String BASE_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v3/tasks";
@@ -49,6 +52,16 @@ public class TaskManagerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_task_manager);
 
         Button btnAdd = findViewById(R.id.btnAddTask);
+        Button btnHome = findViewById(R.id.btnHome);
+
+        userId = getIntent().getIntExtra("userId", -1);
+
+        if (userId == -1) {
+            Toast.makeText(this, "Invalid user session", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
 
         recyclerTasks = findViewById(R.id.recyclerTasks);
         recyclerTasks.setLayoutManager(new LinearLayoutManager(this));
@@ -64,9 +77,15 @@ public class TaskManagerActivity extends AppCompatActivity {
             }
         });
 
+        btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(TaskManagerActivity.this, HomeActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);});
 
         btnAdd.setOnClickListener(v -> showAddTaskDialog());
         getTasks();
+
+
 
         tvAddHint = findViewById(R.id.tvAddHint);
     }
@@ -103,7 +122,7 @@ public class TaskManagerActivity extends AppCompatActivity {
      private void addTask(String title, String description) {
         JSONObject taskJson = new JSONObject();
         try {
-            taskJson.put("userId", 22);
+            taskJson.put("userId", userId);
             taskJson.put("title", title);
             taskJson.put("description", description);
             taskJson.put("status", "Pending");

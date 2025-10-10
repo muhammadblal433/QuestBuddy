@@ -29,12 +29,9 @@
         </activity>
         <!-- Signup screen -->
         <activity android:name=".HomeActivity" />
-        <!-- new screen for delete user-->
-        <activity android:name=".MainActivity" />
-        <activity android:name=".AccountActivity" />
+        <activity android:name=".SetttingsActivity" />
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CalendarActivity" />
-        <activity android:name=".UpdateProfileActivity"/>
         <activity android:name=".DayViewActivity"/>
         <activity android:name=".TaskManagerActivity"
             android:exported="true"/>
