@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+<!-- input fields, add button, and task list layout for manging tasks-->
+
+    <!-- orange header title bar -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FF9800"
+        android:text="Task Manager"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp" />
+
+    <!-- hint text shown when there are no tasks-->
+    <TextView
+        android:id="@+id/tvAddHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add a task below:"
+        android:textSize="20sp"
+        android:textColor="#808080"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp" />
+
+    <!--button to add a new task-->
+    <Button
+        android:id="@+id/btnAddTask"
+        android:background = "@drawable/rounded_button"
+        android:text="Add Task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:backgroundTint="#FF9800"
+        android:gravity = "center"
+        android:layout_gravity="center_horizontal"
+        android:textColor="#FFFFFF" />
+    <!-- button to go back to home-->
+    <Button
+        android:id="@+id/btnHome"
+        android:background="@drawable/rounded_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back to Home"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="#FF9800"
+        android:textColor="#FFFFFF" />
+
+    <!-- recycler view that lists the tasks-->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerTasks"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="16dp"/>
+
+
+    <!-- UI componenmt from from google design material library-->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnScrollDown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/arrow_down_float"
+        android:contentDescription="Scroll Down"
+        android:backgroundTint="#FF9800"
+        android:tint="#FFFFFF" />
+
+</LinearLayout>
