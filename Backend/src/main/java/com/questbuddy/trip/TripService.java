@@ -11,32 +11,47 @@ import java.util.List;
 /**
  * Service class to handle the logic of trips - such as sorting param, checking if starttime and endtime makes sense (in terms of end MUST be after start)
  */
+@Service
 public class TripService {
 
     private final TripRepository repo;
     private final TripMapper mapper;
 
-    public TripService(tripRepository repo, TripMapper mapper) {
+    public TripService(TripRepository repo, TripMapper mapper) {
         this.repo = repo;
         this.mapper = mapper;
     }
 
     // Helper Mtds - for sort and range (main logic metioned above)
-    private static final SORT BY_START_ASCEND = Sort.by(SOrt.Direction.ASC, "startDate");
+    private static final Sort BY_START_ASC = Sort.by(Sort.Direction.ASC, "startDate");
 
-
-    privaye void checkRange(LocalDate start, LocalDate end) {
+    private void checkRange(LocalDate start, LocalDate end) {
         // if times aren't null but end is before start -> doesnt make sense -> throw error
         if (start != null && end != null && end.isBefore(start)) {
             throw new ValidationException("endDate must be after startDate!");
         }
     }
 
+    // ensure both or neither of startLat/startLon are provided
+    private void checkStartPoint(Double lat, Double lon) {
+        if ((lat == null) ^ (lon == null)) {
+            throw new ValidationException("Provide both startLat and startLon together, or leave both null.");
+        }
+    }
 
     // Create a trip
     @Transactional
     public TripResponseDTO create(Long ownerId, TripCreateDTO dto) {
         checkRange(dto.startDate(), dto.endDate());
+        // if your TripCreateDTO has startLat/startLon, validate the pair:
+        try {
+            var latField = TripCreateDTO.class.getDeclaredMethod("startLat");
+            var lonField = TripCreateDTO.class.getDeclaredMethod("startLon");
+            Double lat = (Double) latField.invoke(dto);
+            Double lon = (Double) lonField.invoke(dto);
+            checkStartPoint(lat, lon);
+        } catch (Exception ignore) { /* if fields don't exist, skip */ }
+
         Trip t = mapper.toEntity(ownerId, dto);
         return mapper.toDto(repo.save(t));
     }
@@ -47,13 +62,14 @@ public class TripService {
     }
 
     // Get a trip by id and ownerId
-    public TripResponseDTO get(long ownerId, Long id) {
+    public TripResponseDTO get(Long ownerId, Long id) {
         Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new ResourceNotFound("Trip not found!"));
         return mapper.toDto(t);
     }
 
     // Delete an event
-    public void delete(long ownerId, Long id) {
+    @Transactional
+    public void delete(Long ownerId, Long id) {
         long n = repo.deleteByIdAndOwnerId(id, ownerId);
         // n == 0 -> the event is not found
         if (n == 0) {
@@ -62,39 +78,19 @@ public class TripService {
     }
 
     // Update an event
-    public void update(Long ownerId, Long id, TripUpdateDTO dto) {
+    @Transactional
+    public TripResponseDTO update(Long ownerId, Long id, TripUpdateDTO dto) {
         Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new ResourceNotFound("Trip not found!"));
 
         // Compute new values for params
-        LocalDate newstart;
-        LocalDate newend;
-
-        if (dto.startDate() != null) {
-            newstart = dto.startDate();
-        } else {
-            newstart = t.startDate();
-        }
-
-        if (dto.endDate() != null) {
-            newend = dto.endDate();
-        } else {
-            newend = t.endDate();
-        }
+        LocalDate newstart = (dto.startDate() != null) ? dto.startDate() : t.getStartDate();
+        LocalDate newend   = (dto.endDate()   != null) ? dto.endDate()   : t.getEndDate();
         checkRange(newstart, newend); // check logic
-        Double newLat;
-        Double newLon;
 
-        if (dto.startLat() != null) {
-            newLat = dto.startLat();
-        } else {
-            newLat = t.startLat();
-        }
-
-        if (dto.endLon() != null) {
-            newLon = dto.startLon();
-        } else {
-            newLon = dto.endLon();
-        }
+        // merge potential coordinates if your DTO supports them
+        // im going to start using ternary operatory ? for in line if-else
+        Double newLat = (dto.startLat() != null) ? dto.startLat() : t.getStartLat();
+        Double newLon = (dto.startLon() != null) ? dto.startLon() : t.getStartLon();
         checkStartPoint(newLat, newLon);
 
         mapper.applyUpdate(t, dto);
