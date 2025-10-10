@@ -40,8 +40,8 @@ public class UserServiceImplemented implements UserService {
         x.setEmail(e);
         x.setUsername(u);
         String hash = encoder.encode(password);
-        x.setPasswordHash(hash);          // <-- required by DB
-        x.setPassword(hash);              // <-- required by DB (legacy NOT NULL column)
+        x.setPasswordHash(hash);          // required by DB
+        x.setPassword(hash);              // required by DB (legacy NOT NULL column)
 
         if (firstName != null) x.setFirstName(firstName);
         if (lastName  != null) x.setLastName(lastName);
@@ -49,7 +49,6 @@ public class UserServiceImplemented implements UserService {
         x.setActive(true);
         return user_repo.save(x);
     }
-
 
     @Override
     public Optional<User> getById(Long id) {
@@ -89,7 +88,7 @@ public class UserServiceImplemented implements UserService {
                 .filter(u -> encoder.matches(rawPassword, u.getPasswordHash()));
     }
 
-    // ---- Methods required by your UserService interface ----
+    // Methods required by UserService interface
 
     @Override
     public Optional<User> findByEmail(String email) {

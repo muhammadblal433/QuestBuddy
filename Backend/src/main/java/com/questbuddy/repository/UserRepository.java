@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 /**
- * This file lets us find users by email & do uniqueness checks w/o SQL.
+ * Repository for User entities providing CRUD operations and common lookups.
+ * Exposes finders by email and username (case-sensitive and case-insensitive variants).
  */
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);

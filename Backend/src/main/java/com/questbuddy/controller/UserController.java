@@ -22,7 +22,7 @@ public class UserController {
         this.users = users;
     }
 
-    // Make Data Transfer Object  - excluding password
+    // Make Data Transfer Object - excluding password (due to security reasons)
     public record UserDto(Long id, String email, String username,
                           String firstName, String lastName, String avatarUrl,
                           String role, boolean active,
@@ -44,24 +44,7 @@ public class UserController {
                                        String firstName, String lastName,
                                        String avatarUrl, String newPassword) {}
 
-//    // POST -> create new user  (dev helper; OK to remove when teammate owns signup)
-//    @PostMapping(value = "/auth/signup", consumes = "application/json", produces = "application/json")
-//    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
-//        String email = body.get("email");
-//        String username = body.get("username");
-//        String password = body.get("password");       // raw; encryption handled in service
-//        String firstName = body.get("firstName");
-//        String lastName  = body.get("lastName");
-//
-//        if (email == null || username == null || password == null) {
-//            return ResponseEntity.badRequest().body(Map.of("error", "missing_fields"));
-//        }
-//
-//        User u = users.signup(email, username, password, firstName, lastName);
-//        return ResponseEntity.created(URI.create("/api/v1/users/" + u.getId())).body(toDto(u));
-//    }
-
-    // GET -> fetch user by id
+    // GET (Fetch user by id)
     @GetMapping(value = "/users/{id}", produces = "application/json")
     public ResponseEntity<UserDto> get(@PathVariable Long id) {
         Optional<User> opt = users.getById(id);
@@ -74,7 +57,7 @@ public class UserController {
         }
     }
 
-    // PUT -> edit user profile (path version; forbid if header doesn’t match)
+    // PUT (edit user profile (path version; forbid if header doesn’t match)
     @PutMapping(value = "/users/{id}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> update(@PathVariable Long id,
                                     @RequestHeader(value = "X-User-Id", required = false) Long userId,
@@ -133,7 +116,7 @@ public class UserController {
         return ResponseEntity.created(location).body(created);
     }
 
-    // GET - current profile (that is logged in)  — header-based auth for mini-assignment
+    // GET - current profile (that is logged in): header-based auth for mini-assignment
     @GetMapping(value = "/users/me", produces = "application/json")
     public ResponseEntity<?> me(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
 
@@ -151,7 +134,7 @@ public class UserController {
         }
     }
 
-    // PUT -> update currently logged in profile  — header-based auth for mini-assignment
+    // PUT - update currently logged in profile: header-based auth for mini-assignment
     @PutMapping(value = "/users/me", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateMe(@RequestHeader(value = "X-User-Id", required = false) Long userId,
                                       @RequestBody UpdateProfileRequest body) {
