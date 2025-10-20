@@ -1,4 +1,5 @@
 package com.questbuddy.friends.model;
 
-public class FriendshipStatus {
+public enum FriendshipStatus {
+    PENDING, ACCEPTED, BLOCKED
 }
