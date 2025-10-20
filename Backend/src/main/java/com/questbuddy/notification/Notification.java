@@ -25,7 +25,7 @@ public class Notification{
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 24)
-    private NotificationType type = NotificationType.INFO; // is the notification related to an event? task? trip?
+    private NotificationType type = NotificationType.INFO; // is the notification an invite? a reminder? etc..
 
 
     // Optional references (nullable)
