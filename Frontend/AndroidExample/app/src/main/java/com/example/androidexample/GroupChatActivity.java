@@ -1,4 +1,6 @@
 package com.example.androidexample;
 
-public class GroupChatActivity {
+import androidx.appcompat.app.AppCompatActivity;
+
+public class GroupChatActivity extends AppCompatActivity {
 }
