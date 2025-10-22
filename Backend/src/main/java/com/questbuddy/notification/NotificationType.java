@@ -1,8 +1,3 @@
 package com.questbuddy.notification;
 
-public enum NotificationType {
-    INFO,
-    REMINDER,
-    INVITE,
-    SYSTEM
-}
+public enum NotificationType { INVITE, APPROVAL, TASK, REMINDER }

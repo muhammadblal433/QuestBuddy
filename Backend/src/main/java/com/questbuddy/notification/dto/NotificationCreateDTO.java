@@ -19,7 +19,7 @@ public record NotificationCreateDTO(
     @NotNull Long recipientId,
     @NotBlank @Size(max = 140) String title,
     @NotBlank @Size(max = 2000) String message,
-    String type, // optional; defaults to INFO if null
+    NotificationType type, // optional; defaults to INFO if null
     Long eventId,
     Long tripId,
     Long taskId

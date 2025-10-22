@@ -20,7 +20,7 @@ public record NotificationResponseDTO(
         Long recipientId,
         String title,
         String message,
-        String type,
+        NotificationType type,
         Long eventId,
         Long tripId,
         Long taskId,
