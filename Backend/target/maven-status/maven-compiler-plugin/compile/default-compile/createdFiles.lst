@@ -1,1 +1,10 @@
 com/questbuddy/Demo2Application.class
+com/questbuddy/friends/service/FriendshipServiceImplemented.class
+com/questbuddy/friends/repository/FriendshipRepository.class
+com/questbuddy/friends/model/Friendship.class
+com/questbuddy/friends/dto/FriendDTO.class
+com/questbuddy/friends/model/FriendshipStatus.class
+com/questbuddy/friends/service/FriendshipService.class
+com/questbuddy/friends/controller/FriendshipController.class
+com/questbuddy/friends/dto/FriendSuggestionDTO.class
+com/questbuddy/friends/dto/FriendRequestDTO.class
