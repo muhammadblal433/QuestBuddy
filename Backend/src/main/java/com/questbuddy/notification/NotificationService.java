@@ -1,13 +1,27 @@
 package com.questbuddy.notification;
 
-import com.questbuddy.dto.NotificationCreateDTO;
-import com.questbuddy.mapper.NotificationMapper;
-import com.questbuddy.model.*;
-import com.questbuddy.repository.*;
+import com.questbuddy.notification.dto.NotificationCreateDTO;
+import com.questbuddy.notification.NotificationMapper;
+import com.questbuddy.notification.Notification;
+import com.questbuddy.notification.NotificationType;
+
+import com.questbuddy.repository.NotificationRepository;
+import com.questbuddy.repository.UserRepository;
+import com.questbuddy.repository.TaskRepository;
+import com.questbuddy.trip.TripRepository;
+import com.questbuddy.calendar.EventRepository;
+
+import com.questbuddy.model.User;
+import com.questbuddy.model.Task;
+import com.questbuddy.trip.Trip;
+import com.questbuddy.calendar.Event;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 // Logic of notifications
 @Service

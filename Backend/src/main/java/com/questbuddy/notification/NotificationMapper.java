@@ -1,9 +1,12 @@
 package com.questbuddy.notification;
 
-import com.questbuddy.dto.NotificationCreateDTO;
-import com.questbuddy.dto.NotificationResponseDTO;
-import com.questbuddy.model.*;
+import com.questbuddy.notification.dto.NotificationCreateDTO;
+import com.questbuddy.notification.dto.NotificationResponseDTO;
+import com.questbuddy.notification.Notification;
+import com.questbuddy.notification.NotificationType;
+
 import org.springframework.stereotype.Component;
+import java.time.Instant;
 
 /**
  * This class is mainly for:
