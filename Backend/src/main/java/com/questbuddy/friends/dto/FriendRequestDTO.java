@@ -1,4 +1,3 @@
 package com.questbuddy.friends.dto;
 
-public class FriendRequestDTO {
-}
+public record FriendRequestDTO(Long targetUserId) {}
