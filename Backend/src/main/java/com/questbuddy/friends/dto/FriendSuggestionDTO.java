@@ -1,4 +1,8 @@
 package com.questbuddy.friends.dto;
 
-public class FriendSuggestionDTO {
-}
+public record FriendSuggestionDTO(
+        Long id,
+        String displayName,
+        String username,
+        int mutualCount
+) {}
