@@ -5,9 +5,13 @@ import com.questbuddy.notification.dto.NotificationResponseDTO;
 import com.questbuddy.notification.Notification;
 import com.questbuddy.notification.NotificationType;
 
+import com.questbuddy.trip.Trip;
 import org.springframework.stereotype.Component;
 import java.time.Instant;
 
+import com.questbuddy.model.User;
+import com.questbuddy.calendar.Event;
+import com.questbuddy.model.Task;
 /**
  * This class is mainly for:
  *
@@ -25,6 +29,7 @@ public class NotificationMapper {
                                    Task task) {
         Notification n = new Notification();
         n.setRecipient(recipient);
+        n.setTitle(dto.title());
         n.setMessage(dto.message());
         n.setType(dto.type() == null ? NotificationType.REMINDER : dto.type());
         n.setTrip(trip);
@@ -38,11 +43,12 @@ public class NotificationMapper {
         return new NotificationResponseDTO(
                 n.getId(),
                 n.getRecipient() != null ? n.getRecipient().getId() : null,
+                n.getTitle(),
                 n.getMessage(),
                 n.getType(),
                 n.getTrip()  != null ? n.getTrip().getId()  : null,
                 n.getEvent() != null ? n.getEvent().getId() : null,
-                n.getTask()  != null ? n.getTask().getId()  : null,
+                n.getTask()  != null ? n.getTask().getTaskId()  : null,
                 n.getCreatedAt(),
                 n.isRead()
         );

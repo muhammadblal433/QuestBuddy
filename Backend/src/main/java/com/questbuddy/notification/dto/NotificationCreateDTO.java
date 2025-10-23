@@ -24,4 +24,4 @@ public record NotificationCreateDTO(
     Long eventId,
     Long tripId,
     Long taskId
-)
+) {}

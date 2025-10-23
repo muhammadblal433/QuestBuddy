@@ -5,7 +5,7 @@ import com.questbuddy.notification.NotificationMapper;
 import com.questbuddy.notification.Notification;
 import com.questbuddy.notification.NotificationType;
 
-import com.questbuddy.repository.NotificationRepository;
+import com.questbuddy.notification.NotificationRepository;
 import com.questbuddy.repository.UserRepository;
 import com.questbuddy.repository.TaskRepository;
 import com.questbuddy.trip.TripRepository;
@@ -71,7 +71,7 @@ public class NotificationService {
         if (recOpt.isEmpty()) {
             throw new IllegalArgumentException("recipient_not_found");
         }
-        User recipient = recOpt.get();
+        recipient = recOpt.get();
 
         // trip (optional)
         if (dto.tripId() != null) {
