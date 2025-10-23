@@ -1,5 +1,6 @@
 package com.questbuddy.notification.dto;
 
+import com.questbuddy.notification.NotificationType;
 import java.time.Instant;
 
 /**
