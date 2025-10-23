@@ -8,7 +8,7 @@ import java.util.Set;
  * Server response for a trip (group) message.
  * myReactions are the emojis the caller has added.
  */
-public record TripMessageDTO(
+public record TripMessageResponseDTO(
         Long id,
         Long tripId,
         Long senderId,
