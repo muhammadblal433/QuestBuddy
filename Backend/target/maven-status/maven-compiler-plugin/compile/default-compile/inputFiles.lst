@@ -25,6 +25,14 @@
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/model/Role.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/model/Task.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/model/User.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/Notification.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationController.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationMapper.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationRepository.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationService.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationType.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/dto/NotificationCreateDTO.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/dto/NotificationResponseDTO.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/repository/LabelRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/repository/TaskRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/repository/UserRepository.java
