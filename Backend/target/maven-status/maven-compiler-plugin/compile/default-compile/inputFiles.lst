@@ -13,6 +13,7 @@
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/controller/UserController.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/controller/UserSignupDeleteController.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/friends/controller/FriendshipController.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/friends/dto/ApiMessage.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/friends/dto/FriendDTO.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/friends/dto/FriendRequestDTO.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/friends/dto/FriendSuggestionDTO.java
