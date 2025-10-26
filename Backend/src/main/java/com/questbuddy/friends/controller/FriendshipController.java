@@ -1,9 +1,10 @@
 package com.questbuddy.friends.controller;
 
+import com.questbuddy.friends.dto.ApiMessage;
 import com.questbuddy.friends.dto.FriendDTO;
 import com.questbuddy.friends.dto.FriendSuggestionDTO;
 import com.questbuddy.friends.service.FriendshipService;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,23 +25,23 @@ public class FriendshipController {
         return "FriendshipController v8 is alive!";
     }
 
-    // Requests (no header; user id in path)
+    // Requests (path-param user id)
     @PostMapping("/users/{meId}/friends/requests/{targetId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void send(@PathVariable Long meId, @PathVariable Long targetId) {
+    public ResponseEntity<ApiMessage> send(@PathVariable Long meId, @PathVariable Long targetId) {
         service.sendRequest(meId, targetId);
+        return ResponseEntity.ok(new ApiMessage("Friend request sent"));
     }
 
     @PostMapping("/users/{meId}/friends/requests/{requesterId}/accept")
-    @ResponseStatus(HttpStatus.OK)
-    public void accept(@PathVariable Long meId, @PathVariable Long requesterId) {
+    public ResponseEntity<ApiMessage> accept(@PathVariable Long meId, @PathVariable Long requesterId) {
         service.accept(meId, requesterId);
+        return ResponseEntity.ok(new ApiMessage("Friend request accepted"));
     }
 
     @PostMapping("/users/{meId}/friends/requests/{requesterId}/reject")
-    @ResponseStatus(HttpStatus.OK)
-    public void reject(@PathVariable Long meId, @PathVariable Long requesterId) {
+    public ResponseEntity<ApiMessage> reject(@PathVariable Long meId, @PathVariable Long requesterId) {
         service.reject(meId, requesterId);
+        return ResponseEntity.ok(new ApiMessage("Friend request rejected"));
     }
 
     // Lists
@@ -61,21 +62,21 @@ public class FriendshipController {
 
     // Block / Unblock / Unfriend
     @PostMapping("/users/{meId}/friends/{otherId}/block")
-    @ResponseStatus(HttpStatus.OK)
-    public void block(@PathVariable Long meId, @PathVariable Long otherId) {
+    public ResponseEntity<ApiMessage> block(@PathVariable Long meId, @PathVariable Long otherId) {
         service.block(meId, otherId);
+        return ResponseEntity.ok(new ApiMessage("User blocked"));
     }
 
     @DeleteMapping("/users/{meId}/friends/{otherId}/block")
-    @ResponseStatus(HttpStatus.OK)
-    public void unblock(@PathVariable Long meId, @PathVariable Long otherId) {
+    public ResponseEntity<ApiMessage> unblock(@PathVariable Long meId, @PathVariable Long otherId) {
         service.unblock(meId, otherId);
+        return ResponseEntity.ok(new ApiMessage("User unblocked"));
     }
 
     @DeleteMapping("/users/{meId}/friends/{otherId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unfriend(@PathVariable Long meId, @PathVariable Long otherId) {
+    public ResponseEntity<ApiMessage> unfriend(@PathVariable Long meId, @PathVariable Long otherId) {
         service.unfriend(meId, otherId);
+        return ResponseEntity.ok(new ApiMessage("User unfriended"));
     }
 
     // Suggestions
