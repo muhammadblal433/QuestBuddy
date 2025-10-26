@@ -4,13 +4,12 @@ import com.questbuddy.friends.dto.FriendDTO;
 import com.questbuddy.friends.dto.FriendSuggestionDTO;
 import com.questbuddy.friends.service.FriendshipService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v8/friends")
+@RequestMapping("/api/v8")
 public class FriendshipController {
 
     private final FriendshipService service;
@@ -19,62 +18,70 @@ public class FriendshipController {
         this.service = service;
     }
 
-    @PostMapping("/requests/{targetId}")
+    // Health check
+    @GetMapping("/friends/ping")
+    public String ping() {
+        return "FriendshipController v8 is alive!";
+    }
+
+    // Requests (no header; user id in path)
+    @PostMapping("/users/{meId}/friends/requests/{targetId}")
     @ResponseStatus(HttpStatus.OK)
-    public void send(@RequestHeader("X-User-Id") Long userId, @PathVariable Long targetId) {
-        service.sendRequest(userId, targetId);
+    public void send(@PathVariable Long meId, @PathVariable Long targetId) {
+        service.sendRequest(meId, targetId);
     }
 
-    @PostMapping("/requests/{requesterId}/accept")
+    @PostMapping("/users/{meId}/friends/requests/{requesterId}/accept")
     @ResponseStatus(HttpStatus.OK)
-    public void accept(@RequestHeader("X-User-Id") Long userId, @PathVariable Long requesterId) {
-        service.accept(userId, requesterId);
+    public void accept(@PathVariable Long meId, @PathVariable Long requesterId) {
+        service.accept(meId, requesterId);
     }
 
-    @PostMapping("/requests/{requesterId}/reject")
+    @PostMapping("/users/{meId}/friends/requests/{requesterId}/reject")
     @ResponseStatus(HttpStatus.OK)
-    public void reject(@RequestHeader("X-User-Id") Long userId, @PathVariable Long requesterId) {
-        service.reject(userId, requesterId);
+    public void reject(@PathVariable Long meId, @PathVariable Long requesterId) {
+        service.reject(meId, requesterId);
     }
 
-    @GetMapping
-    public List<FriendDTO> list(@RequestHeader("X-User-Id") Long userId) {
-        return service.listFriends(userId);
+    // Lists
+    @GetMapping("/users/{meId}/friends")
+    public List<FriendDTO> list(@PathVariable Long meId) {
+        return service.listFriends(meId);
     }
 
-    @GetMapping("/requests/incoming")
-    public List<FriendDTO> incoming(@RequestHeader("X-User-Id") Long userId) {
-        return service.incomingRequests(userId);
+    @GetMapping("/users/{meId}/friends/requests/incoming")
+    public List<FriendDTO> incoming(@PathVariable Long meId) {
+        return service.incomingRequests(meId);
     }
 
-    @GetMapping("/requests/outgoing")
-    public List<FriendDTO> outgoing(@RequestHeader("X-User-Id") Long userId) {
-        return service.outgoingRequests(userId);
+    @GetMapping("/users/{meId}/friends/requests/outgoing")
+    public List<FriendDTO> outgoing(@PathVariable Long meId) {
+        return service.outgoingRequests(meId);
     }
 
-    // Block/Unfriend
-    @PostMapping("/{otherId}/block")
+    // Block / Unblock / Unfriend
+    @PostMapping("/users/{meId}/friends/{otherId}/block")
     @ResponseStatus(HttpStatus.OK)
-    public void block(@RequestHeader("X-User-Id") Long userId, @PathVariable Long otherId) {
-        service.block(userId, otherId);
+    public void block(@PathVariable Long meId, @PathVariable Long otherId) {
+        service.block(meId, otherId);
     }
 
-    @DeleteMapping("/{otherId}/block")
+    @DeleteMapping("/users/{meId}/friends/{otherId}/block")
     @ResponseStatus(HttpStatus.OK)
-    public void unblock(@RequestHeader("X-User-Id") Long userId, @PathVariable Long otherId) {
-        service.unblock(userId, otherId);
+    public void unblock(@PathVariable Long meId, @PathVariable Long otherId) {
+        service.unblock(meId, otherId);
     }
 
-    @DeleteMapping("/{otherId}")
+    @DeleteMapping("/users/{meId}/friends/{otherId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unfriend(@RequestHeader("X-User-Id") Long userId, @PathVariable Long otherId) {
-        service.unfriend(userId, otherId);
+    public void unfriend(@PathVariable Long meId, @PathVariable Long otherId) {
+        service.unfriend(meId, otherId);
     }
 
     // Suggestions
-    @GetMapping("/suggestions")
-    public List<FriendSuggestionDTO> suggestions(@RequestHeader("X-User-Id") Long userId,
+    @GetMapping("/users/{meId}/friends/suggestions")
+    public List<FriendSuggestionDTO> suggestions(@PathVariable Long meId,
                                                  @RequestParam(defaultValue = "20") int limit) {
-        return service.suggestions(userId, limit);
+        return service.suggestions(meId, limit);
     }
 }
