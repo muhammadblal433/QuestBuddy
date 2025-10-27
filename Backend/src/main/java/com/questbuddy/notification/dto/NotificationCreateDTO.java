@@ -1,5 +1,6 @@
 package com.questbuddy.notification.dto;
 
+import com.questbuddy.notification.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,11 +17,11 @@ import jakarta.validation.constraints.Size;
  * @param taskId - if related to task, the task id
  */
 public record NotificationCreateDTO(
-    @NotNull Long recipientId,
-    @NotBlank @Size(max = 140) String title,
-    @NotBlank @Size(max = 2000) String message,
-    NotificationType type, // optional; defaults to INFO if null
-    Long eventId,
-    Long tripId,
-    Long taskId
-)
+        @NotNull Long recipientId,
+        @NotBlank @Size(max = 140) String title,
+        @NotBlank @Size(max = 2000) String message,
+        NotificationType type, // optional; defaults to INFO if null
+        Long eventId,
+        Long tripId,
+        Long taskId
+) {}
