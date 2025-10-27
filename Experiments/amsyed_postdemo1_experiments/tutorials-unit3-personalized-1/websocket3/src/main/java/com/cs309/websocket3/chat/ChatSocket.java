@@ -44,62 +44,88 @@ public class ChatSocket {
 
 	private final Logger logger = LoggerFactory.getLogger(ChatSocket.class);
 
+	// room -> (Session -> username)
+	private static final Map<String, Map<Session, String>> roomSessionMap = new Hashtable<>();
+
+	// session -> active room
+	private static final Map<Session, String> sessionActiveRoom = new Hashtable<>();
+
+	private static final String DEFAULT_ROOM = "general";
+
 	@OnOpen
 	public void onOpen(Session session, @PathParam("username") String username) 
       throws IOException {
-
-		logger.info("Entered into Open");
-
-    // store connecting user information
+		// your existing: maps for session<->username, greet, history, etc.
 		sessionUsernameMap.put(session, username);
 		usernameSessionMap.put(username, session);
 
-		//Send chat history to the newly connected user
-		sendMessageToPArticularUser(username, getChatHistory());
-		
-    // broadcast that new user joined
-		String message = "User:" + username + " has Joined the Chat";
-		broadcast(message);
+		// rooms
+		joinRoom(session, username, DEFAULT_ROOM);
+
+		// (optional) send a short tip
+		safeSend(session, "[system] Commands: /join <room>, /leave, /rooms, /who");
+		// send history if you have it (see Section 2)
 	}
 
 
 	@OnMessage
-	public void onMessage(Session session, String message) throws IOException {
-
-		// Handle new messages
-		logger.info("Entered into Message: Got Message:" + message);
+	public void onMessage(Session session, String message) {
 		String username = sessionUsernameMap.get(session);
+		if (username == null) return;
 
-    // Direct message to a user using the format "@username <message>"
-		if (message.startsWith("@")) {
-			String destUsername = message.split(" ")[0].substring(1); 
+		// Commands
 
-      // send the message to the sender and receiver
-			sendMessageToPArticularUser(destUsername, "[DM] " + username + ": " + message);
-			sendMessageToPArticularUser(username, "[DM] " + username + ": " + message);
-
-		} 
-    else { // broadcast
-			broadcast(username + ": " + message);
+		if (message.startsWith("/join ")) { // join room
+			String room = message.substring(6).trim();
+			if (room.isEmpty()) { safeSend(session, "[system] Usage: /join <room>"); return; }
+			try { setActiveRoom(session, username, room); }
+			catch (IOException ignored) {}
+			broadcastToRoom("[system] " + username + " joined " + room, room);
+			return;
+		} else if (message.equals("/leave")) { // leave current room
+			try { leaveCurrentRoom(session, username); } catch (IOException ignored) {}
+			return;
+		} else if (message.equals("/rooms")) { // number of rooms
+			safeSend(session, listRooms()); return;
+		} else if (message.equals("/who")) { // people in this room
+			String room = getActiveRoom(session);
+			safeSend(session, listUsersInRoom(room)); return;
 		}
 
-		// Saving chat history to repository
-		msgRepo.save(new Message(username, message));
+		// DM - same as b4
+		if (message.startsWith("@")) {
+			String[] split_msg = message.split("\\s+");
+			if (split_msg.length >= 2) {
+				String destUserName = split_msg[0].substring(1);
+				StringBuilder actualMessageBuilder = new StringBuilder();
+				for (int i = 1; i < split_msg.length; i++) actualMessageBuilder.append(split_msg[i]).append(" ");
+				String actualMessage = actualMessageBuilder.toString().trim();
+				sendMessageToPArticularUser(destUserName, "[DM from " + username + "]: " + actualMessage);
+				sendMessageToPArticularUser(username, "[DM to " + destUserName + "]: " + actualMessage);
+				// (optional persist)
+			}
+			return;
+		}
+
+		// Broadcast to room
+		String room = getActiveRoom(session);
+		String line = "[" + room + "] " + username + ": " + message;
+		broadcastToRoom(line, room);
+		// (optional persist with room)
 	}
 
-
 	@OnClose
-	public void onClose(Session session) throws IOException {
-		logger.info("Entered into Close");
+	public void onClose(Session session) {
+		String username = sessionUsernameMap.remove(session);
+		if (username != null) usernameSessionMap.remove(username);
 
-    // remove the user connection information
-		String username = sessionUsernameMap.get(session);
-		sessionUsernameMap.remove(session);
-		usernameSessionMap.remove(username);
-
-    // broadcase that the user disconnected
-		String message = username + " disconnected";
-		broadcast(message);
+		String room = getActiveRoom(session);
+		Map<Session,String> m = roomSessionMap.get(room);
+		if (m != null) {
+			m.remove(session);
+			broadcastToRoom("[system] " + username + " disconnected", room);
+		}
+		sessionActiveRoom.remove(session);
 	}
 
 
@@ -151,4 +177,66 @@ public class ChatSocket {
 		return sb.toString();
 	}
 
+	// Helpers for rooms
+
+	private void ensureRoomExists(String room) {
+		roomSessionMap.computeIfAbsent(room, r -> new Hashtable<>());
+	}
+
+	private String getActiveRoom(Session s) {
+		return sessionActiveRoom.getOrDefault(s, DEFAULT_ROOM);
+	}
+
+	private void setActiveRoom(Session s, String username, String room) throws IOException {
+		// remove from old room
+		String old = getActiveRoom(s);
+		if (!old.equals(room)) {
+			Map<Session,String> oldMap = roomSessionMap.get(old);
+			if (oldMap != null) oldMap.remove(s);
+		}
+		// join new room
+		ensureRoomExists(room);
+		roomSessionMap.get(room).put(s, username);
+		sessionActiveRoom.put(s, room);
+		safeSend(s, "[system] Active room → " + room);
+	}
+
+	private void broadcastToRoom(String message, String room) {
+		Map<Session,String> m = roomSessionMap.get(room);
+		if (m == null) return;
+		m.forEach((sess, user) -> safeSend(sess, message));
+	}
+
+	private void safeSend(Session s, String msg) {
+		try { s.getBasicRemote().sendText(msg); }
+		catch (Exception e) {/**/}
+	}
+
+	private void joinRoom(Session s, String username, String room) throws IOException {
+		ensureRoomExists(room);
+		roomSessionMap.get(room).put(s, username);
+		sessionActiveRoom.put(s, room);
+		broadcastToRoom("[system] " + username + " joined " + room, room);
+	}
+
+	private void leaveCurrentRoom(Session s, String username) throws IOException {
+		String room = getActiveRoom(s);
+		Map<Session,String> m = roomSessionMap.get(room);
+		if (m != null) {
+			m.remove(s);
+			broadcastToRoom("[system] " + username + " left " + room, room);
+		}
+		// move to default room
+		setActiveRoom(s, username, DEFAULT_ROOM);
+	}
+
+	private String listRooms() {
+		return "[system] Rooms: " + String.join(", ", roomSessionMap.keySet());
+	}
+
+	private String listUsersInRoom(String room) {
+		Map<Session,String> m = roomSessionMap.get(room);
+		if (m == null || m.isEmpty()) return "[system] (empty)";
+		return "[system] Users in " + room + ": " + String.join(", ", m.values());
+	}
 } // end of Class

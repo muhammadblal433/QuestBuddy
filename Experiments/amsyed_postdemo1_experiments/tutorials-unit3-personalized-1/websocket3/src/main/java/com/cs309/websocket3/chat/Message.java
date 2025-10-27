@@ -31,9 +31,14 @@ public class Message {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "sent")
     private Date sent = new Date();
+
+    @Column
+    private String room; // nullable for DMs/global
+
+    @Column
+    private String type; // "CHAT" or "DM"
 	
-	
-	public Message() {};
+	public Message() {}
 	
 	public Message(String userName, String content) {
 		this.userName = userName;
