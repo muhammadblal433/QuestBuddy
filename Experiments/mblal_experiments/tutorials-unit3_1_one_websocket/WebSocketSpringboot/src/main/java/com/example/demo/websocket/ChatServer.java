@@ -1,8 +1,11 @@
 package com.example.demo.websocket;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
@@ -42,6 +45,13 @@ public class ChatServer {
     // server side logger
     private final Logger logger = LoggerFactory.getLogger(ChatServer.class);
 
+    // personalization for me (mblal)
+    private static final AtomicInteger online = new AtomicInteger(0);
+
+    private static String stamp() {
+        return "[" + ZonedDateTime.now() + "] ";
+    }
+
     /**
      * This method is called when a new WebSocket connection is established.
      *
@@ -67,10 +77,11 @@ public class ChatServer {
             usernameSessionMap.put(username, session);
 
             // send to the user joining in
-            sendMessageToPArticularUser(username, "Welcome to the chat server, "+username);
+            sendMessageToPArticularUser(username, stamp() + "Welcome to the chat server, "+username + " (mblal)");
 
             // send to everyone in the chat
-            broadcast("User: " + username + " has Joined the Chat");
+            int n = online.incrementAndGet();
+            broadcast(stamp() + "User: " + username + " has Joined the Chat | online=" + n);
         }
     }
 
@@ -89,6 +100,27 @@ public class ChatServer {
         // server side log
         logger.info("[onMessage] " + username + ": " + message);
 
+        // simple commands (personalization)
+        if ("!help".equalsIgnoreCase(message)) {
+            sendMessageToPArticularUser(username,
+                    stamp() + "Commands: !help, !users, !ping, !shout TEXT, @username MESSAGE");
+            return;
+        }
+        if ("!users".equalsIgnoreCase(message)) {
+            String list = usernameSessionMap.keySet().stream().sorted().collect(Collectors.joining(", "));
+            sendMessageToPArticularUser(username, stamp() + "Online (" + online.get() + "): " + list);
+            return;
+        }
+        if ("!ping".equalsIgnoreCase(message)) {
+            sendMessageToPArticularUser(username, stamp() + "pong");
+            return;
+        }
+        if (message.startsWith("!shout ")) {
+            String text = message.substring("!shout ".length());
+            broadcast(stamp() + username + ": " + text.toUpperCase());
+            return;
+        }
+
         // Direct message to a user using the format "@username <message>"
         if (message.startsWith("@")) {
 
@@ -102,11 +134,17 @@ public class ChatServer {
             }
             String destUserName = split_msg[0].substring(1);    //@username and get rid of @
             String actualMessage = actualMessageBuilder.toString();
-            sendMessageToPArticularUser(destUserName, "[DM from " + username + "]: " + actualMessage);
-            sendMessageToPArticularUser(username, "[DM from " + username + "]: " + actualMessage);
+
+            if (!usernameSessionMap.containsKey(destUserName)) {
+                sendMessageToPArticularUser(username, stamp() + "User '" + destUserName + "' is not online.");
+                return;
+            }
+
+            sendMessageToPArticularUser(destUserName, stamp() + "[DM from " + username + "]: " + actualMessage);
+            sendMessageToPArticularUser(username,   stamp() + "[DM from " + username + "]: " + actualMessage);
         }
         else { // Message to whole chat
-            broadcast(username + ": " + message);
+            broadcast(stamp() + username + ": " + message);
         }
     }
 
@@ -129,7 +167,8 @@ public class ChatServer {
         usernameSessionMap.remove(username);
 
         // send the message to chat
-        broadcast(username + " disconnected");
+        int n = online.decrementAndGet();
+        broadcast(stamp() + username + " disconnected | online=" + n);
     }
 
     /**
@@ -156,7 +195,12 @@ public class ChatServer {
      */
     private void sendMessageToPArticularUser(String username, String message) {
         try {
-            usernameSessionMap.get(username).getBasicRemote().sendText(message);
+            Session s = usernameSessionMap.get(username);
+            if (s != null && s.isOpen()) {
+                s.getBasicRemote().sendText(message);
+            } else {
+                logger.info("[DM skip] '" + username + "' not online");
+            }
         } catch (IOException e) {
             logger.info("[DM Exception] " + e.getMessage());
         }
@@ -170,7 +214,9 @@ public class ChatServer {
     private void broadcast(String message) {
         sessionUsernameMap.forEach((session, username) -> {
             try {
-                session.getBasicRemote().sendText(message);
+                if (session.isOpen()) {
+                    session.getBasicRemote().sendText(message);
+                }
             } catch (IOException e) {
                 logger.info("[Broadcast Exception] " + e.getMessage());
             }
