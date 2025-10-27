@@ -2,16 +2,16 @@ package com.questbuddy.notification;
 
 import com.questbuddy.notification.dto.NotificationCreateDTO;
 import com.questbuddy.notification.dto.NotificationResponseDTO;
-import com.questbuddy.notification.NotificationService;
 import com.questbuddy.notification.NotificationMapper;
-import com.questbuddy.model.Notification;
+import com.questbuddy.notification.NotificationService;
+import com.questbuddy.notification.Notification;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/v7/notifications")
 public class NotificationController {
