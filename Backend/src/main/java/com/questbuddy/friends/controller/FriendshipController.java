@@ -4,8 +4,12 @@ import com.questbuddy.friends.dto.ApiMessage;
 import com.questbuddy.friends.dto.FriendDTO;
 import com.questbuddy.friends.dto.FriendSuggestionDTO;
 import com.questbuddy.friends.service.FriendshipService;
+import com.questbuddy.model.User;
+import com.questbuddy.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -14,75 +18,90 @@ import java.util.List;
 public class FriendshipController {
 
     private final FriendshipService service;
+    private final UserRepository users;
 
-    public FriendshipController(FriendshipService service) {
+    public FriendshipController(FriendshipService service, UserRepository users) {
         this.service = service;
+        this.users = users;
     }
 
     // Health check
     @GetMapping("/friends/ping")
     public String ping() {
-        return "FriendshipController v8 is alive!";
+        return "FriendshipController v8 is alive again!";
     }
 
-    // Requests (path-param user id)
-    @PostMapping("/users/{meId}/friends/requests/{targetId}")
-    public ResponseEntity<ApiMessage> send(@PathVariable Long meId, @PathVariable Long targetId) {
-        service.sendRequest(meId, targetId);
+    // Username-based Requests
+    @PostMapping("/users/{meUsername}/friends/requests/{targetUsername}")
+    public ResponseEntity<ApiMessage> send(@PathVariable String meUsername,
+                                           @PathVariable String targetUsername) {
+        service.sendRequest(idOf(meUsername), idOf(targetUsername));
         return ResponseEntity.ok(new ApiMessage("Friend request sent"));
     }
 
-    @PostMapping("/users/{meId}/friends/requests/{requesterId}/accept")
-    public ResponseEntity<ApiMessage> accept(@PathVariable Long meId, @PathVariable Long requesterId) {
-        service.accept(meId, requesterId);
+    @PostMapping("/users/{meUsername}/friends/requests/{requesterUsername}/accept")
+    public ResponseEntity<ApiMessage> accept(@PathVariable String meUsername,
+                                             @PathVariable String requesterUsername) {
+        service.accept(idOf(meUsername), idOf(requesterUsername));
         return ResponseEntity.ok(new ApiMessage("Friend request accepted"));
     }
 
-    @PostMapping("/users/{meId}/friends/requests/{requesterId}/reject")
-    public ResponseEntity<ApiMessage> reject(@PathVariable Long meId, @PathVariable Long requesterId) {
-        service.reject(meId, requesterId);
+    @PostMapping("/users/{meUsername}/friends/requests/{requesterUsername}/reject")
+    public ResponseEntity<ApiMessage> reject(@PathVariable String meUsername,
+                                             @PathVariable String requesterUsername) {
+        service.reject(idOf(meUsername), idOf(requesterUsername));
         return ResponseEntity.ok(new ApiMessage("Friend request rejected"));
     }
 
     // Lists
-    @GetMapping("/users/{meId}/friends")
-    public List<FriendDTO> list(@PathVariable Long meId) {
-        return service.listFriends(meId);
+    @GetMapping("/users/{meUsername}/friends")
+    public List<FriendDTO> list(@PathVariable String meUsername) {
+        return service.listFriends(idOf(meUsername));
     }
 
-    @GetMapping("/users/{meId}/friends/requests/incoming")
-    public List<FriendDTO> incoming(@PathVariable Long meId) {
-        return service.incomingRequests(meId);
+    @GetMapping("/users/{meUsername}/friends/requests/incoming")
+    public List<FriendDTO> incoming(@PathVariable String meUsername) {
+        return service.incomingRequests(idOf(meUsername));
     }
 
-    @GetMapping("/users/{meId}/friends/requests/outgoing")
-    public List<FriendDTO> outgoing(@PathVariable Long meId) {
-        return service.outgoingRequests(meId);
+    @GetMapping("/users/{meUsername}/friends/requests/outgoing")
+    public List<FriendDTO> outgoing(@PathVariable String meUsername) {
+        return service.outgoingRequests(idOf(meUsername));
     }
 
     // Block / Unblock / Unfriend
-    @PostMapping("/users/{meId}/friends/{otherId}/block")
-    public ResponseEntity<ApiMessage> block(@PathVariable Long meId, @PathVariable Long otherId) {
-        service.block(meId, otherId);
+    @PostMapping("/users/{meUsername}/friends/{otherUsername}/block")
+    public ResponseEntity<ApiMessage> block(@PathVariable String meUsername,
+                                            @PathVariable String otherUsername) {
+        service.block(idOf(meUsername), idOf(otherUsername));
         return ResponseEntity.ok(new ApiMessage("User blocked"));
     }
 
-    @DeleteMapping("/users/{meId}/friends/{otherId}/block")
-    public ResponseEntity<ApiMessage> unblock(@PathVariable Long meId, @PathVariable Long otherId) {
-        service.unblock(meId, otherId);
+    @DeleteMapping("/users/{meUsername}/friends/{otherUsername}/block")
+    public ResponseEntity<ApiMessage> unblock(@PathVariable String meUsername,
+                                              @PathVariable String otherUsername) {
+        service.unblock(idOf(meUsername), idOf(otherUsername));
         return ResponseEntity.ok(new ApiMessage("User unblocked"));
     }
 
-    @DeleteMapping("/users/{meId}/friends/{otherId}")
-    public ResponseEntity<ApiMessage> unfriend(@PathVariable Long meId, @PathVariable Long otherId) {
-        service.unfriend(meId, otherId);
+    @DeleteMapping("/users/{meUsername}/friends/{otherUsername}")
+    public ResponseEntity<ApiMessage> unfriend(@PathVariable String meUsername,
+                                               @PathVariable String otherUsername) {
+        service.unfriend(idOf(meUsername), idOf(otherUsername));
         return ResponseEntity.ok(new ApiMessage("User unfriended"));
     }
 
     // Suggestions
-    @GetMapping("/users/{meId}/friends/suggestions")
-    public List<FriendSuggestionDTO> suggestions(@PathVariable Long meId,
+    @GetMapping("/users/{meUsername}/friends/suggestions")
+    public List<FriendSuggestionDTO> suggestions(@PathVariable String meUsername,
                                                  @RequestParam(defaultValue = "20") int limit) {
-        return service.suggestions(meId, limit);
+        return service.suggestions(idOf(meUsername), limit);
+    }
+
+    // helper method
+    private Long idOf(String username) {
+        User u = users.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found: " + username));
+        return u.getId();
     }
 }
