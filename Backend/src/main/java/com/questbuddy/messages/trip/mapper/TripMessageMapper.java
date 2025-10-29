@@ -1,6 +1,7 @@
 package com.questbuddy.messages.trip.mapper;
 
 import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
 import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
 import com.questbuddy.messages.trip.model.TripMessage;
 import org.springframework.stereotype.Component;
@@ -15,11 +16,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This class does 2 things:
+ * This class does 3 things:
  *
  * 1) Creates an entity based on a CreateDTO
  *
  * 2) Create a ResponseDTO based on an entity
+ *
+ * 3) Apply an edit
  */
 @Component
 public class TripMessageMapper {
@@ -54,8 +57,17 @@ public class TripMessageMapper {
         }
 
         m.setSavedAt(savedAt);
+
+        // new flags default for fresh message
+        m.setEdited(false);
+        m.setEditedAt(null);
+        m.setDeleted(false);
+        m.setDeletedAt(null);
+        m.setDeletedBy(null);
+
         return m;
     }
+
 
     /**
      * TripMessage Entity -> ResponseDTO
@@ -83,6 +95,7 @@ public class TripMessageMapper {
             mineView = Collections.unmodifiableSet(new HashSet<String>(myReactions));
         }
 
+        // NOTE: constructor order must match TripMessageResponseDTO record/class
         return new TripMessageResponseDTO(
                 m.getId(),
                 m.getTripId(),
@@ -95,9 +108,30 @@ public class TripMessageMapper {
                 m.isEdited(),
                 m.getVersion(),
                 countsView,
-                mineView
+                mineView,
+                m.getEditedAt(),
+                m.isDeleted(),
+                m.getDeletedAt(),
+                m.getDeletedBy()
         );
     }
+
+
+    /**
+     * Apply an edit (pure field updates).
+     */
+    public void applyEdit(TripMessage target,
+                          TripMessageEditDTO in,
+                          Instant editedAt) {
+
+        // content
+        target.setContent(in.content());
+
+        // flags
+        target.setEdited(true);
+        target.setEditedAt(editedAt);
+    }
+
 
     /**
      * Batch mapping: keeps input order. countsByMsgId/myReactionsByMsgId may be null.
@@ -112,7 +146,10 @@ public class TripMessageMapper {
 
         List<TripMessageResponseDTO> out = new ArrayList<TripMessageResponseDTO>(messages.size());
 
-        for (TripMessage m : messages) {
+        int i = 0;
+        while (i < messages.size()) {
+            TripMessage m = messages.get(i);
+
             Map<String, Integer> counts = null;
             if (countsByMsgId != null) {
                 counts = countsByMsgId.get(m.getId());
@@ -125,6 +162,7 @@ public class TripMessageMapper {
 
             TripMessageResponseDTO dto = toResponse(m, counts, mine);
             out.add(dto);
+            i = i + 1;
         }
 
         return out;
