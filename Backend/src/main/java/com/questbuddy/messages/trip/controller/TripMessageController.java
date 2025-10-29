@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v9/trips/{tripId}/messages")
+@RequestMapping("/api/v9")
 public class TripMessageController {
 
     private final TripMessageService service;
@@ -20,7 +20,7 @@ public class TripMessageController {
     }
 
     // GET - List of "limit" messages before "beforeId" for a trip
-    @GetMapping
+    @GetMapping("/trips/{tripId}/messages")
     public List<TripMessageResponseDTO> list(@RequestHeader("X-User-Id") Long me,
                                              @PathVariable Long tripId,
                                              @RequestParam(required = false) Long beforeId,
@@ -29,7 +29,7 @@ public class TripMessageController {
     }
 
     // POST - send a message to a trip gc
-    @PostMapping
+    @PostMapping("/trips/{tripId}/messages")
     public TripMessageResponseDTO post(@RequestHeader("X-User-Id") Long me,
                                        @PathVariable Long tripId,
                                        @RequestBody @Valid TripMessageCreateDTO in) {
@@ -37,7 +37,7 @@ public class TripMessageController {
     }
 
     // POST - react to a message
-    @PostMapping("/{messageId}/reactions")
+    @PostMapping("/trips/{tripId}/messages/{messageId}/reactions")
     public Map<String, Integer> react(@RequestHeader("X-User-Id") Long me,
                                       @PathVariable Long tripId,
                                       @PathVariable Long messageId,
@@ -50,12 +50,15 @@ public class TripMessageController {
     }
 
     // DELETE = delete a reaction
-    @DeleteMapping("/{messageId}/reactions/{emoji}")
+    @DeleteMapping("/trips/{tripId}/messages/{messageId}/reactions/{emoji}")
     public Map<String, Integer> unreact(@RequestHeader("X-User-Id") Long me,
                                         @PathVariable Long tripId,
                                         @PathVariable Long messageId,
                                         @PathVariable String emoji) {
         return service.toggleReaction(me, tripId, messageId, emoji);
     }
+
+    @GetMapping("/ping")
+    public String ping() { return "ok"; }
 }
 

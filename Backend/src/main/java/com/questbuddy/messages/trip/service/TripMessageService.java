@@ -1,6 +1,7 @@
 package com.questbuddy.messages.trip.service;
 
 import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
 import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
 import com.questbuddy.messages.guard.TripMembershipGate;
 import com.questbuddy.messages.trip.mapper.TripMessageMapper;
@@ -207,6 +208,112 @@ public class TripMessageService {
         }
 
         return mapper.toResponses(page, countsByMsgId, myByMsgId);
+    }
+
+    @Transactional
+    public TripMessageResponseDTO edit(Long me,
+                                       Long tripId,
+                                       Long messageId,
+                                       TripMessageEditDTO in) {
+
+        if (!membershipGate.isMember(tripId, me)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member of this trip");
+        }
+        if (in == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Body is required");
+        }
+        if (in.content() == null || in.content().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Content is required");
+        }
+        if (in.version() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "version is required");
+        }
+
+        // load message
+        TripMessage msg = findByIdAndTrip(messageId, tripId);
+        if (msg == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found in this trip");
+        }
+
+        // cannot edit deleted messages
+        if (msg.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Message is deleted");
+        }
+
+        // only sender can edit
+        if (msg.getSenderId() == null || !msg.getSenderId().equals(me)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the sender can edit this message");
+        }
+
+        // optimistic lock check (extra safety in addition to @Version on entity)
+        Long currentVersion = msg.getVersion();
+        if (currentVersion == null || !currentVersion.equals(in.version())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Version mismatch");
+        }
+
+        // apply edit
+        Instant now = Instant.now();
+        mapper.applyEdit(msg, in, now);
+
+        // save
+        TripMessage saved = messages.save(msg);
+
+        // reactions unchanged
+        Map<String, Integer> counts = recountFor(saved.getId());
+        Set<String> mine = myReactionsFor(saved.getId(), me);
+        return mapper.toResponse(saved, counts, mine);
+    }
+
+
+    @Transactional
+    public TripMessageResponseDTO delete(Long me, Long tripId, Long messageId, Long version) {
+
+        if (!membershipGate.isMember(tripId, me)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member of this trip");
+        }
+        if (version == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "version is required");
+        }
+
+        // load
+        TripMessage msg = findByIdAndTrip(messageId, tripId);
+        if (msg == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found in this trip");
+        }
+
+        // only sender can delete
+        if (msg.getSenderId() == null || !msg.getSenderId().equals(me)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the sender can delete this message");
+        }
+
+        // already deleted
+        if (msg.isDeleted()) {
+            return mapper.toResponse(msg, Collections.<String, Integer>emptyMap(), Collections.<String>emptySet());
+        }
+
+
+        Long currentVersion = msg.getVersion();
+        if (currentVersion == null || !currentVersion.equals(version)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Version mismatch");
+        }
+
+        // soft delete
+        msg.setDeleted(true);
+        msg.setDeletedAt(Instant.now());
+        msg.setDeletedBy(me);
+
+        TripMessage saved = messages.save(msg);
+
+        // clear reactions without repo changes
+        java.util.List<MessageReaction> rs = reactions.findByMessageId(messageId);
+        int i = 0;
+        while (i < rs.size()) {
+            reactions.delete(rs.get(i));
+            i = i + 1;
+        }
+
+        // return with empty counts/myReactions
+        return mapper.toResponse(saved, Collections.<String, Integer>emptyMap(), Collections.<String>emptySet());
     }
 
     // react to a msg -> afterwards update hashmap for count of rxn to msg
