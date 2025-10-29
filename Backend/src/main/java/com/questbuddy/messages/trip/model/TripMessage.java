@@ -39,6 +39,18 @@ public class TripMessage {
     @Column(name="saved_at", nullable=false)
     private Instant savedAt;
 
+    @Column(name="edited_at", nullable=false)
+    private Instant editedAt;
+
+    @Column(name="is_deleted", nullable = false)
+    private boolean isDeleted;
+
+    @Column(name="deleted_at", nullable = false)
+    private Instant deletedAt;
+
+    @Column(name="deleted_by", nullable = false)
+    private Long deletedBy;
+
     @Column(name="is_edited", nullable=false)
     private boolean edited = false;
 
@@ -76,6 +88,18 @@ public class TripMessage {
 
     public boolean isEdited() { return edited; }
     public void setEdited(boolean edited) { this.edited = edited; }
+
+    public Instant getEditedAt() { return editedAt; }
+    public void setEditedAt(Instant editedAt) { this.editedAt = editedAt; }
+
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean deleted) { this.isDeleted = deleted; }
+
+    public Instant getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    public Long getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     public String getClientMessageId() { return clientMessageId; }
     public void setClientMessageId(String clientMessageId) { this.clientMessageId = clientMessageId; }
