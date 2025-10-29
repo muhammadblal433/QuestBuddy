@@ -72,6 +72,15 @@ public class UserSignupDeleteController {
                 .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    // GET - User by username
+    @GetMapping("/by-username/{username}")
+    public ResponseEntity<?> getByUsername(@PathVariable String username) {
+        return userRepo.findByUsernameIgnoreCase(username)
+                .map(UserSignupDeleteController::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // Health/test check to make sure that the file is being read
     @GetMapping("/ping")
     public String ping() {
