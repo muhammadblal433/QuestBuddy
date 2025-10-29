@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v9/trips")
+@RequestMapping("/v9/trips")
 public class TripMessageController {
 
     private final TripMessageService service;
@@ -83,4 +83,3 @@ public class TripMessageController {
         return "ok";
     }
 }
-
