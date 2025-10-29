@@ -1,2 +1,15 @@
 com/questbuddy/Demo2Application.class
+com/questbuddy/messages/guard/MessagingGuardsConfig.class
+com/questbuddy/messages/guard/TripMembershipGate.class
+com/questbuddy/messages/trip/model/TripMessage.class
+com/questbuddy/messages/trip/model/MessageReaction.class
+com/questbuddy/messages/guard/AllowAllTripMembershipGate.class
+com/questbuddy/messages/trip/dto/TripMessageResponseDTO.class
+com/questbuddy/messages/trip/mapper/TripMessageMapper.class
 com/questbuddy/friends/dto/ApiMessage.class
+com/questbuddy/messages/trip/repository/MessageReactionRepository.class
+com/questbuddy/messages/trip/dto/TripMessageCreateDTO.class
+com/questbuddy/messages/trip/dto/TripMessageEditDTO.class
+com/questbuddy/messages/trip/controller/TripMessageController.class
+com/questbuddy/messages/trip/service/TripMessageService.class
+com/questbuddy/messages/trip/repository/TripMessageRepository.class
