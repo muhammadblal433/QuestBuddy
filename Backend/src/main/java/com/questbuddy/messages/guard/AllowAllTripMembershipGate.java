@@ -1,4 +1,4 @@
-package com.questbuddy.messages;
+package com.questbuddy.messages.guard;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;

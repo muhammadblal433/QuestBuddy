@@ -1,7 +1,13 @@
-package com.questbuddy.messages;
+package com.questbuddy.messages.trip.service;
 
-import com.questbuddy.messages.dto.TripMessageCreateDTO;
-import com.questbuddy.messages.dto.TripMessageResponseDTO;
+import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
+import com.questbuddy.messages.guard.TripMembershipGate;
+import com.questbuddy.messages.trip.mapper.TripMessageMapper;
+import com.questbuddy.messages.trip.model.MessageReaction;
+import com.questbuddy.messages.trip.model.TripMessage;
+import com.questbuddy.messages.trip.repository.MessageReactionRepository;
+import com.questbuddy.messages.trip.repository.TripMessageRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

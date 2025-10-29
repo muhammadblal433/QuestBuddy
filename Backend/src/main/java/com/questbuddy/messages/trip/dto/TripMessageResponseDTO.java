@@ -1,4 +1,4 @@
-package com.questbuddy.messages.dto;
+package com.questbuddy.messages.trip.dto;
 
 import java.time.Instant;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.questbuddy.messages;
+package com.questbuddy.messages.trip.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;

@@ -1,5 +1,6 @@
-package com.questbuddy.messages;
+package com.questbuddy.messages.trip.repository;
 
+import com.questbuddy.messages.trip.model.MessageReaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 
