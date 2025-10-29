@@ -1,4 +1,3 @@
 package com.questbuddy.budget.dto;
 
-public class ApiMessage {
-}
+public record ApiMessage(String message) {}
