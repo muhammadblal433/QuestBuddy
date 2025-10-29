@@ -1,6 +1,7 @@
 package com.questbuddy.messages.trip.controller;
 
 import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
 import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
 import com.questbuddy.messages.trip.service.TripMessageService;
 import jakarta.validation.Valid;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v9")
+@RequestMapping("/api/v9/trips")
 public class TripMessageController {
 
     private final TripMessageService service;
@@ -20,7 +21,7 @@ public class TripMessageController {
     }
 
     // GET - List of "limit" messages before "beforeId" for a trip
-    @GetMapping("/trips/{tripId}/messages")
+    @GetMapping("/{tripId}/messages")
     public List<TripMessageResponseDTO> list(@RequestHeader("X-User-Id") Long me,
                                              @PathVariable Long tripId,
                                              @RequestParam(required = false) Long beforeId,
@@ -29,15 +30,34 @@ public class TripMessageController {
     }
 
     // POST - send a message to a trip gc
-    @PostMapping("/trips/{tripId}/messages")
+    @PostMapping("/{tripId}/messages")
     public TripMessageResponseDTO post(@RequestHeader("X-User-Id") Long me,
                                        @PathVariable Long tripId,
                                        @RequestBody @Valid TripMessageCreateDTO in) {
         return service.post(me, tripId, in);
     }
 
+
+    // PUT - edit a message
+    @PutMapping("/{tripId}/messages/{messageId}")
+    public TripMessageResponseDTO edit(@RequestHeader("X-User-Id") Long me,
+                                       @PathVariable Long tripId,
+                                       @PathVariable Long messageId,
+                                       @RequestBody @Valid TripMessageEditDTO in) {
+        return service.edit(me, tripId, messageId, in);
+    }
+
+    // DELETE - delete a message
+    @DeleteMapping("/{tripId}/messages/{messageId}")
+    public TripMessageResponseDTO delete(@RequestHeader("X-User-Id") Long me,
+                                         @PathVariable Long tripId,
+                                         @PathVariable Long messageId,
+                                         @RequestParam("version") Long version) {
+        return service.delete(me, tripId, messageId, version);
+    }
+
     // POST - react to a message
-    @PostMapping("/trips/{tripId}/messages/{messageId}/reactions")
+    @PostMapping("/{tripId}/messages/{messageId}/reactions")
     public Map<String, Integer> react(@RequestHeader("X-User-Id") Long me,
                                       @PathVariable Long tripId,
                                       @PathVariable Long messageId,
@@ -50,7 +70,7 @@ public class TripMessageController {
     }
 
     // DELETE = delete a reaction
-    @DeleteMapping("/trips/{tripId}/messages/{messageId}/reactions/{emoji}")
+    @DeleteMapping("/{tripId}/messages/{messageId}/reactions/{emoji}")
     public Map<String, Integer> unreact(@RequestHeader("X-User-Id") Long me,
                                         @PathVariable Long tripId,
                                         @PathVariable Long messageId,
@@ -58,7 +78,9 @@ public class TripMessageController {
         return service.toggleReaction(me, tripId, messageId, emoji);
     }
 
-    @GetMapping("/ping")
-    public String ping() { return "ok"; }
+    @GetMapping("/messages/ping")
+    public String ping() {
+        return "ok";
+    }
 }
 
