@@ -39,16 +39,16 @@ public class TripMessage {
     @Column(name="saved_at", nullable=false)
     private Instant savedAt;
 
-    @Column(name="edited_at", nullable=false)
+    @Column(name="edited_at")
     private Instant editedAt;
 
     @Column(name="is_deleted", nullable = false)
-    private boolean isDeleted;
+    private boolean isDeleted = false;
 
-    @Column(name="deleted_at", nullable = false)
+    @Column(name="deleted_at")
     private Instant deletedAt;
 
-    @Column(name="deleted_by", nullable = false)
+    @Column(name="deleted_by")
     private Long deletedBy;
 
     @Column(name="is_edited", nullable=false)
