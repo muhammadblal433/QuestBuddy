@@ -52,7 +52,7 @@ public class DirectMessage {
     @Column(name = "edited_at")
     private Instant editedAt;
 
-    @Column(name = "version", nullable = false)
+    @Version
     private Long version;
 
     // soft delete
