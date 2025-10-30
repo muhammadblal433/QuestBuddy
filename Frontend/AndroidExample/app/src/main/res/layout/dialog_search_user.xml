@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="#FFF8E7">
+
+    <!-- title text for the friend request dialog -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Friend Request"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:textColor="#E65100"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
+
+    <!-- search bar for typing a username -->
+    <EditText
+        android:id="@+id/etSearchUsernameAuto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Search username (e.g., brian)"
+        android:inputType="textPersonName"
+        android:padding="10dp"
+        android:textColor="#000000"
+        android:background="#FFFFFFFF" />
+
+    <!-- small loading spinner while searching -->
+    <ProgressBar
+        android:id="@+id/pbSearch"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        android:layout_gravity="center_horizontal" />
+
+    <!-- message when no search results are found -->
+    <TextView
+        android:id="@+id/tvEmptySearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start typing to search…"
+        android:textColor="#8A8A8A"
+        android:paddingTop="8dp"
+        android:gravity="center" />
+
+    <!-- recycler view that lists all search results -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSearchResults"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:paddingTop="8dp"
+        android:clipToPadding="false" />
+</LinearLayout>

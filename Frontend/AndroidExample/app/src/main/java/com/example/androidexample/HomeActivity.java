@@ -79,6 +79,12 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+            else if(drawerItems[position].equals("Friends")){
+                Intent intent = new Intent(HomeActivity.this, FriendsListActivity.class);
+                intent.putExtra("userId", userId);
+                startActivity(intent);
+                drawerLayout.closeDrawer(GravityCompat.START);
+            }
             else if(drawerItems[position].equals("Currency Converter")){
                 Intent intent = new Intent(HomeActivity.this, CurrencyConverterActivity.class);
                 intent.putExtra("userId", userId);
