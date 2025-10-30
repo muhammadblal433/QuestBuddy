@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="#FFF8E7">
+
+    <!-- title text for the dialog -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Friend Request"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:textColor="#E65100"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
+
+    <!-- input box where user types the username to search -->
+    <EditText
+        android:id="@+id/etSearchUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Search username (e.g., brian)"
+        android:inputType="textPersonName"
+        android:padding="10dp"
+        android:textColor="#000000"
+        android:background="#FFFFFFFF" />
+</LinearLayout>
