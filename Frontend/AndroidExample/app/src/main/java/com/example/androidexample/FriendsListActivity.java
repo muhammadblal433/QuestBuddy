@@ -1,6 +1,7 @@
 package com.example.androidexample;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -154,6 +155,16 @@ public class FriendsListActivity extends AppCompatActivity {
         });
 
         btnAddFriend.setOnClickListener(v -> showSearchDialog());
+
+        //intent to return home
+        Button btnReturnHome = findViewById(R.id.btnReturnHome);
+        btnReturnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(FriendsListActivity.this, HomeActivity.class);
+            intent.putExtra("userId", currentUserId);
+            intent.putExtra("username", currentUsername);
+            startActivity(intent);
+            finish();
+        });
     }
 
     @Override

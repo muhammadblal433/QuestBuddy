@@ -105,4 +105,16 @@
         android:scrollbars="vertical"
         tools:listitem="@layout/item_friend" />
 
+    <!-- returns to home page-->
+    <Button
+        android:id="@+id/btnReturnHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Return to Home"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="#FF9800"
+        android:textColor="#FFFFFF"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp" />
 </LinearLayout>

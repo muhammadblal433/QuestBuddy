@@ -53,17 +53,22 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
         h.btnUnfriend.setVisibility(View.GONE);
         h.btnAccept.setVisibility(View.GONE);
         h.btnReject.setVisibility(View.GONE);
+        h.btnBlock.setVisibility(View.GONE);
 
         switch (mode) {
             case FRIENDS:
                 h.btnUnfriend.setVisibility(View.VISIBLE);
                 h.btnUnfriend.setOnClickListener(v -> unfriend(f.getUsername()));
+                h.btnBlock.setVisibility(View.VISIBLE);
+                h.btnBlock.setOnClickListener(v -> block(f.getUsername()));
                 break;
             case INCOMING:
                 h.btnAccept.setVisibility(View.VISIBLE);
                 h.btnReject.setVisibility(View.VISIBLE);
                 h.btnAccept.setOnClickListener(v -> accept(f.getUsername()));
                 h.btnReject.setOnClickListener(v -> reject(f.getUsername()));
+                h.btnBlock.setVisibility(View.VISIBLE);
+                h.btnBlock.setOnClickListener(v -> block(f.getUsername()));
                 break;
             case SUGGESTIONS:
             case SEARCH:
@@ -84,7 +89,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
     // view holder for list item
     static class VH extends RecyclerView.ViewHolder {
         TextView tvName, tvUsername;
-        Button btnUnfriend, btnAccept, btnReject;
+        Button btnUnfriend, btnAccept, btnReject, btnBlock;
 
         // initialize ui components
         VH(@NonNull View v) {
@@ -94,6 +99,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
             btnUnfriend = v.findViewById(R.id.btnUnfriend);
             btnAccept = v.findViewById(R.id.btnAccept);
             btnReject = v.findViewById(R.id.btnReject);
+            btnBlock  = v.findViewById(R.id.btnBlock);
         }
     }
 
@@ -146,6 +152,19 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
         JsonObjectRequest r = new JsonObjectRequest(Request.Method.POST, url, null,
                 res -> Toast.makeText(ctx, "Rejected @" + requester, Toast.LENGTH_SHORT).show(),
                 err -> Toast.makeText(ctx, "Reject failed: " + err.getMessage(), Toast.LENGTH_SHORT).show());
+        Volley.newRequestQueue(ctx).add(r);
+    }
+
+    //block an user
+    private void block(String other) {
+        if (currentUsername == null || currentUsername.isEmpty()) {
+            Toast.makeText(ctx, "Enter your username first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String url = BASE + "/users/" + currentUsername + "/friends/" + other + "/block";
+        JsonObjectRequest r = new JsonObjectRequest(Request.Method.POST, url, null,
+                res -> Toast.makeText(ctx, "Blocked @" + other, Toast.LENGTH_SHORT).show(),
+                err -> Toast.makeText(ctx, "Block failed: " + err.getMessage(), Toast.LENGTH_SHORT).show());
         Volley.newRequestQueue(ctx).add(r);
     }
 }
