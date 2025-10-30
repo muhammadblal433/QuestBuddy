@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#FF6F00">
+
+    <!-- page title at top-->
+    <TextView
+        android:text="Friend Suggestions"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <!--recycler view that shows all suggestions-->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerSuggestions"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</LinearLayout>

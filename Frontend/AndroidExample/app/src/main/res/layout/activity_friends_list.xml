@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF8E1"
+    tools:context=".FriendsListActivity">
+
+    <!-- top orange header bar -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FF9800"
+        android:text="Friends"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp" />
+
+    <!-- input box for username -->
+    <EditText
+        android:id="@+id/etCurrentUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your username"
+        android:inputType="textPersonName"
+        android:padding="12dp"
+        android:layout_margin="12dp"
+        android:background="@drawable/rounded_button"
+        android:drawableStart="@android:drawable/ic_menu_myplaces" />
+
+    <!-- buttons row for actions like load, requests, etc -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:weightSum="4">
+
+        <!-- load friends -->
+        <Button
+            android:id="@+id/btnLoadFriends"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFFFFF"
+            android:text="Load" />
+
+        <!-- view incoming requests -->
+        <Button
+            android:id="@+id/btnViewRequests"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#F57C00"
+            android:textColor="#FFFFFF"
+            android:text="Requests" />
+
+        <!-- view friend suggestions -->
+        <Button
+            android:id="@+id/btnViewSuggestions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#E65100"
+            android:textColor="#FFFFFF"
+            android:text="Suggestions" />
+
+        <!-- open add friend dialog -->
+        <Button
+            android:id="@+id/btnAddFriend"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#FFA726"
+            android:textColor="#FFFFFF"
+            android:text="Add" />
+    </LinearLayout>
+
+    <!-- text shown when there are no friends -->
+    <TextView
+        android:id="@+id/tvNoFriends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No friends yet — add someone!"
+        android:textAlignment="center"
+        android:textColor="#9E9E9E"
+        android:layout_marginTop="12dp"
+        android:visibility="gone" />
+
+    <!-- recycler view showing list of friends -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerFriends"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="12dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_friend" />
+
+</LinearLayout>
