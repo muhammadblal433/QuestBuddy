@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF8E1"
+    tools:context=".NotificationDetailsActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- top orange header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FF9800"
+            android:text="Notification Details"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="16dp" />
+
+        <!-- notification title -->
+        <TextView
+            android:id="@+id/tvDetailTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Trip Reminder"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#E65100"
+            android:layout_marginTop="24dp" />
+
+        <!-- notification type -->
+        <TextView
+            android:id="@+id/tvDetailType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Type: REMINDER"
+            android:textColor="#FF9800"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp" />
+
+        <!-- date when it was created -->
+        <TextView
+            android:id="@+id/tvDetailCreatedAt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Created At: 2025-11-01 12:30"
+            android:textColor="#757575"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp" />
+
+        <!-- main message content -->
+        <TextView
+            android:id="@+id/tvDetailMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Your trip to Chicago starts tomorrow morning. Don’t forget to pack your essentials!"
+            android:textColor="#424242"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:lineSpacingExtra="4dp" />
+
+        <!-- extra info section for future use -->
+        <TextView
+            android:id="@+id/tvRelatedInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Related Trip: #12"
+            android:textColor="#9E9E9E"
+            android:textSize="14sp"
+            android:layout_marginTop="10dp"
+            android:visibility="gone" />
+
+        <!-- buttons to mark as read or delete -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="28dp"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/btnMarkReadDetail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Mark Read"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#FFA726"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnDeleteDetail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Delete"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#E65100" />
+        </LinearLayout>
+
+        <!-- button to go back to the notifications list -->
+        <Button
+            android:id="@+id/btnBackToList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Back to Notifications"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFFFFF"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp" />
+
+    </LinearLayout>
+</ScrollView>
