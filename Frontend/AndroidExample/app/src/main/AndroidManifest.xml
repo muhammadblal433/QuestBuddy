@@ -31,11 +31,14 @@
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CalendarActivity" />
         <activity android:name=".DayViewActivity"/>
+        <activity android:name=".SuggestionsActivity" android:exported="true" />
+        <activity android:name=".RequestsActivity" android:exported="true" />
         <activity android:name=".TaskManagerActivity"
             android:exported="true"/>
         <activity android:name=".PackingChecklistActivity"
             android:exported="true"/>
         <activity android:name=".CurrencyConverterActivity"/>
+        <activity android:name=".FriendsListActivity" android:exported="true" />
         <activity android:name=".GroupChatActivity"/>
     </application>
 
