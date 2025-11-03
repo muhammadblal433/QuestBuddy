@@ -20,7 +20,7 @@ public class DirectMessageController {
         this.service = service;
     }
 
-    // GET - List of "limit" messages before "beforeId" for a 1:1 conversation
+    // GET - List of "limit" messages before "beforeId" for conversation
     @GetMapping("/{peerId}/messages")
     public List<DirectMessageResponseDTO> list(@RequestHeader("X-User-Id") Long me,
                                                @PathVariable Long peerId,
@@ -37,7 +37,7 @@ public class DirectMessageController {
         return service.post(me, peerId, in);
     }
 
-    // PUT - edit a message
+    // PUT - edit a direct message
     @PutMapping("/{peerId}/messages/{messageId}")
     public DirectMessageResponseDTO edit(@RequestHeader("X-User-Id") Long me,
                                          @PathVariable Long peerId,
@@ -46,7 +46,7 @@ public class DirectMessageController {
         return service.edit(me, peerId, messageId, in);
     }
 
-    // DELETE - delete a message
+    // DELETE - delete a direct message
     @DeleteMapping("/{peerId}/messages/{messageId}")
     public void delete(@RequestHeader("X-User-Id") Long me,
                        @PathVariable Long peerId,
