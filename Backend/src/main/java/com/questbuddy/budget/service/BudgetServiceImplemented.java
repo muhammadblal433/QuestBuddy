@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -82,6 +83,79 @@ public class BudgetServiceImplemented implements BudgetService {
         Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
         return mapper.toResponse(b);
+    }
+
+    @Override
+    @Transactional
+    public BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+
+        // Optional: rename
+        if (body.name() != null) {
+            String nm = body.name().trim();
+            if (nm.isEmpty()) throw new ValidationException("name cannot be blank");
+            b.setName(nm);
+        }
+
+        // Optional: replace splits (upsert listed, prune unlisted)
+        if (body.splits() != null) {
+            // resolve desired participants (username -> userId), enforce no duplicates
+            Set<String> seenUsernames = new HashSet<>();
+            Map<Long, BudgetSplitCreateDTO> desiredByUserId = new LinkedHashMap<>();
+            for (BudgetSplitCreateDTO s : body.splits()) {
+                String uname = s.username();
+                if (uname == null || uname.isBlank())
+                    throw new ValidationException("username required in split");
+
+                String key = uname.toLowerCase();
+                if (!seenUsernames.add(key))
+                    throw new ValidationException("duplicate participant: " + uname);
+
+                User u = users.findByUsernameIgnoreCase(uname)
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + uname));
+                desiredByUserId.put(u.getId(), s);
+            }
+
+            // index existing splits by userId
+            Map<Long, BudgetSplit> existingByUserId = b.getSplits().stream()
+                    .collect(Collectors.toMap(s -> s.getUser().getId(), s -> s));
+
+            // upsert/update for each desired participant
+            Set<Long> keepUserIds = new HashSet<>();
+            for (Map.Entry<Long, BudgetSplitCreateDTO> e : desiredByUserId.entrySet()) {
+                Long userId = e.getKey();
+                BudgetSplitCreateDTO dto = e.getValue();
+
+                BigDecimal share = nz(dto.shareAmount());
+                BigDecimal paid  = nz(dto.paidAmount());
+                if (share.signum() < 0 || paid.signum() < 0)
+                    throw new ValidationException("amounts cannot be negative");
+
+                BudgetSplit exist = existingByUserId.get(userId);
+                if (exist == null) {
+                    // create new split
+                    User u = users.findById(userId).orElseThrow();
+                    BudgetSplit ns = new BudgetSplit();
+                    ns.setBudget(b);
+                    ns.setUser(u);
+                    ns.setShareAmount(share);
+                    ns.setPaidAmount(paid);
+                    b.getSplits().add(ns);
+                } else {
+                    // update existing
+                    exist.setShareAmount(share);
+                    exist.setPaidAmount(paid);
+                }
+                keepUserIds.add(userId);
+            }
+
+            // prune participants not listed in the update
+            b.getSplits().removeIf(s -> !keepUserIds.contains(s.getUser().getId()));
+        }
+
+        Budget saved = budgets.save(b);
+        return mapper.toResponse(saved);
     }
 
     @Override

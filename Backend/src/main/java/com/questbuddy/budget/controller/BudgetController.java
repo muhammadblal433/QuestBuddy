@@ -49,6 +49,14 @@ public class BudgetController {
         return service.get(idOf(ownerUsername), budgetId);
     }
 
+    // Update a budget (optional name; optional full replace of splits)
+    @PutMapping("/users/{ownerUsername}/budgets/{budgetId}")
+    public BudgetResponseDTO update(@PathVariable String ownerUsername,
+                                    @PathVariable Long budgetId,
+                                    @RequestBody @Valid BudgetUpdateDTO body) {
+        return service.update(idOf(ownerUsername), budgetId, body);
+    }
+
     // Delete a budget
     @DeleteMapping("/users/{ownerUsername}/budgets/{budgetId}")
     public ResponseEntity<ApiMessage> delete(@PathVariable String ownerUsername,
