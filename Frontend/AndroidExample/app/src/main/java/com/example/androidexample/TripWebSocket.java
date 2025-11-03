@@ -20,7 +20,7 @@ public class TripWebSocket {
     }
 
 
-    private final String baseWsUrl; // e.g., wss://api.example.com/ws
+    private final String baseWsUrl; // websocket url
     private final long me;
     private final long tripId;
     private final WsListener listener;
