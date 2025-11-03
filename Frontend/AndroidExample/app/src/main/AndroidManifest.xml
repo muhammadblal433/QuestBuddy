@@ -18,7 +18,7 @@
         >
 
         <activity
-            android:name=".SignupActivity"
+            android:name=".TripChatActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,7 +36,8 @@
         <activity android:name=".PackingChecklistActivity"
             android:exported="true"/>
         <activity android:name=".CurrencyConverterActivity"/>
-        <activity android:name=".GroupChatActivity"/>
+        <activity android:name=".SignupActivity"/>
+
     </application>
 
 </manifest>

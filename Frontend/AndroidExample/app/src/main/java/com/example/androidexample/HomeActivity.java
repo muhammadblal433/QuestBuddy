@@ -97,13 +97,18 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+            else if(drawerItems[position].equals("Group Chat")){
+                Intent intent = new Intent(HomeActivity.this, TripChatActivity.class);
+                intent.putExtra("userId", userId);
+                startActivity(intent);
+                finish();
+            }
             else if(drawerItems[position].equals("Logout")){
                 Intent intent = new Intent(HomeActivity.this, SignupActivity.class);
                 startActivity(intent);
                 finish();
                 Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
             }
-
             else{
                 Toast.makeText(this, drawerItems[position] + " clicked", Toast.LENGTH_SHORT).show();
                 drawerLayout.closeDrawer(GravityCompat.START);

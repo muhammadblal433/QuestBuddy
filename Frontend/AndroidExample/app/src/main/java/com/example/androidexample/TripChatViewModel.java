@@ -14,28 +14,39 @@ import java.util.*;
 
 public class TripChatViewModel extends ViewModel {
     private final TripApi api;
-    private final TripWebSocket ws;
     private final long me;
     private final long tripId;
 
     private final MutableLiveData<List<TripMessageResponseDTO>> messages = new MutableLiveData<>(new ArrayList<>());
     private Long oldestIdLoaded = null;
 
+    private final TripWebSocket wsOrNull;
+
+
     public TripChatViewModel(String baseUrl, String baseWsUrl, long me, long tripId, RequestQueue queue) {
         this.api = new TripApi(baseUrl, queue);
-        this.ws = new TripWebSocket(baseWsUrl, me, tripId, new TripWebSocket.WsListener() {
-            @Override public void onOpen() {}
-            @Override public void onMessage(String json) { reloadLatest(); }
-            @Override public void onClosed(int code, String reason) {}
-            @Override public void onFailure(Throwable t) {}
-        });
         this.me = me; this.tripId = tripId;
+
+        // Only create/connect WS if we have a valid ws:// or wss:// URL
+        if (baseWsUrl != null && (baseWsUrl.startsWith("ws://") || baseWsUrl.startsWith("wss://"))) {
+            wsOrNull = new TripWebSocket(baseWsUrl, me, tripId, new TripWebSocket.WsListener() {
+                @Override public void onOpen() {}
+                @Override public void onMessage(String json) { reloadLatest(); }
+                @Override public void onClosed(int code, String reason) {}
+                @Override public void onFailure(Throwable t) { /* no crash; maybe log */ }
+            });
+        } else {
+            wsOrNull = null;
+        }
+
         start();
     }
 
     public LiveData<List<TripMessageResponseDTO>> getMessages() { return messages; }
 
-    private void start() { reloadLatest(); ws.connect(); }
+    private void start() {
+        reloadLatest();           // REST still works without WS
+        try { if (wsOrNull != null) wsOrNull.connect(); } catch (Throwable ignored) {} }
 
 
     private void reloadLatest() {
