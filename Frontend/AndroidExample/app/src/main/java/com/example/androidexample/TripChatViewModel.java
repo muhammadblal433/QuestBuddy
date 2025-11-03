@@ -33,9 +33,7 @@ public class TripChatViewModel extends ViewModel {
         start();
     }
 
-
     public LiveData<List<TripMessageResponseDTO>> getMessages() { return messages; }
-
 
     private void start() { reloadLatest(); ws.connect(); }
 
@@ -54,7 +52,6 @@ public class TripChatViewModel extends ViewModel {
             @Override public void onError(Throwable t) { /* optional: expose error */ }
         });
     }
-
 
     public void loadMore() {
         if (oldestIdLoaded == null) return;
@@ -96,7 +93,7 @@ public class TripChatViewModel extends ViewModel {
                 List<TripMessageResponseDTO> list = new ArrayList<>(messages.getValue());
                 for (int i = 0; i < list.size(); i++) if (list.get(i).getId() == tempId) {
                     TripMessageResponseDTO fail = new TripMessageResponseDTO(
-                            tempId, tripId, me, "❗ Failed to send: " + content,
+                            tempId, tripId, me, "Failed to send: " + content,
                             null, null, isoNow(), null, false, null,
                             null, null, null, false, null, null);
                     list.set(i, fail); break;
