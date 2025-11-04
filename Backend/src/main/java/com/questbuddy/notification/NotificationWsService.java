@@ -1,7 +1,6 @@
 package com.questbuddy.notification;
 
 import com.questbuddy.notification.dto.NotificationWsPayload;
-import com.questbuddy.notification.Notification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +19,10 @@ public class NotificationWsService {
                 n.getId(),
                 n.getTitle(),
                 n.getMessage(),
-                n.getType().name(),
-                n.getRecipient().getId(),
+                n.getType() == null ? null : n.getType().name(),
+                n.getRecipient() == null ? null : n.getRecipient().getId(),
                 n.getCreatedAt(),
-                Boolean.TRUE.equals(n.getIsRead()),
+                n.isRead(),
                 null
         );
         ws.convertAndSend("/topic/notifications/" + n.getRecipient().getId(), payload);

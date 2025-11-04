@@ -37,6 +37,9 @@ public class NotificationService {
     // mapper
     private final NotificationMapper mapper;
 
+    // WS publisher (pushes to /topic/notifications/{userId})
+    private final NotificationWsService ws;
+
     /**
      * Constructor for Notification Service class
      */
@@ -45,13 +48,15 @@ public class NotificationService {
                                TripRepository trips,
                                EventRepository events,
                                TaskRepository tasks,
-                               NotificationMapper mapper) {
+                               NotificationMapper mapper,
+                               NotificationWsService ws) {
         this.notifications = notifications;
         this.users = users;
         this.trips = trips;
         this.events = events;
         this.tasks = tasks;
         this.mapper = mapper;
+        this.ws = ws;
     }
 
     /**
@@ -103,9 +108,12 @@ public class NotificationService {
 
         Notification n = mapper.fromCreate(dto, recipient, trip, event, task);
         try {
-            return notifications.save(n);
+            Notification saved = notifications.save(n);
+            // push WS "NEW" after persisting
+            ws.publishNew(saved);
+            return saved;
         } catch (DataIntegrityViolationException ex) {
-            // DB-level FK/unique constraints fire, surface a clean 400 via controller.
+            // DB-level FK/unique constraints fire, surface a clean 400 via controller
             throw new IllegalArgumentException("bad_reference");
         }
     }
@@ -146,6 +154,10 @@ public class NotificationService {
             noti.setRead(true);
             // ensure change is persisted within the write transaction
             noti = notifications.save(noti);
+
+            // compute unread count and push WS "READ"
+            long unread = notifications.countByRecipient_IdAndIsReadFalse(recipientId);
+            ws.publishRead(recipientId, noti.getId(), unread);
         }
 
         return noti;
