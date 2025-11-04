@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class CalendarActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener {
 
     private TextView monthYearText;
@@ -32,7 +33,6 @@ public class CalendarActivity extends AppCompatActivity implements CalendarAdapt
     private LocalDate selectedDate;
     private Button backBtn, forwardBtn;
     private int userId;
-
 
     private static final String TASKS_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v4/calendar/events";
 
