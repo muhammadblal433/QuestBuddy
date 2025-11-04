@@ -40,7 +40,7 @@
         <activity android:name=".CurrencyConverterActivity"/>
         <activity android:name=".FriendsListActivity" android:exported="true" />
         <activity android:name=".FriendProfileActivity" />
-
+        <activity android:name=".GroupChatActivity"/>
     </application>
 
 </manifest>

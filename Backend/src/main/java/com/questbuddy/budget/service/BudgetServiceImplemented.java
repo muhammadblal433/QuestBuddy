@@ -1,0 +1,185 @@
+package com.questbuddy.budget.service;
+
+import com.questbuddy.budget.BudgetMapper;
+import com.questbuddy.budget.dto.*;
+import com.questbuddy.budget.model.Budget;
+import com.questbuddy.budget.model.BudgetSplit;
+import com.questbuddy.budget.repository.BudgetRepository;
+import com.questbuddy.budget.repository.BudgetSplitRepository;
+import com.questbuddy.model.User;
+import com.questbuddy.repository.UserRepository;
+import jakarta.validation.ValidationException;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
+@Service
+public class BudgetServiceImplemented implements BudgetService {
+
+    private final BudgetRepository budgets;
+    private final BudgetSplitRepository splits;
+    private final UserRepository users;
+    private final BudgetMapper mapper = new BudgetMapper();
+
+    public BudgetServiceImplemented(BudgetRepository budgets,
+                                    BudgetSplitRepository splits,
+                                    UserRepository users) {
+        this.budgets = budgets;
+        this.splits = splits;
+        this.users = users;
+    }
+
+    @Override
+    @Transactional
+    public BudgetResponseDTO create(Long ownerId, BudgetCreateDTO body) {
+        if (body == null || body.splits() == null || body.splits().isEmpty()) {
+            throw new ValidationException("splits required");
+        }
+
+        Budget b = new Budget();
+        b.setOwner(requireUser(ownerId));
+        b.setName(requireNonBlank(body.name()));
+
+        // build splits
+        Map<Long, Boolean> seen = new HashMap<>();
+        List<BudgetSplit> splitEntities = new ArrayList<>();
+        for (BudgetSplitCreateDTO s : body.splits()) {
+            User u = users.findByUsernameIgnoreCase(s.username())
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + s.username()));
+            if (seen.putIfAbsent(u.getId(), true) != null) {
+                throw new ValidationException("duplicate participant: " + s.username());
+            }
+
+            BudgetSplit be = new BudgetSplit();
+            be.setBudget(b);
+            be.setUser(u);
+            be.setShareAmount(nz(s.shareAmount()));
+            be.setPaidAmount(nz(s.paidAmount()));
+            splitEntities.add(be);
+        }
+        b.setSplits(splitEntities);
+
+        Budget saved = budgets.save(b);
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BudgetResponseDTO> list(Long ownerId) {
+        return budgets.findAllByOwner_Id(ownerId, Sort.by("createdAt").descending())
+                .stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BudgetResponseDTO get(Long ownerId, Long budgetId) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        return mapper.toResponse(b);
+    }
+
+    @Override
+    @Transactional
+    public BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+
+        // Optional: rename
+        if (body.name() != null) {
+            String nm = body.name().trim();
+            if (nm.isEmpty()) throw new ValidationException("name cannot be blank");
+            b.setName(nm);
+        }
+
+        // Optional: replace splits (upsert listed, prune unlisted)
+        if (body.splits() != null) {
+            // resolve desired participants (username -> userId), enforce no duplicates
+            Set<String> seenUsernames = new HashSet<>();
+            Map<Long, BudgetSplitCreateDTO> desiredByUserId = new LinkedHashMap<>();
+            for (BudgetSplitCreateDTO s : body.splits()) {
+                String uname = s.username();
+                if (uname == null || uname.isBlank())
+                    throw new ValidationException("username required in split");
+
+                String key = uname.toLowerCase();
+                if (!seenUsernames.add(key))
+                    throw new ValidationException("duplicate participant: " + uname);
+
+                User u = users.findByUsernameIgnoreCase(uname)
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + uname));
+                desiredByUserId.put(u.getId(), s);
+            }
+
+            // index existing splits by userId
+            Map<Long, BudgetSplit> existingByUserId = b.getSplits().stream()
+                    .collect(Collectors.toMap(s -> s.getUser().getId(), s -> s));
+
+            // upsert/update for each desired participant
+            Set<Long> keepUserIds = new HashSet<>();
+            for (Map.Entry<Long, BudgetSplitCreateDTO> e : desiredByUserId.entrySet()) {
+                Long userId = e.getKey();
+                BudgetSplitCreateDTO dto = e.getValue();
+
+                BigDecimal share = nz(dto.shareAmount());
+                BigDecimal paid  = nz(dto.paidAmount());
+                if (share.signum() < 0 || paid.signum() < 0)
+                    throw new ValidationException("amounts cannot be negative");
+
+                BudgetSplit exist = existingByUserId.get(userId);
+                if (exist == null) {
+                    // create new split
+                    User u = users.findById(userId).orElseThrow();
+                    BudgetSplit ns = new BudgetSplit();
+                    ns.setBudget(b);
+                    ns.setUser(u);
+                    ns.setShareAmount(share);
+                    ns.setPaidAmount(paid);
+                    b.getSplits().add(ns);
+                } else {
+                    // update existing
+                    exist.setShareAmount(share);
+                    exist.setPaidAmount(paid);
+                }
+                keepUserIds.add(userId);
+            }
+
+            // prune participants not listed in the update
+            b.getSplits().removeIf(s -> !keepUserIds.contains(s.getUser().getId()));
+        }
+
+        Budget saved = budgets.save(b);
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long ownerId, Long budgetId) {
+        long n = budgets.deleteByIdAndOwner_Id(budgetId, ownerId);
+        if (n == 0) throw new ResponseStatusException(NOT_FOUND, "budget_not_found");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BudgetBalanceDTO> balances(Long ownerId, Long budgetId) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        return mapper.toBalances(b);
+    }
+
+    // helpers
+    private User requireUser(Long id) {
+        return users.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + id));
+    }
+    private static String requireNonBlank(String s) {
+        if (s == null || s.trim().isEmpty()) throw new ValidationException("name required");
+        return s.trim();
+    }
+    private static BigDecimal nz(BigDecimal x) { return x == null ? BigDecimal.ZERO : x; }
+}
