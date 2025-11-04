@@ -39,6 +39,7 @@
             android:exported="true"/>
         <activity android:name=".CurrencyConverterActivity"/>
         <activity android:name=".FriendsListActivity" android:exported="true" />
+        <activity android:name=".FriendProfileActivity" />
 
     </application>
 
