@@ -101,6 +101,19 @@ public class DirectMessageService {
             return mapper.toResponse(e, recountFor(e.getId()), myReactionsFor(e.getId(), me));
         }
 
+        if (in.parentMessageId() != null) {
+            boolean ok = messages.findByIdInConversation(in.parentMessageId(), me, peerId).isPresent();
+            if (!ok) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "parentMessageId not in this conversation");
+            }
+        }
+        if (in.forwardFromMessageId() != null) {
+            boolean ok = messages.findByIdInConversation(in.forwardFromMessageId(), me, peerId).isPresent();
+            if (!ok) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "forwardFromMessageId not in this conversation");
+                }
+        }
+
         DirectMessage entity = mapper.toEntity(me, peerId, in, Instant.now());
         DirectMessage saved = messages.save(entity);
         return mapper.toResponse(saved, Collections.emptyMap(), Collections.emptySet());
