@@ -12,16 +12,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Public STOMP endpoint (Postman/FE connect here)
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
-        // SockJS fallback (optional, helps with proxies)
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*"); // FE & Postman
+        // .withSockJS(); // enable if FE uses SockJS
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // App -> Server destinations would be under /app (not used for notifications)
         registry.setApplicationDestinationPrefixes("/app");
-        // Clients subscribe to /topic/**
+        // Server -> Client topics (simple in-memory broker) under /topic
         registry.enableSimpleBroker("/topic");
     }
 }

@@ -19,10 +19,10 @@ public class NotificationWsService {
                 n.getId(),
                 n.getTitle(),
                 n.getMessage(),
-                n.getType() == null ? null : n.getType().name(),
-                n.getRecipient() == null ? null : n.getRecipient().getId(),
+                n.getType().name(),
+                n.getRecipient().getId(),
                 n.getCreatedAt(),
-                n.isRead(),
+                n.isRead(),            // <-- use isRead()
                 null
         );
         ws.convertAndSend("/topic/notifications/" + n.getRecipient().getId(), payload);

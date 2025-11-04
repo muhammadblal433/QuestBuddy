@@ -22,6 +22,7 @@
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/calendar/dto/EventCreateDTO.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/calendar/dto/EventResponseDTO.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/calendar/dto/EventUpdateDTO.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/config/WebSocketConfig.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/controller/AuthController.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/controller/LabelController.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/controller/TaskController.java
@@ -72,8 +73,10 @@
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationService.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationType.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/NotificationWsService.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/dto/NotificationCreateDTO.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/dto/NotificationResponseDTO.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/notification/dto/NotificationWsPayload.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/repository/LabelRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/repository/TaskRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/repository/UserRepository.java
