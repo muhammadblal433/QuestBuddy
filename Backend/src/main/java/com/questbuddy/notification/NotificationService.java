@@ -16,6 +16,7 @@ import com.questbuddy.model.Task;
 import com.questbuddy.trip.Trip;
 import com.questbuddy.calendar.Event;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,7 +102,12 @@ public class NotificationService {
         }
 
         Notification n = mapper.fromCreate(dto, recipient, trip, event, task);
-        return notifications.save(n);
+        try {
+            return notifications.save(n);
+        } catch (DataIntegrityViolationException ex) {
+            // DB-level FK/unique constraints fire, surface a clean 400 via controller.
+            throw new IllegalArgumentException("bad_reference");
+        }
     }
 
     /**
@@ -124,6 +130,7 @@ public class NotificationService {
      * @param id - noti id
      * @param recipientId - user id of person recieving
      */
+    @Transactional
     public Notification markRead(Long id, Long recipientId) {
         Notification noti = null;
         Optional<Notification> notiOpt = notifications.findById(id);
@@ -137,6 +144,8 @@ public class NotificationService {
         }
         if (!noti.isRead()) {
             noti.setRead(true);
+            // ensure change is persisted within the write transaction
+            noti = notifications.save(noti);
         }
 
         return noti;

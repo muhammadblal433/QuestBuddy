@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/v7/notifications")
 public class NotificationController {
@@ -47,16 +48,13 @@ public class NotificationController {
 
     /**
      *  GET - List notifications (filter can be toggled)
-
-     *  List notifications for a user (pass recipientId in query; unread=true to filter).
      */
     @GetMapping
-    public ResponseEntity<List<NotificationResponseDTO>> list(
-            @RequestParam Long recipientId,
-            @RequestParam(name = "unread", required = false) Boolean unread
+    public ResponseEntity<List<NotificationResponseDTO>> list(@RequestHeader("X-User-Id") Long me,
+                                                              @RequestParam(name = "unread", required = false) Boolean unread
     ) {
         List<NotificationResponseDTO> out = notifications
-                .listForUser(recipientId, unread)
+                .listForUser(me, unread)
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -65,16 +63,14 @@ public class NotificationController {
 
     /**
      * PUT - update read status
-     *
-     * Mark one notification as read (pass recipientId in query for ownership check).
      * */
     @PutMapping("/{id}/read")
     public ResponseEntity<NotificationResponseDTO> markRead(
             @PathVariable Long id,
-            @RequestParam Long recipientId
+            @RequestHeader("X-User-Id") Long me
     ) {
         try {
-            Notification n = notifications.markRead(id, recipientId);
+            Notification n = notifications.markRead(id, me);
             return ResponseEntity.ok(mapper.toResponse(n));
         } catch (IllegalArgumentException ex) {
             if ("notification_not_found".equals(ex.getMessage())) {
@@ -92,10 +88,10 @@ public class NotificationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
-            @RequestParam Long recipientId
+            @RequestHeader("X-User-Id") Long me
     ) {
         try {
-            notifications.deleteForOwner(id, recipientId); // throws if not owner or not found
+            notifications.deleteForOwner(id, me); // throws if not owner or not found
             return ResponseEntity.noContent().build();     // 204
         } catch (IllegalArgumentException ex) {
             if ("notification_not_found".equals(ex.getMessage())) {
