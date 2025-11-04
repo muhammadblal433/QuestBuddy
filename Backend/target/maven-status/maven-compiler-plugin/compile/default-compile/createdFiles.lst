@@ -7,6 +7,7 @@ com/questbuddy/budget/dto/BudgetResponseDTO.class
 com/questbuddy/messages/guard/MessagingGuardsConfig.class
 com/questbuddy/messages/guard/TripMembershipGate.class
 com/questbuddy/budget/repository/BudgetRepository.class
+com/questbuddy/notification/ws/NotificationBroadcaster.class
 com/questbuddy/tripmember/repository/TripMemberRepository.class
 com/questbuddy/budget/model/BudgetSplit.class
 com/questbuddy/messages/direct/repository/DirectMessageReactionRepository.class
@@ -22,6 +23,7 @@ com/questbuddy/tripmember/dto/UserSummaryDTO.class
 com/questbuddy/budget/controller/BudgetController.class
 com/questbuddy/tripmember/dto/UpdateStatusDTO.class
 com/questbuddy/messages/trip/controller/TripMessageController.class
+com/questbuddy/config/WsServerConfig.class
 com/questbuddy/tripmember/security/TripMembershipGateJPA.class
 com/questbuddy/messages/trip/repository/TripMessageRepository.class
 com/questbuddy/messages/direct/dto/DirectMessageCreateDTO.class
@@ -33,6 +35,7 @@ com/questbuddy/budget/dto/BudgetUpdateDTO.class
 com/questbuddy/budget/dto/ApiMessage.class
 com/questbuddy/messages/direct/mapper/DirectMessageMapper.class
 com/questbuddy/messages/direct/service/DirectMessageService.class
+com/questbuddy/notification/ws/NotificationEndpoint.class
 com/questbuddy/tripmember/model/TripMember.class
 com/questbuddy/messages/trip/model/TripMessage.class
 com/questbuddy/messages/trip/model/MessageReaction.class
