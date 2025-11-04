@@ -2,18 +2,19 @@ package com.questbuddy.notification;
 
 import com.questbuddy.notification.dto.NotificationCreateDTO;
 import com.questbuddy.notification.dto.NotificationResponseDTO;
+import com.questbuddy.notification.NotificationMapper;
+import com.questbuddy.notification.NotificationService;
+import com.questbuddy.notification.Notification;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Notification REST API (v7), user-id in path (no X-User-Id).
- */
 @RestController
-@RequestMapping("/api/v7")
+@RequestMapping("/api/v7/notifications")
 public class NotificationController {
 
     private final NotificationService notifications;
@@ -24,102 +25,81 @@ public class NotificationController {
         this.mapper = mapper;
     }
 
-    // Health check
-    @GetMapping("/notifications/ping")
-    public String ping() {
-        return "NotificationController v7 is alive!";
-    }
-
     /**
      * POST - create a notification
      *
-     * Create a notification for a recipient (recipientId from path).
-     * If recipientId is present in the body, it is ignored in favor of the path value.
-     */
-    @PostMapping("/users/{recipientId}/notifications")
-    public ResponseEntity<NotificationResponseDTO> create(
-            @PathVariable Long recipientId,
-            @Valid @RequestBody NotificationCreateDTO body
-    ) {
+     * Create a notification for a recipient (IDs in body).
+     * */
+    @PostMapping
+    public ResponseEntity<NotificationResponseDTO> create(@Valid @RequestBody NotificationCreateDTO dto) {
         try {
-            NotificationCreateDTO dto = new NotificationCreateDTO(
-                    recipientId,                      // override from path
-                    body.title(),
-                    body.message(),
-                    body.type(),
-                    body.tripId(),
-                    body.eventId(),
-                    body.taskId()
-            );
-            Notification n = notifications.create(dto);
+            Notification n = notifications.create(dto); // service resolves/validates refs
             return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(n));
         } catch (IllegalArgumentException ex) {
             String msg = ex.getMessage();
             if ("recipient_not_found".equals(msg) || "trip_not_found".equals(msg)
                     || "event_not_found".equals(msg) || "task_not_found".equals(msg)
                     || "bad_reference".equals(msg)) {
-                return ResponseEntity.badRequest().build();
+                return ResponseEntity.badRequest().body(null); // 400
             }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
     /**
-     * GET - List notifications for a user (optionally unread-only), newest first.
-     *
-     * @param userId     recipient user id
-     * @param unread     set unread=true to filter only unread
+     *  GET - List notifications (filter can be toggled)
      */
-    @GetMapping("/users/{userId}/notifications")
-    public ResponseEntity<List<NotificationResponseDTO>> list(
-            @PathVariable Long userId,
-            @RequestParam(name = "unread", required = false) Boolean unread
+    @GetMapping
+    public ResponseEntity<List<NotificationResponseDTO>> list(@RequestHeader("X-User-Id") Long me,
+                                                              @RequestParam(name = "unread", required = false) Boolean unread
     ) {
         List<NotificationResponseDTO> out = notifications
-                .listForUser(userId, unread)
-                .stream().map(mapper::toResponse).toList();
+                .listForUser(me, unread)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
         return ResponseEntity.ok(out);
     }
 
     /**
-     * PUT - update read status (enforces ownership via userId).
-     */
-    @PutMapping("/users/{userId}/notifications/{id}/read")
+     * PUT - update read status
+     * */
+    @PutMapping("/{id}/read")
     public ResponseEntity<NotificationResponseDTO> markRead(
-            @PathVariable Long userId,
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long me
     ) {
         try {
-            Notification n = notifications.markRead(id, userId);
+            Notification n = notifications.markRead(id, me);
             return ResponseEntity.ok(mapper.toResponse(n));
         } catch (IllegalArgumentException ex) {
             if ("notification_not_found".equals(ex.getMessage())) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
             }
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().build(); // 400 for other bad input
         } catch (SecurityException se) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 wrong owner
         }
     }
 
     /**
-     * DELETE - delete one notification owned by {userId}.
+     * DELETE - a notification for a user
      */
-    @DeleteMapping("/users/{userId}/notifications/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable Long userId,
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long me
     ) {
         try {
-            notifications.deleteForOwner(id, userId);
-            return ResponseEntity.noContent().build();
+            notifications.deleteForOwner(id, me); // throws if not owner or not found
+            return ResponseEntity.noContent().build();     // 204
         } catch (IllegalArgumentException ex) {
             if ("notification_not_found".equals(ex.getMessage())) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
             }
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().build(); // 400 (bad ids, etc.)
         } catch (SecurityException se) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 (not recipient's notif)
         }
     }
 }
