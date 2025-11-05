@@ -16,6 +16,8 @@ import com.questbuddy.model.Task;
 import com.questbuddy.trip.Trip;
 import com.questbuddy.calendar.Event;
 
+import com.questbuddy.notification.ws.NotificationBroadcaster;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,9 @@ public class NotificationService {
     // mapper
     private final NotificationMapper mapper;
 
+    // websocket broadcaster (non-STOMP JSR-356)
+    private final NotificationBroadcaster ws;
+
     /**
      * Constructor for Notification Service class
      */
@@ -45,13 +50,15 @@ public class NotificationService {
                                TripRepository trips,
                                EventRepository events,
                                TaskRepository tasks,
-                               NotificationMapper mapper) {
+                               NotificationMapper mapper,
+                               NotificationBroadcaster ws) {
         this.notifications = notifications;
         this.users = users;
         this.trips = trips;
         this.events = events;
         this.tasks = tasks;
         this.mapper = mapper;
+        this.ws = ws;
     }
 
     /**
@@ -103,7 +110,10 @@ public class NotificationService {
 
         Notification n = mapper.fromCreate(dto, recipient, trip, event, task);
         try {
-            return notifications.save(n);
+            Notification saved = notifications.save(n);
+            // push to the connected recipient over WebSocket
+            ws.publishNew(saved);
+            return saved;
         } catch (DataIntegrityViolationException ex) {
             // DB-level FK/unique constraints fire, surface a clean 400 via controller.
             throw new IllegalArgumentException("bad_reference");
@@ -146,6 +156,8 @@ public class NotificationService {
             noti.setRead(true);
             // ensure change is persisted within the write transaction
             noti = notifications.save(noti);
+            long unread = notifications.countByRecipient_IdAndIsReadFalse(recipientId);
+            ws.publishRead(recipientId, noti.getId(), unread);
         }
 
         return noti;

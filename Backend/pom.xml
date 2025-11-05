@@ -81,6 +81,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- STOMP over WebSocket (pulls in spring-websocket + spring-messaging) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- Validation Dependency -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
