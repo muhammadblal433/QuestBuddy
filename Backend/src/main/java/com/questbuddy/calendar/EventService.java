@@ -46,15 +46,19 @@ public class EventService {
         Event e = mapper.toEntity(userId, dto);
         Event saved = repo.save(e);
 
-        // notify owner of creation
-        notificationService.create(new NotificationCreateDTO(
-                userId,
-                "Event Created",
-                "“" + saved.getTitle() + "” on " + saved.getStartAt(),
-                // reuse an existing type to avoid enum changes
-                NotificationType.REMINDER,
-                null, saved.getId(), null
-        ));
+        // notify owner of creation (best-effort; do not fail the txn if notifications have an issue)
+        try {
+            String title = (saved.getTitle() == null || saved.getTitle().isBlank()) ? "(untitled)" : saved.getTitle();
+            notificationService.create(new NotificationCreateDTO(
+                    userId,
+                    "Event Created",
+                    "“" + title + "” on " + saved.getStartAt(),
+                    NotificationType.EVENT_CREATED,
+                    saved.getId(),   // eventId
+                    null,            // tripId
+                    null             // taskId
+            ));
+        } catch (Exception ignored) { /* best effort */ }
 
         return mapper.toDto(saved);
     }
@@ -124,31 +128,26 @@ public class EventService {
         }
         Event e = opt.get();
         // Validate final time range after applying partial updates
-        Instant newStart;
-        Instant newEnd;
-        if (dto.startAt() != null) {
-            newStart = dto.startAt();
-        } else {
-            newStart = e.getStartAt();
-        }
-        if (dto.endAt() != null) {
-            newEnd = dto.endAt();
-        } else {
-            newEnd = e.getEndAt();
-        }
+        Instant newStart = (dto.startAt() != null) ? dto.startAt() : e.getStartAt();
+        Instant newEnd   = (dto.endAt()   != null) ? dto.endAt()   : e.getEndAt();
         checkRange(newStart, newEnd);
 
         mapper.applyUpdate(e, dto);
         Event saved = repo.save(e);
 
-        // notify owner of update
-        notificationService.create(new NotificationCreateDTO(
-                userId,
-                "Event Updated",
-                "“" + saved.getTitle() + "” was updated.",
-                NotificationType.REMINDER,
-                null, saved.getId(), null
-        ));
+        // notify owner of update (best-effort)
+        try {
+            String title = (saved.getTitle() == null || saved.getTitle().isBlank()) ? "(untitled)" : saved.getTitle();
+            notificationService.create(new NotificationCreateDTO(
+                    userId,
+                    "Event Updated",
+                    "“" + title + "” was updated.",
+                    NotificationType.EVENT_UPDATED,
+                    saved.getId(),   // eventId
+                    null,            // tripId
+                    null             // taskId
+            ));
+        } catch (Exception ignored) { /* best effort */ }
 
         return mapper.toDto(saved);
     }
@@ -162,14 +161,19 @@ public class EventService {
         }
         Event e = opt.get();
 
-        // notify owner of deletion (send before delete so eventId is still valid)
-        notificationService.create(new NotificationCreateDTO(
-                userId,
-                "Event Deleted",
-                "“" + e.getTitle() + "” was deleted.",
-                NotificationType.REMINDER,
-                null, e.getId(), null
-        ));
+        // notify owner of deletion (send before delete so eventId is still valid) - best-effort
+        try {
+            String title = (e.getTitle() == null || e.getTitle().isBlank()) ? "(untitled)" : e.getTitle();
+            notificationService.create(new NotificationCreateDTO(
+                    userId,
+                    "Event Deleted",
+                    "“" + title + "” was deleted.",
+                    NotificationType.EVENT_CANCELLED,
+                    e.getId(),   // eventId
+                    null,        // tripId
+                    null         // taskId
+            ));
+        } catch (Exception ignored) { /* best effort */ }
 
         long n = repo.deleteByIdAndUserId(id, userId);
         if (n == 0) {
