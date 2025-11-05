@@ -9,8 +9,7 @@ import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
 import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
 import com.questbuddy.messages.trip.service.TripMessageService;
 import jakarta.websocket.*;
-import jakarta.websocket.server.PathParam;
-import jakarta.websocket.server.ServerEndpoint;
+import jakarta.websocket.server.*;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -77,9 +76,15 @@ public class TripChatEndpoint {
             }
 
             switch (event) {
-                case "MESSAGE_NEW" -> handleCreate(session, userId, tripId, clientMsgId, root.path("payload"));
-                case "EDIT"        -> handleEdit(session, userId, tripId, clientMsgId, root.path("payload"));
-                case "DELETE"      -> handleDelete(session, userId, tripId, clientMsgId, root.path("payload")); // requires version
+                case "MESSAGE_NEW":
+                    handleCreate(session, userId, tripId, clientMsgId, root.path("payload"));
+                    break;
+                case "EDIT":
+                    handleEdit(session, userId, tripId, clientMsgId, root.path("payload"));
+                    break;
+                case "DELETE":
+                    handleDelete(session, userId, tripId, clientMsgId, root.path("payload"));
+                    break;
                 case "REACTION_ADD":
                 case "REACTION_REMOVE":
                     handleReaction(session, userId, tripId, clientMsgId, root.path("payload"));
@@ -88,7 +93,9 @@ public class TripChatEndpoint {
                 case "TYPING_STOP":
                     handleTyping(userId, tripId, event);
                     break;
-                default -> sendSafe(session, json(Map.of("event", "ERROR", "reason", "unknown event")));
+                default:
+                    sendSafe(session, json(java.util.Map.of("event", "ERROR", "reason", "unknown event")));
+                    break;
             }
         } catch (Exception e) {
             sendSafe(session, json(Map.of("event", "ERROR", "reason", "bad JSON")));
