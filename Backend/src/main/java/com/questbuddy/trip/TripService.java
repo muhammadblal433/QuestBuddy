@@ -8,6 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
+// v12 membership
+import com.questbuddy.tripmember.service.TripMembershipService;
+
 /**
  * Service class to handle the logic of trips - such as sorting param, checking if starttime and endtime makes sense (in terms of end MUST be after start)
  */
@@ -16,10 +19,13 @@ public class TripService {
 
     private final TripRepository repo;
     private final TripMapper mapper;
+    // Trip membership seeding for v12
+    private final TripMembershipService tripMembershipService;
 
-    public TripService(TripRepository repo, TripMapper mapper) {
+    public TripService(TripRepository repo, TripMapper mapper, TripMembershipService tripMembershipService) {
         this.repo = repo;
         this.mapper = mapper;
+        this.tripMembershipService = tripMembershipService;
     }
 
     // Helper Mtds - for sort and range (main logic metioned above)
@@ -50,10 +56,17 @@ public class TripService {
             Double lat = (Double) latField.invoke(dto);
             Double lon = (Double) lonField.invoke(dto);
             checkStartPoint(lat, lon);
-        } catch (Exception ignore) { /* if fields don't exist, skip */ }
+        } catch (Exception ignore) {
+            /* if fields don't exist, skip */
+        }
 
         Trip t = mapper.toEntity(ownerId, dto);
-        return mapper.toDto(repo.save(t));
+
+        // save and then seed owner membership so v12 gate doesn't 403 the owner
+        Trip saved = repo.save(t);
+        tripMembershipService.seedOwner(ownerId, saved.getId());
+
+        return mapper.toDto(saved);
     }
 
     // List (by owner)

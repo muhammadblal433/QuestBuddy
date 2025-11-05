@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.questbuddy.messages.ws.ChatBroadcaster; //add for websocket
+
 @Service
 public class TripMessageService {
 
@@ -30,15 +32,18 @@ public class TripMessageService {
     private final MessageReactionRepository reactions;
     private final TripMembershipGate membershipGate;
     private final TripMessageMapper mapper;
+    private final ChatBroadcaster chatBroadcaster;
 
     public TripMessageService(TripMessageRepository messages,
                               MessageReactionRepository reactions,
                               TripMembershipGate membershipGate,
-                              TripMessageMapper mapper) {
+                              TripMessageMapper mapper,
+                              ChatBroadcaster chatBroadcaster) {
         this.messages = messages;
         this.reactions = reactions;
         this.membershipGate = membershipGate;
         this.mapper = mapper;
+        this.chatBroadcaster = chatBroadcaster;
     }
 
     // ----- helpers -----
@@ -138,7 +143,10 @@ public class TripMessageService {
         TripMessage toSave = mapper.toEntity(in, tripId, me, now, now);
         TripMessage saved = messages.save(toSave);
 
-        return mapper.toResponse(saved, Collections.<String, Integer>emptyMap(), Collections.<String>emptySet());
+        // Build response and broadcast to the trip
+        TripMessageResponseDTO out = mapper.toResponse(saved, Collections.<String, Integer>emptyMap(), Collections.<String>emptySet());
+        chatBroadcaster.tripMessageNew(tripId, out); // for ws
+        return out;
     }
 
     // listing out messages
@@ -261,7 +269,10 @@ public class TripMessageService {
         // reactions unchanged
         Map<String, Integer> counts = recountFor(saved.getId());
         Set<String> mine = myReactionsFor(saved.getId(), me);
-        return mapper.toResponse(saved, counts, mine);
+        TripMessageResponseDTO out = mapper.toResponse(saved, counts, mine);
+        chatBroadcaster.tripEdit(tripId, out);   // for ws
+        return out;
+
     }
 
 
@@ -313,7 +324,9 @@ public class TripMessageService {
         }
 
         // return with empty counts/myReactions
-        return mapper.toResponse(saved, Collections.<String, Integer>emptyMap(), Collections.<String>emptySet());
+        TripMessageResponseDTO out = mapper.toResponse(saved, Collections.<String, Integer>emptyMap(), Collections.<String>emptySet());
+        chatBroadcaster.tripDelete(tripId, out);  // for ws
+        return out;
     }
 
     // react to a msg -> afterwards update hashmap for count of rxn to msg
@@ -344,6 +357,8 @@ public class TripMessageService {
             r.setReactedAt(Instant.now());
             reactions.save(r);
         }
+
+        chatBroadcaster.tripReactionToggle(tripId, messageId, trimmed);
 
         return recountFor(messageId);
     }
