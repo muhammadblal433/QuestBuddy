@@ -8,7 +8,6 @@ import com.questbuddy.friends.repository.FriendshipRepository;
 import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
 
-// ⬇️ NEW: notifications
 import com.questbuddy.notification.NotificationService;
 import com.questbuddy.notification.NotificationType;
 import com.questbuddy.notification.dto.NotificationCreateDTO;
@@ -54,10 +53,11 @@ public class FriendshipServiceImplemented implements FriendshipService {
             incoming.setStatus(FriendshipStatus.ACCEPTED);
 
             // notify original requester that the receiver auto-accepted (mutual pending)
+            User target = getUser(targetUserId);
             notificationService.create(new NotificationCreateDTO(
                     meId,
                     "Friend Request Accepted",
-                    "User " + targetUserId + " accepted your request.",
+                    userLabel(target) + " accepted your request.",
                     // reuse an existing type to avoid enum changes
                     NotificationType.REMINDER,
                     null, null, null
@@ -82,10 +82,11 @@ public class FriendshipServiceImplemented implements FriendshipService {
         friendshipRepo.save(f);
 
         // notify the recipient of the friend request
+        User me = getUser(meId);
         notificationService.create(new NotificationCreateDTO(
                 targetUserId,
                 "Friend Request",
-                "User " + meId + " sent you a friend request.",
+                userLabel(me) + " sent you a friend request.",
                 NotificationType.INVITE,
                 null, null, null
         ));
@@ -103,10 +104,11 @@ public class FriendshipServiceImplemented implements FriendshipService {
         // need to do this: hook chat/DM creation after acceptance
 
         // notify original requester that their request was accepted
+        User me = getUser(meId);
         notificationService.create(new NotificationCreateDTO(
                 requesterId,
                 "Friend Request Accepted",
-                "User " + meId + " accepted your request.",
+                userLabel(me) + " accepted your request.",
                 NotificationType.REMINDER,
                 null, null, null
         ));
@@ -114,20 +116,13 @@ public class FriendshipServiceImplemented implements FriendshipService {
 
     @Override
     public void reject(Long meId, Long requesterId) {
-        Friendship f = friendshipRepo.findByUser_IdAndFriend_Id(requesterId, meId)
+        var f = friendshipRepo.findByUser_IdAndFriend_Id(requesterId, meId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No incoming request"));
         if (f.getStatus() != FriendshipStatus.PENDING)
             throw new ResponseStatusException(CONFLICT, "Not pending");
         friendshipRepo.delete(f);
 
-        // optional courtesy notify requester (non-blocking)
-        notificationService.create(new NotificationCreateDTO(
-                requesterId,
-                "Friend Request Rejected",
-                "User " + meId + " rejected your request.",
-                NotificationType.REMINDER,
-                null, null, null
-        ));
+        // No notification on reject (silent UX).
     }
 
     @Override
@@ -242,6 +237,16 @@ public class FriendshipServiceImplemented implements FriendshipService {
         if (!uname.isBlank()) return uname;
         String email = safe(u.getEmail());
         return email;
+    }
+
+    // Compact label for notifications (prefer username, else full name, else email, else "User {id}")
+    private String userLabel(User u) {
+        String uname = safe(u.getUsername());
+        if (!uname.isBlank()) return uname;
+        String dn = displayName(u);
+        if (!dn.isBlank()) return dn;
+        String email = safe(u.getEmail());
+        return email.isBlank() ? ("User " + u.getId()) : email;
     }
 
     private static String safe(String s) { return s == null ? "" : s; }
