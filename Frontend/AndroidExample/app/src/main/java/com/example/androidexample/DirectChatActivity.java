@@ -108,22 +108,29 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         return h;
     }
 
-    private void fetchMessages(@Nullable Long beforeId, int limit, boolean prepend) {
+    private void fetchMessages(Long beforeId, int limit, boolean prepend) {
         loading = true;
         String url = BASE_V10() + "/messages?limit=" + limit + (beforeId != null ? ("&beforeId=" + beforeId) : "");
-
-
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
                 res -> {
                     List<DirectMessageDTO> list = new ArrayList<>();
-                    for (int i=0; i<res.length(); i++) {
+                    for (int i = 0; i < res.length(); i++) {
                         JSONObject o = res.optJSONObject(i);
                         if (o != null) list.add(DirectMessageDTO.fromJson(o));
                     }
-                    if (prepend) adapter.prepend(list); else {
-                    // first load: put older first then scroll to bottom
-                        adapter.prepend(list);
-                        rv.scrollToPosition(adapter.getItemCount()-1);
+
+                    // Ensure oldest -> newest within this page
+                    list.sort(
+                            java.util.Comparator
+                                    .comparingLong((DirectMessageDTO m) -> m.createdAtEpochMs)
+                                    .thenComparingLong(m -> m.id)
+                    );
+
+                    if (prepend) {
+                        adapter.prepend(list);                 // older page goes on top
+                    } else {
+                        adapter.prepend(list);                 // first page
+                        rv.scrollToPosition(adapter.getItemCount() - 1); // jump to latest
                     }
                     loading = false;
                 },
