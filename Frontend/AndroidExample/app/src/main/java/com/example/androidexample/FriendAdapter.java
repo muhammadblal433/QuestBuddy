@@ -60,6 +60,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
                 h.btnProfile.setOnClickListener(v -> {
                     Intent i = new Intent(ctx, FriendProfileActivity.class);
                     i.putExtra("username", f.getUsername());
+                    i.putExtra("id", f.getId());
                     i.putExtra("displayName", f.getDisplayName());
                     i.putExtra("currentUser", currentUsername);
                     ctx.startActivity(i);

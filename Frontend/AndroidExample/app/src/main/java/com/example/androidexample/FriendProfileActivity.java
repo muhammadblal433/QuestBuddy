@@ -17,6 +17,8 @@ public class FriendProfileActivity extends AppCompatActivity {
     private String displayName;
     private String currentUser;
 
+    private String id;
+
     private TextView tvProfileName, tvProfileUsername, tvProfileEmail;
     private Button btnMessage, btnUnfriend, btnBlock;
 
@@ -27,6 +29,7 @@ public class FriendProfileActivity extends AppCompatActivity {
 
         // retrieve data passed from previous activity
         username = getIntent().getStringExtra("username");
+        id = getIntent().getStringExtra("id");
         displayName = getIntent().getStringExtra("displayName");
         currentUser = getIntent().getStringExtra("currentUser");
 
