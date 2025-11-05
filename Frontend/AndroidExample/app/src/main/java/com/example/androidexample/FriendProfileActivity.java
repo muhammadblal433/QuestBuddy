@@ -1,5 +1,6 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -57,8 +58,13 @@ public class FriendProfileActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(req);
 
         // handle message button click
-        btnMessage.setOnClickListener(v ->
-                Toast.makeText(this, "Messaging feature coming soon!", Toast.LENGTH_SHORT).show());
+        btnMessage.setOnClickListener(v -> {
+            Intent i = new Intent(this, DirectChatActivity.class);
+            i.putExtra("friendId", id); // friend's numeric id from your intent extras
+            i.putExtra("friendUsername", username); // for title
+            i.putExtra("currentUser", currentUser); // current signed‑in user's numeric id
+            startActivity(i);
+        });
 
         // handle unfriend button click
         btnUnfriend.setOnClickListener(v -> {
