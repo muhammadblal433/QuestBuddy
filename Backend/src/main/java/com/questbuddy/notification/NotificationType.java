@@ -1,3 +1,8 @@
 package com.questbuddy.notification;
 
-public enum NotificationType { INVITE, APPROVAL, TASK, REMINDER }
+public enum NotificationType {
+    INVITE, APPROVAL, TASK, REMINDER,
+    FRIEND_REQUEST, FRIEND_ACCEPTED, FRIEND_REJECTED,
+    EVENT_CREATED, EVENT_UPDATED, EVENT_CANCELLED,
+    TASK_ASSIGNED, TASK_COMPLETED
+}
