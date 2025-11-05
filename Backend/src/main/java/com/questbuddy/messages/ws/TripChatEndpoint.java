@@ -236,7 +236,7 @@ public class TripChatEndpoint {
 
     // helper functions
 
-    private static void sendToTrip(Long tripId, String json) {
+    public static void sendToTrip(Long tripId, String json) {
         var set = BY_TRIP.get(tripId);
         if (set == null) return;
         for (Session s : set) {
