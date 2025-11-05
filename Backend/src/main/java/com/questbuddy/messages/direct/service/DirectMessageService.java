@@ -18,6 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.Collections;
+
+import com.questbuddy.messages.ws.ChatBroadcaster; //add for websocket
 
 /**
  * This class handles the main logic of direct messaging.
@@ -31,16 +34,20 @@ public class DirectMessageService {
     private final DirectMessagingGate dmGate;
     private final DirectMessageMapper mapper;
 
+    private final ChatBroadcaster chatBroadcaster;
+
     public DirectMessageService(DirectMessageRepository messages,
                                 DirectMessageReactionRepository reactions,
                                 UserRepository users,
                                 DirectMessagingGate dmGate,
-                                DirectMessageMapper mapper) {
+                                DirectMessageMapper mapper,
+                                ChatBroadcaster chatBroadcaster) {
         this.messages = messages;
         this.reactions = reactions;
         this.users = users;
         this.dmGate = dmGate;
         this.mapper = mapper;
+        this.chatBroadcaster = chatBroadcaster;
     }
 
     // helper func to check basic stuff (is DM allowed? does User exist?)
@@ -116,7 +123,9 @@ public class DirectMessageService {
 
         DirectMessage entity = mapper.toEntity(me, peerId, in, Instant.now());
         DirectMessage saved = messages.save(entity);
-        return mapper.toResponse(saved, Collections.emptyMap(), Collections.emptySet());
+        DirectMessageResponseDTO out = mapper.toResponse(saved, java.util.Collections.emptyMap(), java.util.Collections.emptySet());
+        chatBroadcaster.dmMessageNew(me, peerId, out); // for ws
+        return out;
     }
 
     // edit a message between "me" and "peerId"
@@ -139,7 +148,11 @@ public class DirectMessageService {
 
         mapper.applyEdit(m, in, Instant.now());
         DirectMessage saved = messages.save(m);
-        return mapper.toResponse(saved, recountFor(saved.getId()), myReactionsFor(saved.getId(), me));
+        var counts = recountFor(saved.getId());
+        var mine   = myReactionsFor(saved.getId(), me);
+        DirectMessageResponseDTO out = mapper.toResponse(saved, counts, mine);
+        chatBroadcaster.dmEdit(me, peerId, out); // for ws
+        return out;
     }
 
     // delete a message
@@ -152,10 +165,24 @@ public class DirectMessageService {
         if (!m.getSenderId().equals(me)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only sender can delete");
         }
+        if (Boolean.TRUE.equals(m.isDeleted())) {
+            return; // no broadcast
+        }
+
         m.setDeleted(true);
         m.setDeletedAt(Instant.now());
         m.setDeletedBy(me);
-        messages.save(m);
+        DirectMessage saved = messages.save(m);
+
+        // Build a minimal DTO for clients (counts/myReactions empty after delete)
+        DirectMessageResponseDTO out = mapper.toResponse(
+                saved,
+                Collections.emptyMap(),
+                Collections.emptySet()
+        );
+
+        // Broadcast to both peers
+        chatBroadcaster.dmDelete(me, peerId, out);
     }
 
     // react to a message
@@ -181,6 +208,7 @@ public class DirectMessageService {
             r.setReactedAt(Instant.now());
             reactions.save(r);
         }
+        chatBroadcaster.dmReactionToggle(me, peerId, messageId, trimmed); // for ws
         return recountFor(messageId);
     }
 
@@ -198,6 +226,9 @@ public class DirectMessageService {
             m.setReadAt(Instant.now());
             m.setReadByUserId(me);
             messages.save(m);
+
+            // Broadcast read receipt (unreadCount not computed here → null)
+            chatBroadcaster.dmReadReceipt(me, peerId, messageId, me, null);
         }
     }
 
