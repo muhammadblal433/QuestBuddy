@@ -7,6 +7,12 @@ import com.questbuddy.friends.model.FriendshipStatus;
 import com.questbuddy.friends.repository.FriendshipRepository;
 import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
+
+// ⬇️ NEW: notifications
+import com.questbuddy.notification.NotificationService;
+import com.questbuddy.notification.NotificationType;
+import com.questbuddy.notification.dto.NotificationCreateDTO;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,9 +29,15 @@ public class FriendshipServiceImplemented implements FriendshipService {
     private final FriendshipRepository friendshipRepo;
     private final UserRepository userRepo;
 
-    public FriendshipServiceImplemented(FriendshipRepository friendshipRepo, UserRepository userRepo) {
+    private final NotificationService notificationService;
+
+    // constructor injection extended
+    public FriendshipServiceImplemented(FriendshipRepository friendshipRepo,
+                                        UserRepository userRepo,
+                                        NotificationService notificationService) {
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -40,6 +52,16 @@ public class FriendshipServiceImplemented implements FriendshipService {
                 .orElse(null);
         if (incoming != null) {
             incoming.setStatus(FriendshipStatus.ACCEPTED);
+
+            // notify original requester that the receiver auto-accepted (mutual pending)
+            notificationService.create(new NotificationCreateDTO(
+                    meId,
+                    "Friend Request Accepted",
+                    "User " + targetUserId + " accepted your request.",
+                    // reuse an existing type to avoid enum changes
+                    NotificationType.REMINDER,
+                    null, null, null
+            ));
             return;
         }
 
@@ -58,6 +80,15 @@ public class FriendshipServiceImplemented implements FriendshipService {
         f.setFriend(getUser(targetUserId));
         f.setStatus(FriendshipStatus.PENDING);
         friendshipRepo.save(f);
+
+        // notify the recipient of the friend request
+        notificationService.create(new NotificationCreateDTO(
+                targetUserId,
+                "Friend Request",
+                "User " + meId + " sent you a friend request.",
+                NotificationType.INVITE,
+                null, null, null
+        ));
     }
 
     @Override
@@ -70,6 +101,15 @@ public class FriendshipServiceImplemented implements FriendshipService {
         f.setStatus(FriendshipStatus.ACCEPTED);
 
         // need to do this: hook chat/DM creation after acceptance
+
+        // notify original requester that their request was accepted
+        notificationService.create(new NotificationCreateDTO(
+                requesterId,
+                "Friend Request Accepted",
+                "User " + meId + " accepted your request.",
+                NotificationType.REMINDER,
+                null, null, null
+        ));
     }
 
     @Override
@@ -79,6 +119,15 @@ public class FriendshipServiceImplemented implements FriendshipService {
         if (f.getStatus() != FriendshipStatus.PENDING)
             throw new ResponseStatusException(CONFLICT, "Not pending");
         friendshipRepo.delete(f);
+
+        // optional courtesy notify requester (non-blocking)
+        notificationService.create(new NotificationCreateDTO(
+                requesterId,
+                "Friend Request Rejected",
+                "User " + meId + " rejected your request.",
+                NotificationType.REMINDER,
+                null, null, null
+        ));
     }
 
     @Override
