@@ -1,4 +1,6 @@
 package com.example.androidexample;
 
-public class DirectChatActivity {
+import androidx.appcompat.app.AppCompatActivity;
+
+public class DirectChatActivity extends AppCompatActivity {
 }
