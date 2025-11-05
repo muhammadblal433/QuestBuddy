@@ -62,7 +62,7 @@ public class FriendProfileActivity extends AppCompatActivity {
             Intent i = new Intent(this, DirectChatActivity.class);
             i.putExtra("friendId", Long.parseLong(id)); // friend's numeric id from your intent extras
             i.putExtra("friendUsername", username); // for title
-            i.putExtra("currentUser", currentUser); // current signed‑in user's numeric id
+            i.putExtra("currentUser", Long.parseLong(currentUser)); // current signed‑in user's numeric id
             startActivity(i);
         });
 
