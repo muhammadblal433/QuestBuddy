@@ -25,6 +25,8 @@ public class SuggestionsActivity extends AppCompatActivity {
     private FriendAdapter adapter;
     private List<Friend> suggestions;
     private String currentUsername;
+
+    private Long currentUserId;
     private ProgressDialog progressDialog;
 
     @Override
@@ -33,6 +35,7 @@ public class SuggestionsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_suggestions);
 
         currentUsername = getIntent().getStringExtra("username");
+        currentUserId = getIntent().getLongExtra("userID", -1);
         if (currentUsername == null || currentUsername.isEmpty()) {
             Toast.makeText(this, "Error: No username provided!", Toast.LENGTH_LONG).show();
             finish();
@@ -42,7 +45,7 @@ public class SuggestionsActivity extends AppCompatActivity {
         recyclerSuggestions = findViewById(R.id.recyclerSuggestions);
         recyclerSuggestions.setLayoutManager(new LinearLayoutManager(this));
         suggestions = new ArrayList<>();
-        adapter = new FriendAdapter(this, suggestions, currentUsername);
+        adapter = new FriendAdapter(this, suggestions, currentUsername, currentUserId);
         recyclerSuggestions.setAdapter(adapter);
 
         progressDialog = new ProgressDialog(this);

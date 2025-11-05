@@ -78,7 +78,7 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         rv.setAdapter(adapter);
 
 
-// endless scroll (load older when scrolled to top)
+        // endless scroll (load older when scrolled to top)
         rv.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
@@ -90,9 +90,8 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         });
 
 
-// initial page
+        // initial page
         fetchMessages(null, 50, false);
-
 
         btnSend.setOnClickListener(v -> {
             String text = et.getText().toString().trim();

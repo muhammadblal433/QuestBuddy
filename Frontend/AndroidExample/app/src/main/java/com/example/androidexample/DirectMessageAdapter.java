@@ -72,7 +72,7 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
     public long smallestId() {
         if (data.isEmpty()) return Long.MAX_VALUE;
         long min = Long.MAX_VALUE;
-        for (DirectMessage m : data) min = Math.min(min, m.id);
+        for (DirectMessageDTO m : data) min = Math.min(min, m.id);
         return min;
     }
 

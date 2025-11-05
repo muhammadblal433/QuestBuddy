@@ -75,7 +75,7 @@ public class FriendsListActivity extends AppCompatActivity {
         btnLoad = findViewById(R.id.btnLoadFriends);
 
         recyclerFriends.setLayoutManager(new LinearLayoutManager(this)); // vertical list
-        adapter = new FriendAdapter(this, friendList, null);
+        adapter = new FriendAdapter(this, friendList, null, -1L);
         adapter.setMode(FriendAdapter.Mode.FRIENDS);
         recyclerFriends.setAdapter(adapter);
 
@@ -88,6 +88,7 @@ public class FriendsListActivity extends AppCompatActivity {
         // try to get username and userId from intent or saved session
         currentUsername = getIntent().getStringExtra("username");
         currentUserId = getIntent().getIntExtra("userId", -1);
+
         if (TextUtils.isEmpty(currentUsername)) {
             currentUsername = getSharedPreferences("session", MODE_PRIVATE)
                     .getString("username", null);
@@ -97,9 +98,13 @@ public class FriendsListActivity extends AppCompatActivity {
                     .getInt("userId", -1);
         }
 
+        // Set adapter identity immediately so it's never stale
+        adapter.setCurrentUsername(currentUsername);
+        adapter.setCurrentUserId(currentUserId);
+
         // load friends automatically if user known
         if (!TextUtils.isEmpty(currentUsername)) {
-            loadFriends(currentUsername);
+            loadFriends(currentUsername, currentUserId);
         } else if (currentUserId > 0) {
             // try to resolve username from id
             progressDialog.setMessage("Loading your profile…");
@@ -114,9 +119,12 @@ public class FriendsListActivity extends AppCompatActivity {
                             getSharedPreferences("session", MODE_PRIVATE)
                                     .edit()
                                     .putString("username", currentUsername)
-                                    .putInt("userId", currentUserId)
+                                    .putLong("userId", currentUserId)
                                     .apply();
-                            loadFriends(currentUsername);
+                            // keep adapter in sync
+                            adapter.setCurrentUsername(currentUsername);
+                            adapter.setCurrentUserId(currentUserId);
+                            loadFriends(currentUsername, currentUserId);
                         } else {
                             tvNoFriends.setVisibility(View.VISIBLE);
                             tvNoFriends.setText("Couldn’t resolve username. Please log in again.");
@@ -138,20 +146,20 @@ public class FriendsListActivity extends AppCompatActivity {
             btnLoad.setOnClickListener(v -> {
                 mode = FriendAdapter.Mode.FRIENDS;
                 adapter.setMode(FriendAdapter.Mode.FRIENDS);
-                if (ensureMe()) loadFriends(currentUsername);
+                if (ensureMe()) loadFriends(currentUsername, currentUserId);
             });
         }
 
         btnRequests.setOnClickListener(v -> {
             mode = FriendAdapter.Mode.INCOMING;
             adapter.setMode(FriendAdapter.Mode.INCOMING);
-            if (ensureMe()) loadIncoming(currentUsername);
+            if (ensureMe()) loadIncoming(currentUsername, currentUserId);
         });
 
         btnSuggestions.setOnClickListener(v -> {
             mode = FriendAdapter.Mode.SUGGESTIONS;
             adapter.setMode(FriendAdapter.Mode.SUGGESTIONS);
-            if (ensureMe()) loadSuggestions(currentUsername, 50);
+            if (ensureMe()) loadSuggestions(currentUsername, 50, currentUserId);
         });
 
         btnAddFriend.setOnClickListener(v -> showSearchDialog());
@@ -172,7 +180,7 @@ public class FriendsListActivity extends AppCompatActivity {
         super.onResume();
         // refresh list when coming back
         if (!TextUtils.isEmpty(currentUsername) && mode == FriendAdapter.Mode.FRIENDS) {
-            loadFriends(currentUsername);
+            loadFriends(currentUsername, currentUserId);
         }
     }
 
@@ -184,7 +192,7 @@ public class FriendsListActivity extends AppCompatActivity {
     }
 
     // load current friends
-    private void loadFriends(String me) {
+    private void loadFriends(String me, long id) {
         progressDialog.setMessage("Loading friends…");
         progressDialog.show();
         String url = BASE_V8 + "/users/" + me + "/friends";
@@ -194,6 +202,7 @@ public class FriendsListActivity extends AppCompatActivity {
                     friendList.clear();
                     parseFriendDTOList(arr, false);
                     adapter.setCurrentUsername(me);
+                    adapter.setCurrentUserId(id); // keep adapter in sync in FRIENDS mode
                     refreshEmptyState();
                 },
                 err -> {
@@ -205,7 +214,7 @@ public class FriendsListActivity extends AppCompatActivity {
     }
 
     // load incoming friend requests
-    private void loadIncoming(String me) {
+    private void loadIncoming(String me, long id) {
         progressDialog.setMessage("Loading incoming requests…");
         progressDialog.show();
         String url = BASE_V8 + "/users/" + me + "/friends/requests/incoming";
@@ -215,6 +224,7 @@ public class FriendsListActivity extends AppCompatActivity {
                     friendList.clear();
                     parseFriendDTOList(arr, true);
                     adapter.setCurrentUsername(me);
+                    adapter.setCurrentUserId(id); // already present previously
                     refreshEmptyState();
                 },
                 err -> {
@@ -226,7 +236,7 @@ public class FriendsListActivity extends AppCompatActivity {
     }
 
     // load suggested friends
-    private void loadSuggestions(String me, int limit) {
+    private void loadSuggestions(String me, int limit, long id) {
         progressDialog.setMessage("Loading suggestions…");
         progressDialog.show();
         String url = BASE_V8 + "/users/" + me + "/friends/suggestions?limit=" + limit;
@@ -241,6 +251,7 @@ public class FriendsListActivity extends AppCompatActivity {
                         Toast.makeText(this, "Showing starter users (no mutuals yet).", Toast.LENGTH_SHORT).show();
                     }
                     adapter.setCurrentUsername(me);
+                    adapter.setCurrentUserId(id); // keep adapter in sync in SUGGESTIONS mode
                     refreshEmptyState();
                 },
                 err -> {
@@ -389,7 +400,7 @@ public class FriendsListActivity extends AppCompatActivity {
                                 sAdapter.clear();
                                 if (resp != null && resp.has("username")) {
                                     String uname = resp.optString("username", "");
-                                    int uid = resp.optInt("id", -1);
+                                    long uid = resp.optLong("id", -1L);
                                     if (isSelf(uid, uname)) {
                                         tvEmpty.setText("That’s you.");
                                         return;
@@ -416,8 +427,7 @@ public class FriendsListActivity extends AppCompatActivity {
         sAdapter.setOnClickUser(u -> {
             if (!ensureMe()) return;
             sendFriendRequest(currentUsername, u.username);
-            Toast.makeText(this, "Request sent to @" + u.username, Toast.LENGTH_SHORT).show();
-            if (mode == FriendAdapter.Mode.SUGGESTIONS) loadSuggestions(currentUsername, 50);
+            if (mode == FriendAdapter.Mode.SUGGESTIONS) loadSuggestions(currentUsername, 50, currentUserId);
             d.dismiss();
         });
     }
@@ -435,8 +445,8 @@ public class FriendsListActivity extends AppCompatActivity {
 
     // simple user holder for search results
     private static class UserRow {
-        int id; String username; String email;
-        UserRow(int id, String username, String email) {
+        long id; String username; String email;
+        UserRow(long id, String username, String email) {
             this.id = id; this.username = username; this.email = email;
         }
     }

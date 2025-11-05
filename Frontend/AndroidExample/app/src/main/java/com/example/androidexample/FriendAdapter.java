@@ -20,17 +20,23 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
     private final Context ctx;
     private final List<Friend> items;
     private String currentUsername;
+    private long currentUserId;
     private Mode mode = Mode.FRIENDS;
     private static final String BASE = "http://coms-3090-026.class.las.iastate.edu:8080/api/v8";
 
-    public FriendAdapter(Context ctx, List<Friend> items, String currentUsername) {
+    public FriendAdapter(Context ctx, List<Friend> items, String currentUsername, long currentUserId) {
         this.ctx = ctx;
         this.items = items;
         this.currentUsername = currentUsername;
+        this.currentUserId = currentUserId;
     }
 
     // sets the current user's username
-    public void setCurrentUsername(String me) { this.currentUsername = me; }
+    public void setCurrentUsername(String me) { this.currentUsername = me;  }
+
+    // sets the current user's id (primitive to avoid null unboxing)
+    public void setCurrentUserId(long id){ this.currentUserId = id; }
+
     // changes the adapter mode and refreshes the view
     public void setMode(Mode m) { this.mode = m; notifyDataSetChanged(); }
 
@@ -62,7 +68,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
                     i.putExtra("username", f.getUsername());
                     i.putExtra("id", f.getId());
                     i.putExtra("displayName", f.getDisplayName());
-                    i.putExtra("currentUser", currentUsername);
+                    i.putExtra("currentUser", currentUsername); // username string for v8 endpoints
+                    i.putExtra("userId", currentUserId);        // numeric ID for downstream use
                     ctx.startActivity(i);
                 });
                 break;
@@ -83,6 +90,10 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
                         : "Add Friend";
                 h.btnAddFriend.setText(label);
                 h.btnAddFriend.setOnClickListener(v -> sendRequest(f.getUsername()));
+                break;
+
+            case SEARCH:
+                // (not used here, but retained for completeness)
                 break;
         }
     }

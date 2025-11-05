@@ -14,11 +14,11 @@ public class FriendProfileActivity extends AppCompatActivity {
 
     private static final String BASE = "http://coms-3090-026.class.las.iastate.edu:8080/api/v8";
 
-    private String username;
-    private String displayName;
-    private String currentUser;
-
-    private String id;
+    private String username;      // friend's username
+    private String displayName;   // friend's display name
+    private String currentUser;   // current user's username
+    private long id;              // friend's numeric id
+    private long userId;          // current user's numeric id
 
     private TextView tvProfileName, tvProfileUsername, tvProfileEmail;
     private Button btnMessage, btnUnfriend, btnBlock;
@@ -30,9 +30,12 @@ public class FriendProfileActivity extends AppCompatActivity {
 
         // retrieve data passed from previous activity
         username = getIntent().getStringExtra("username");
-        id = getIntent().getStringExtra("id");
+        id = getIntent().getLongExtra("id", -1L);
         displayName = getIntent().getStringExtra("displayName");
-        currentUser = getIntent().getStringExtra("currentUser");
+        currentUser = getIntent().getStringExtra("currentUser"); // username
+        userId = getIntent().getLongExtra("userId", -1L);        // numeric id
+
+        Toast.makeText(this, "current user id: " + userId, Toast.LENGTH_SHORT).show();
 
         // initialize ui components
         tvProfileName = findViewById(R.id.tvProfileName);
@@ -60,13 +63,14 @@ public class FriendProfileActivity extends AppCompatActivity {
         // handle message button click
         btnMessage.setOnClickListener(v -> {
             Intent i = new Intent(this, DirectChatActivity.class);
-            i.putExtra("friendId", Long.parseLong(id)); // friend's numeric id from your intent extras
-            i.putExtra("friendUsername", username); // for title
-            i.putExtra("currentUser", Long.parseLong(currentUser)); // current signed‑in user's numeric id
+            i.putExtra("friendId", id);                 // friend's numeric id
+            i.putExtra("friendUsername", username);     // for title
+            i.putExtra("currentUserId", userId);        // current signed-in user's numeric id
+            i.putExtra("currentUsername", currentUser); // current user's username
             startActivity(i);
         });
 
-        // handle unfriend button click
+        // handle unfriend button click (these endpoints use the username path variable)
         btnUnfriend.setOnClickListener(v -> {
             String unfriendUrl = BASE + "/users/" + currentUser + "/friends/" + username;
             JsonObjectRequest r = new JsonObjectRequest(Request.Method.DELETE, unfriendUrl, null,
