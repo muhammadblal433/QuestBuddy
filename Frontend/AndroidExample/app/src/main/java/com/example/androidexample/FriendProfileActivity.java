@@ -35,8 +35,6 @@ public class FriendProfileActivity extends AppCompatActivity {
         currentUser = getIntent().getStringExtra("currentUser"); // username
         userId = getIntent().getLongExtra("userId", -1L);        // numeric id
 
-        Toast.makeText(this, "current user id: " + userId, Toast.LENGTH_SHORT).show();
-
         // initialize ui components
         tvProfileName = findViewById(R.id.tvProfileName);
         tvProfileUsername = findViewById(R.id.tvProfileUsername);

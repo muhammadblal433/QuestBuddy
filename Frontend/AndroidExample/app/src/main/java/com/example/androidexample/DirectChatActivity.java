@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.Instant;
 
 public class DirectChatActivity extends AppCompatActivity implements DirectMessageAdapter.Callbacks {
 
@@ -55,7 +56,7 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         setContentView(R.layout.activity_direct_chat);
 
 
-        me = getIntent().getLongExtra("currentUser", -1);
+        me = getIntent().getLongExtra("currentUserId", -1);
         peerId = getIntent().getLongExtra("friendId", -1);
         peerUsername = getIntent().getStringExtra("friendUsername");
 
@@ -120,7 +121,7 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
                         if (o != null) list.add(DirectMessageDTO.fromJson(o));
                     }
                     if (prepend) adapter.prepend(list); else {
-// first load: put older first then scroll to bottom
+                    // first load: put older first then scroll to bottom
                         adapter.prepend(list);
                         rv.scrollToPosition(adapter.getItemCount()-1);
                     }
@@ -137,27 +138,46 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
 
 
     private void sendMessage(String text) {
-        String url = BASE_V10() + "/messages";
-        JSONObject body = new JSONObject();
-        try { body.put("text", text); } catch (JSONException ignored) {}
+        String trimmed = text == null ? "" : text.trim();
+        if (trimmed.isEmpty()) { et.setError("Message cannot be empty"); return; }
+        if (trimmed.length() > 2000) { et.setError("Max 2000 characters"); return; }
 
+        String url = BASE_V10() + "/messages";
+
+        // Build body to match DirectMessageCreateDTO
+        JSONObject body = new JSONObject();
+        try {
+            body.put("content", trimmed);                       //
+            body.put("clientMessageId", genClientMsgId());      //
+            body.put("sentAt", Instant.now()); //
+            // body.put("parentMessageId", replyToId);          // or JSONObject.NULL
+            // body.put("forwardFromMessageId", forwardFromId); // or JSONObject.NULL
+        } catch (Exception ignored) {}
 
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body,
                 res -> {
-                    DirectMessageDTO m = DirectMessageDTO.fromJson(res);
+                    DirectMessageDTO m = DirectMessageDTO.fromJson(res);   // ensure model reads "content" field
                     adapter.append(m);
-                    rv.scrollToPosition(adapter.getItemCount()-1);
+                    rv.scrollToPosition(adapter.getItemCount() - 1);
                     et.setText("");
                 },
-                err -> Toast.makeText(this, "Send failed", Toast.LENGTH_SHORT).show()) {
+                err -> {
+                    Toast.makeText(this, "Send failed", Toast.LENGTH_SHORT).show();
+                }) {
             @Override public Map<String, String> getHeaders() { return authHeader(); }
         };
+
         Volley.newRequestQueue(this).add(req);
     }
 
 
     private String BASE_V10() {
         return "http://coms-3090-026.class.las.iastate.edu:8080/api/v10/direct/" + peerId;
+    }
+
+    private String genClientMsgId() {
+        String id = java.util.UUID.randomUUID().toString(); // 36 chars with hyphens
+        return id.length() <= 64 ? id : id.substring(0, 64);
     }
 
 
