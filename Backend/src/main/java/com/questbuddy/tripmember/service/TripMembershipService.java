@@ -103,6 +103,33 @@ public class TripMembershipService {
                 null, trip.getId(), null);
     }
 
+    // Invitee declines (rejects) their pending invite
+    @Transactional
+    public void decline(Long userId, Long tripId) {
+        TripMember m = members.findByTrip_IdAndUser_Id(tripId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "membership_not_found"));
+
+        if (m.getStatus() == Status.ACCEPTED) {
+            // If already accepted, treat as no-op or enforce a different flow (leave/remove)
+            return;
+        }
+
+        User invitee = m.getUser();
+        User inviter = m.getInvitedBy();
+        Trip trip    = m.getTrip();
+
+        // Remove the pending invite row on decline
+        members.delete(m);
+
+        // Notify the owner/inviter that the invitee declined
+        safelyNotify(inviter.getId(),
+                "Invite declined",
+                display(invitee) + " declined Trip #" + trip.getId(),
+                // Using REMINDER for "declined" as discussed (no enum change required)
+                NotificationType.REMINDER,
+                null, trip.getId(), null);
+    }
+
     /**
      * Remove a member (owner can remove anyone; a user can remove themselves = leave).
      * NOTE: removing a non-existent membership --> no operation due to @Transactional.

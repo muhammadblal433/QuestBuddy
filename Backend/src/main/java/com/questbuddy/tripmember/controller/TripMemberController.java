@@ -54,6 +54,18 @@ public class TripMemberController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Invitee declines their pending invite. Body must be { "status": "DECLINED" }. */
+    @PutMapping("/decline")
+    public ResponseEntity<Void> decline(@RequestHeader("X-User-Id") Long me,
+                                        @PathVariable Long tripId,
+                                        @Valid @RequestBody UpdateStatusDTO body) {
+        if (!"DECLINED".equals(body.status())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be DECLINED");
+        }
+        svc.decline(me, tripId);
+        return ResponseEntity.noContent().build();
+    }
+
     /** Remove a member. Owner can remove anyone; a user can remove themself (leave). */
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> remove(@RequestHeader("X-User-Id") Long me,
