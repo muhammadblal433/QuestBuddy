@@ -2,6 +2,7 @@ com/questbuddy/Demo2Application.class
 com/questbuddy/budget/repository/BudgetSplitRepository.class
 com/questbuddy/tripmember/model/TripMember$Status.class
 com/questbuddy/tripmember/dto/InviteDTO.class
+com/questbuddy/config/SpringContext.class
 com/questbuddy/budget/dto/BudgetCreateDTO.class
 com/questbuddy/budget/dto/BudgetResponseDTO.class
 com/questbuddy/messages/guard/MessagingGuardsConfig.class
@@ -29,6 +30,7 @@ com/questbuddy/messages/trip/repository/TripMessageRepository.class
 com/questbuddy/messages/direct/dto/DirectMessageCreateDTO.class
 com/questbuddy/budget/BudgetMapper.class
 com/questbuddy/budget/service/BudgetServiceImplemented.class
+com/questbuddy/messages/ws/TripChatEndpoint.class
 com/questbuddy/tripmember/model/TripMember$Role.class
 com/questbuddy/tripmember/service/TripMembershipService.class
 com/questbuddy/budget/dto/BudgetUpdateDTO.class
@@ -39,7 +41,9 @@ com/questbuddy/notification/ws/NotificationEndpoint.class
 com/questbuddy/tripmember/model/TripMember.class
 com/questbuddy/messages/trip/model/TripMessage.class
 com/questbuddy/messages/trip/model/MessageReaction.class
+com/questbuddy/messages/ws/WsPing.class
 com/questbuddy/messages/trip/dto/TripMessageResponseDTO.class
+com/questbuddy/messages/ws/ChatBroadcaster.class
 com/questbuddy/messages/direct/dto/DirectMessageEditDTO.class
 com/questbuddy/messages/direct/model/DirectMessage.class
 com/questbuddy/friends/dto/ApiMessage.class
