@@ -293,32 +293,106 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
      * POST /{peerId}/messages/{messageId}/reactions?emoji=...
      */
     private void toggleReaction(long messageId, String emoji) {
-        String url = baseV10() + "/messages/" + messageId + "/reactions?emoji=" + android.net.Uri.encode(emoji);
+        int idx = indexOf(messageId);
+        if (idx < 0) return;
+        DirectMessageDTO row = data.get(idx);
+        if (row.deleted) { cb.onError("Can't react to a deleted message"); return; }
 
-        // optimistic: add (or bump) locally
-        applyLocalReaction(messageId, emoji, true);
+        String url = baseV10() + "/messages/" + messageId
+                + "/reactions?emoji=" + android.net.Uri.encode(emoji == null ? "" : emoji);
+
+        // optimistic +1
+        applyLocalReaction(messageId, emoji, /*add*/ true);
 
         JsonObjectRequest req = new JsonObjectRequest(
-                Request.Method.POST, url, null,
+                Request.Method.POST, url, /*body*/ null,
                 res -> {
-                    // If server returns reaction map/counters, sync precisely:
-                    // DirectMessageDTO updated = DirectMessageDTO.fromJson(res);
-                    // replace local reactions and notify.
-                    int i = indexOf(messageId);
-                    if (i >= 0 && res.has("reactions")) {
-                        DirectMessageDTO m = data.get(i);
-                        m.reactions = res.optJSONObject("reactions");
-                        notifyItemChanged(i);
-                    }
+                    // Server returns a JSON map: {"Heart":2,"👍":1} — trust it
+                    DirectMessageDTO m = data.get(idx);
+                    m.reactions = res;
+                    notifyItemChanged(idx);
                 },
                 err -> {
-                    cb.onError("Reaction failed");
-                    // optional: revert optimistic change by decrementing
-                    applyLocalReaction(messageId, emoji, false);
+                    // revert optimistic change
+                    applyLocalReaction(messageId, emoji, /*add*/ false);
+
+                    int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;
+                    String body = (err.networkResponse != null && err.networkResponse.data != null)
+                            ? new String(err.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8) : null;
+                    android.util.Log.e("REACTION", "POST failed code=" + code + " body=" + body);
+                    cb.onError("Reaction failed" + (code > 0 ? " (" + code + ")" : ""));
                 }
         ) {
-            @Override public Map<String, String> getHeaders() { return authHeader(); }
+            @Override public Map<String, String> getHeaders() {
+                Map<String,String> h = authHeader();
+                h.put("Accept", "application/json");
+                return h;
+            }
+            // accept empty-body success just in case
+            @Override
+            protected com.android.volley.Response<org.json.JSONObject> parseNetworkResponse(
+                    com.android.volley.NetworkResponse response) {
+                if (response == null || response.data == null || response.data.length == 0) {
+                    return com.android.volley.Response.success(
+                            new org.json.JSONObject(),
+                            com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                }
+                return super.parseNetworkResponse(response);
+            }
         };
+
+        req.setShouldCache(false);
+        Volley.newRequestQueue(ctx).add(req);
+    }
+
+    private void unreact(long messageId, String emoji) {
+        int idx = indexOf(messageId);
+        if (idx < 0) return;
+        DirectMessageDTO row = data.get(idx);
+        if (row.deleted) { cb.onError("Can't react to a deleted message"); return; }
+
+        String url = baseV10() + "/messages/" + messageId
+                + "/reactions/" + android.net.Uri.encode(emoji == null ? "" : emoji);
+
+        // optimistic -1
+        applyLocalReaction(messageId, emoji, /*add*/ false);
+
+        JsonObjectRequest req = new JsonObjectRequest(
+                Request.Method.DELETE, url, /*body*/ null,
+                res -> {
+                    DirectMessageDTO m = data.get(idx);
+                    m.reactions = res;  // authoritative counts
+                    notifyItemChanged(idx);
+                },
+                err -> {
+                    // revert optimistic change
+                    applyLocalReaction(messageId, emoji, /*add*/ true);
+
+                    int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;
+                    String body = (err.networkResponse != null && err.networkResponse.data != null)
+                            ? new String(err.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8) : null;
+                    android.util.Log.e("REACTION", "DELETE failed code=" + code + " body=" + body);
+                    cb.onError("Unreact failed" + (code > 0 ? " (" + code + ")" : ""));
+                }
+        ) {
+            @Override public Map<String, String> getHeaders() {
+                Map<String,String> h = authHeader();
+                h.put("Accept", "application/json");
+                return h;
+            }
+            @Override
+            protected com.android.volley.Response<org.json.JSONObject> parseNetworkResponse(
+                    com.android.volley.NetworkResponse response) {
+                if (response == null || response.data == null || response.data.length == 0) {
+                    return com.android.volley.Response.success(
+                            new org.json.JSONObject(),
+                            com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                }
+                return super.parseNetworkResponse(response);
+            }
+        };
+
+        req.setShouldCache(false);
         Volley.newRequestQueue(ctx).add(req);
     }
 
@@ -362,16 +436,13 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
         notifyItemRemoved(i);
     }
 
-    private void applyLocalReaction(long messageId, String emoji, boolean addOrToggleOn) {
-        int i = indexOf(messageId);
-        if (i < 0) return;
+    private void applyLocalReaction(long messageId, String emoji, boolean add) {
+        int i = indexOf(messageId); if (i < 0) return;
         DirectMessageDTO m = data.get(i);
         if (m.reactions == null) m.reactions = new org.json.JSONObject();
         int prev = m.reactions.optInt(emoji, 0);
-        try {
-            int next = addOrToggleOn ? Math.max(prev + 1, 1) : Math.max(prev - 1, 0);
-            if (next <= 0) m.reactions.remove(emoji); else m.reactions.put(emoji, next);
-        } catch (Exception ignored) {}
+        int next = Math.max(prev + (add ? 1 : -1), 0);
+        try { if (next == 0) m.reactions.remove(emoji); else m.reactions.put(emoji, next); } catch (Exception ignored) {}
         notifyItemChanged(i);
     }
 }
