@@ -20,6 +20,10 @@ public interface BudgetService {
     BudgetResponseDTO get(Long ownerId, Long budgetId, String requesterUsername);
 
     BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body);
+
+    // participant update requesterUsername is not the owner; can only edit their own split amounts
+    BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body, String requesterUsername);
+
     void delete(Long ownerId, Long budgetId);
 
     // Owner view (original)

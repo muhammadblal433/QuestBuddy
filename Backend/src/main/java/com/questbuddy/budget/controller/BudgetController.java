@@ -68,11 +68,20 @@ public class BudgetController {
     }
 
     // Update a budget (optional name; optional full replace of splits)
+    // NOTE: owner can update all fields; a participant (X-Username != owner) can only update their own split amounts
     @PutMapping("/users/{ownerUsername}/budgets/{budgetId}")
     public BudgetResponseDTO update(@PathVariable String ownerUsername,
                                     @PathVariable Long budgetId,
-                                    @RequestBody @Valid BudgetUpdateDTO body) {
-        return service.update(idOf(ownerUsername), budgetId, body);
+                                    @RequestBody @Valid BudgetUpdateDTO body,
+                                    @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
+        Long ownerId = idOf(ownerUsername);
+        if (requesterUsername == null || requesterUsername.isBlank()
+                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+            // owner path (existing behavior)
+            return service.update(ownerId, budgetId, body);
+        }
+        // participant path: only modify own split
+        return service.update(ownerId, budgetId, body, requesterUsername);
     }
 
     // Delete a budget
