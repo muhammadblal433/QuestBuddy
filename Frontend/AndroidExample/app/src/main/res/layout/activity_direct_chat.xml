@@ -2,18 +2,43 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
 
-    <TextView
-        android:id="@+id/tvToolbar"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:textStyle="bold"
-        android:textSize="18sp"
-        android:background="#EEEEEE"
-        android:text="Chat"/>
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="12dp"
+        android:background="#f97316">
+
+        <!-- Back arrow (clickable area) -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_arrow_back_24"
+            app:tint="#FFFFFF"/>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tvToolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="8dp"
+            android:text="chat"
+            android:paddingBottom="4dp"
+            android:textSize="28sp"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
 
 
     <androidx.recyclerview.widget.RecyclerView
@@ -43,6 +68,8 @@
             android:id="@+id/btnSend"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Send"/>
+            android:text="Send"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rounded_button_orange"/>
     </LinearLayout>
 </LinearLayout>

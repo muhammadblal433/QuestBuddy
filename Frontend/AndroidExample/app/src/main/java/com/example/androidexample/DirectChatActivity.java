@@ -1,9 +1,11 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,12 +41,13 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
 
     private long me;
     private long peerId;
-    private String peerUsername;
-
+    private String peerUsername, currentUsername;
 
     private RecyclerView rv;
     private EditText et;
     private Button btnSend;
+
+    private ImageButton btnback;
     private DirectMessageAdapter adapter;
 
 
@@ -57,8 +60,10 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
 
 
         me = getIntent().getLongExtra("currentUserId", -1);
+
         peerId = getIntent().getLongExtra("friendId", -1);
         peerUsername = getIntent().getStringExtra("friendUsername");
+        currentUsername = getIntent().getStringExtra("currentUsername");
 
 
         TextView tvToolbar = findViewById(R.id.tvToolbar);
@@ -68,6 +73,8 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         rv = findViewById(R.id.rvMessages);
         et = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
+        btnback = findViewById(R.id.btnBack);
+
 
 
         LinearLayoutManager lm = new LinearLayoutManager(this);
@@ -99,8 +106,15 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
             if (TextUtils.isEmpty(text)) return;
             sendMessage(text);
         });
-    }
 
+        btnback.setOnClickListener(v -> {
+            Intent i = new Intent(this, FriendsListActivity.class);
+            i.putExtra("username", currentUsername);
+            i.putExtra("userId", me);
+            startActivity(i);
+            finish();
+        });
+    }
 
     private Map<String,String> authHeader() {
         Map<String,String> h = new HashMap<>();

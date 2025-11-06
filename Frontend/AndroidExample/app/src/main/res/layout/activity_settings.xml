@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:text="Back"
             android:textColor="#FFFFFF"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/rounded_button_orange"
             android:backgroundTint="#FB8C00"
             android:layout_marginStart="8dp"
             android:layout_marginVertical="8dp"
@@ -130,6 +130,6 @@
         android:backgroundTint="#FF0000"
         android:textColor="#FFFFFF"
         android:padding="10dp"
-        android:background="@drawable/rounded_button" />
+        android:background="@drawable/rounded_button_orange" />
 
 </LinearLayout>

@@ -24,6 +24,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
     private Mode mode = Mode.FRIENDS;
     private static final String BASE = "http://coms-3090-026.class.las.iastate.edu:8080/api/v8";
 
+
     public FriendAdapter(Context ctx, List<Friend> items, String currentUsername, long currentUserId) {
         this.ctx = ctx;
         this.items = items;
@@ -55,21 +56,35 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
         h.tvName.setText(f.getDisplayName());
         h.tvUsername.setText("@" + f.getUsername());
 
+
         h.btnProfile.setVisibility(View.GONE);
         h.btnAddFriend.setVisibility(View.GONE);
         h.llRequestActions.setVisibility(View.GONE);
+        h.imgBtn.setVisibility(View.GONE);
+
 
         switch (mode) {
             // show profile button for friends
             case FRIENDS:
+                h.imgBtn.setVisibility(View.VISIBLE);
+                h.imgBtn.setOnClickListener(v -> {
+                    Intent i = new Intent(ctx, DirectChatActivity.class);
+                    i.putExtra("friendUsername", f.getUsername());
+                    i.putExtra("friendId", f.getId());
+                    i.putExtra("displayName", f.getDisplayName());
+                    i.putExtra("currentUsername", currentUsername);
+                    i.putExtra("currentUserId", currentUserId);
+                    ctx.startActivity(i);
+                });
+
                 h.btnProfile.setVisibility(View.VISIBLE);
                 h.btnProfile.setOnClickListener(v -> {
                     Intent i = new Intent(ctx, FriendProfileActivity.class);
                     i.putExtra("username", f.getUsername());
                     i.putExtra("id", f.getId());
                     i.putExtra("displayName", f.getDisplayName());
-                    i.putExtra("currentUser", currentUsername); // username string for v8 endpoints
-                    i.putExtra("userId", currentUserId);        // numeric ID for downstream use
+                    i.putExtra("currentUser", currentUsername);
+                    i.putExtra("userId", currentUserId);
                     ctx.startActivity(i);
                 });
                 break;
@@ -93,7 +108,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
                 break;
 
             case SEARCH:
-                // (not used here, but retained for completeness)
                 break;
         }
     }
@@ -144,12 +158,15 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.VH> {
         Button btnAddFriend, btnAccept, btnReject, btnBlock, btnProfile;
         LinearLayout llRequestActions;
 
+        ImageButton imgBtn;
+
         // initializes all view references
         VH(@NonNull View v) {
             super(v);
             tvName = v.findViewById(R.id.tvFriendName);
             tvUsername = v.findViewById(R.id.tvFriendUsername);
             btnProfile = v.findViewById(R.id.btnProfile);
+            imgBtn = v.findViewById(R.id.btnChat);
             btnAddFriend = v.findViewById(R.id.btnAddFriend);
             btnAccept = v.findViewById(R.id.btnAccept);
             btnReject = v.findViewById(R.id.btnReject);

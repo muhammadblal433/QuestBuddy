@@ -74,6 +74,7 @@ public class FriendsListActivity extends AppCompatActivity {
         btnAddFriend = findViewById(R.id.btnAddFriend);
         btnLoad = findViewById(R.id.btnLoadFriends);
 
+
         recyclerFriends.setLayoutManager(new LinearLayoutManager(this)); // vertical list
         adapter = new FriendAdapter(this, friendList, null, -1L);
         adapter.setMode(FriendAdapter.Mode.FRIENDS);

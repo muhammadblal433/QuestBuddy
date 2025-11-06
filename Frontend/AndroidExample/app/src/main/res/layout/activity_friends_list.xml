@@ -28,7 +28,7 @@
         android:inputType="textPersonName"
         android:padding="12dp"
         android:layout_margin="12dp"
-        android:background="@drawable/rounded_button"
+        android:background="@drawable/rounded_button_orange"
         android:drawableStart="@android:drawable/ic_menu_myplaces" />
 
     <!-- buttons row for actions like load, requests, etc -->
@@ -99,18 +99,19 @@
         android:visibility="gone" />
 
     <!-- recycler view showing list of friends -->
+
+    <!-- returns to home page-->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerFriends"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_margin="12dp"
+        android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="16dp"
         android:scrollbars="vertical"
         tools:listitem="@layout/item_friend" />
 
-    <!-- returns to home page-->
     <Button
         android:id="@+id/btnReturnHome"
         android:layout_width="wrap_content"

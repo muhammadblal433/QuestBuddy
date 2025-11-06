@@ -3,6 +3,7 @@ package com.example.androidexample;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,7 +22,9 @@ public class FriendProfileActivity extends AppCompatActivity {
     private long userId;          // current user's numeric id
 
     private TextView tvProfileName, tvProfileUsername, tvProfileEmail;
-    private Button btnMessage, btnUnfriend, btnBlock;
+    private Button btnUnfriend, btnBlock;
+
+    private ImageButton imgBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +42,9 @@ public class FriendProfileActivity extends AppCompatActivity {
         tvProfileName = findViewById(R.id.tvProfileName);
         tvProfileUsername = findViewById(R.id.tvProfileUsername);
         tvProfileEmail = findViewById(R.id.tvProfileEmail);
-        btnMessage = findViewById(R.id.btnMessage);
         btnUnfriend = findViewById(R.id.btnUnfriend);
         btnBlock = findViewById(R.id.btnBlock);
+        imgBtn = findViewById(R.id.btnBack);
 
         // display basic user info
         tvProfileName.setText(displayName);
@@ -58,15 +61,6 @@ public class FriendProfileActivity extends AppCompatActivity {
                 err -> tvProfileEmail.setText("Email: Not available"));
         Volley.newRequestQueue(this).add(req);
 
-        // handle message button click
-        btnMessage.setOnClickListener(v -> {
-            Intent i = new Intent(this, DirectChatActivity.class);
-            i.putExtra("friendId", id);                 // friend's numeric id
-            i.putExtra("friendUsername", username);     // for title
-            i.putExtra("currentUserId", userId);        // current signed-in user's numeric id
-            i.putExtra("currentUsername", currentUser); // current user's username
-            startActivity(i);
-        });
 
         // handle unfriend button click (these endpoints use the username path variable)
         btnUnfriend.setOnClickListener(v -> {
@@ -75,6 +69,14 @@ public class FriendProfileActivity extends AppCompatActivity {
                     res -> Toast.makeText(this, "Unfriended @" + username, Toast.LENGTH_SHORT).show(),
                     err -> Toast.makeText(this, "Unfriend failed: " + err.getMessage(), Toast.LENGTH_SHORT).show());
             Volley.newRequestQueue(this).add(r);
+        });
+
+        imgBtn.setOnClickListener(v -> {
+            Intent i = new Intent(this, FriendsListActivity.class);
+            i.putExtra("username", currentUser);
+            i.putExtra("userId", userId);
+            startActivity(i);
+            finish();
         });
 
         // handle block button click
