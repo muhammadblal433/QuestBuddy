@@ -80,7 +80,7 @@
         android:layout_height="wrap_content"
         android:text="Return Home"
         android:textColor="#FFFFFF"
-        android:background="@drawable/rounded_button"
+        android:background="@drawable/rounded_button_orange"
         android:backgroundTint="#FB8C00"
         android:paddingHorizontal="12dp"
         android:layout_gravity="center"

@@ -7,12 +7,30 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Back row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_arrow_back_24" />
+    </LinearLayout>
+
     <!-- Profile Picture -->
     <ImageView
         android:id="@+id/ivProfilePic"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         android:src="@android:drawable/sym_def_app_icon"
         android:contentDescription="Profile Picture"
@@ -51,32 +69,25 @@
         android:layout_marginTop="4dp"
         android:layout_marginBottom="32dp" />
 
-    <!-- Message button -->
-    <Button
-        android:id="@+id/btnMessage"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:text="MESSAGE"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#2196F3"
-        android:layout_marginBottom="12dp" />
-
-    <!-- Unfriend button -->
+    <!-- Unfriend -->
     <Button
         android:id="@+id/btnUnfriend"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:text="UNFRIEND"
         android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_buttons"
         android:backgroundTint="#FF9800"
         android:layout_marginBottom="12dp" />
 
-    <!-- Block button -->
+    <!-- Block -->
     <Button
         android:id="@+id/btnBlock"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:text="BLOCK"
         android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_buttons"
         android:backgroundTint="#F44336" />
+
 </LinearLayout>
