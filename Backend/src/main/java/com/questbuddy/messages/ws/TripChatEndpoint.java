@@ -93,6 +93,9 @@ public class TripChatEndpoint {
                 case "TYPING_STOP":
                     handleTyping(userId, tripId, event);
                     break;
+                case "READ_RECEIPT":
+                    handleReadReceipt(session, userId, tripId, clientMsgId, root.path("payload"));
+                    break;
                 default:
                     sendSafe(session, json(java.util.Map.of("event", "ERROR", "reason", "unknown event")));
                     break;
@@ -239,6 +242,25 @@ public class TripChatEndpoint {
                 "senderId", me,
                 "timestamp", Instant.now().toString()
         )));
+    }
+
+    private void handleReadReceipt(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+        try {
+            Long upTo = longOrNull(p, "messageId");
+            // Service updates per-user pointer and BROADCASTS to the trip
+            tripSvc().markReadProgress(me, tripId, upTo);
+
+            // ACK only from the endpoint
+            sendSafe(session, json(Map.of(
+                    "event", "ACK",
+                    "channelType", "TRIP",
+                    "channelId", tripId,
+                    "clientMsgId", clientMsgId,
+                    "serverMsgId", upTo
+            )));
+        } catch (Exception e) {
+            sendSafe(session, json(Map.of("event", "ERROR", "reason", safeReason(e))));
+        }
     }
 
     // helper functions
