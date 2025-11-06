@@ -37,16 +37,34 @@ public class BudgetController {
     }
 
     // List budgets for a user
+    // NOTE: if X-Username is provided and is NOT the owner, only budgets that include that user are returned
     @GetMapping("/users/{ownerUsername}/budgets")
-    public List<BudgetResponseDTO> list(@PathVariable String ownerUsername) {
-        return service.list(idOf(ownerUsername));
+    public List<BudgetResponseDTO> list(@PathVariable String ownerUsername,
+                                        @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
+        Long ownerId = idOf(ownerUsername);
+        if (requesterUsername == null || requesterUsername.isBlank()
+                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+            // original owner behavior (unchanged)
+            return service.list(ownerId);
+        }
+        // participant-filtered view
+        return service.list(ownerId, requesterUsername);
     }
 
     // Get a single budget (with splits + totals)
+    // NOTE: owner always allowed; participant allowed if included in splits via X-Username header
     @GetMapping("/users/{ownerUsername}/budgets/{budgetId}")
     public BudgetResponseDTO get(@PathVariable String ownerUsername,
-                                 @PathVariable Long budgetId) {
-        return service.get(idOf(ownerUsername), budgetId);
+                                 @PathVariable Long budgetId,
+                                 @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
+        Long ownerId = idOf(ownerUsername);
+        if (requesterUsername == null || requesterUsername.isBlank()
+                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+            // original owner behavior
+            return service.get(ownerId, budgetId);
+        }
+        // participant view
+        return service.get(ownerId, budgetId, requesterUsername);
     }
 
     // Update a budget (optional name; optional full replace of splits)
@@ -66,10 +84,19 @@ public class BudgetController {
     }
 
     // Compute per-user balances for a budget
+    // NOTE: owner always allowed; participant allowed if included in splits via X-Username header
     @GetMapping("/users/{ownerUsername}/budgets/{budgetId}/balances")
     public List<BudgetBalanceDTO> balances(@PathVariable String ownerUsername,
-                                           @PathVariable Long budgetId) {
-        return service.balances(idOf(ownerUsername), budgetId);
+                                           @PathVariable Long budgetId,
+                                           @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
+        Long ownerId = idOf(ownerUsername);
+        if (requesterUsername == null || requesterUsername.isBlank()
+                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+            // original owner behavior
+            return service.balances(ownerId, budgetId);
+        }
+        // participant view
+        return service.balances(ownerId, budgetId, requesterUsername);
     }
 
     private Long idOf(String username) {
