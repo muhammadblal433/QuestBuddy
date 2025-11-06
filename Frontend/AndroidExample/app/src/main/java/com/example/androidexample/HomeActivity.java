@@ -3,12 +3,12 @@ package com.example.androidexample;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ArrayAdapter;
+import org.json.JSONObject;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ImageView;
-import android.view.View;
+import com.nex3z.notificationbadge.NotificationBadge;
 import android.widget.Toast;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +28,7 @@ public class HomeActivity extends AppCompatActivity {
     private String[] drawerItems;
 
     private int userId;
-
-    private TextView tvBadgeCount;
+    private NotificationBadge notificationBadge;
     private int notificationCount = 0;
 
     @Override
@@ -61,18 +60,12 @@ public class HomeActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
 
-        tvBadgeCount = findViewById(R.id.tvBadgeCount);
+        notificationBadge = findViewById(R.id.badge);
         ImageView btnNotifications = findViewById(R.id.btnNotifications);
         btnNotifications.setOnClickListener(v -> {
             // Reset badge when opening notifications
             notificationCount = 0;
-            updateBadge();
-
-            getSharedPreferences("session", MODE_PRIVATE)
-                    .edit()
-                    .putInt("badgeCount", 0)
-                    .apply();
-
+            notificationBadge.setNumber(0);
             Intent intent = new Intent(HomeActivity.this, NotificationsActivity.class);
             intent.putExtra("userId", userId);
             startActivity(intent);
@@ -85,8 +78,32 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onWebSocketMessage(String message) {
                 runOnUiThread(() -> {
+                    try {
+                        JSONObject json = new JSONObject(message);
+                        String title = json.optString("title", "New Notification");
+                        String body = json.optString("message", "");
+
+                        Toast.makeText(
+                                HomeActivity.this,
+                                "🔔 " + title + (body.isEmpty() ? "" : ": " + body),
+                                Toast.LENGTH_LONG
+                        ).show();
+
+                    } catch (org.json.JSONException e) {
+                        Toast.makeText(
+                                HomeActivity.this,
+                                "🔔 New notification received!",
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+
                     notificationCount++;
-                    updateBadge();
+                    notificationBadge.setNumber(notificationCount);
+
+                    ImageView bell = findViewById(R.id.btnNotifications);
+                    bell.animate().rotation(15).setDuration(120)
+                            .withEndAction(() -> bell.animate().rotation(0).setDuration(120))
+                            .start();
 
                     getSharedPreferences("session", MODE_PRIVATE)
                             .edit()
@@ -95,10 +112,9 @@ public class HomeActivity extends AppCompatActivity {
                 });
             }
 
-            @Override
-            public void onWebSocketClose(int code, String reason, boolean remote) {}
-            @Override
-            public void onWebSocketError(Exception ex) {}
+
+            @Override public void onWebSocketClose(int code, String reason, boolean remote) {}
+            @Override public void onWebSocketError(Exception ex) {}
         });
 
         if (!WebSocketManager.getInstance().isConnected()) {
@@ -200,17 +216,6 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    // updates the notification badge visibility and count on the screen
-    private void updateBadge() {
-        Log.d("BadgeDebug", "Updating badge: count=" + notificationCount);
-        if (notificationCount > 0) {
-            tvBadgeCount.setText(String.valueOf(notificationCount));
-            tvBadgeCount.setVisibility(View.VISIBLE);
-        } else {
-            tvBadgeCount.setVisibility(View.GONE);
-        }
-    }
-
 
     // loads the username of the logged-in user from the server and displays it
     private void loadUserProfile(int userId) {
@@ -249,8 +254,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onResume();
         notificationCount = getSharedPreferences("session", MODE_PRIVATE)
                 .getInt("badgeCount", 0);
-        updateBadge();
-
+        notificationBadge.setNumber(notificationCount);
         if (!WebSocketManager.getInstance().isConnected()) {
             WebSocketManager.getInstance()
                     .connectWebSocket("ws://coms-3090-026.class.las.iastate.edu:8080/ws/notifications/" + userId);

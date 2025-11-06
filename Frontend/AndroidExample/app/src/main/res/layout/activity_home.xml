@@ -40,19 +40,13 @@
                     android:layout_gravity="center_vertical|end"
                     app:tint="@android:color/white" />
 
-                <!-- Red Badge Count -->
-                <TextView
-                    android:id="@+id/tvBadgeCount"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                <com.nex3z.notificationbadge.NotificationBadge
+                    android:id="@+id/badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="end|top"
-                    android:background="@drawable/circle_background"
-                    android:textColor="@android:color/white"
-                    android:textSize="10sp"
-                    android:gravity="center"
-                    android:visibility="gone"
-                    android:layout_marginEnd="-2dp"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginEnd="2dp"
+                    android:layout_marginTop="2dp" />
             </FrameLayout>
 
         </androidx.appcompat.widget.Toolbar>
