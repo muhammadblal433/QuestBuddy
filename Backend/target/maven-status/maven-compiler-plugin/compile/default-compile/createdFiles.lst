@@ -38,6 +38,7 @@ com/questbuddy/budget/dto/ApiMessage.class
 com/questbuddy/messages/direct/mapper/DirectMessageMapper.class
 com/questbuddy/messages/direct/service/DirectMessageService.class
 com/questbuddy/notification/ws/NotificationEndpoint.class
+com/questbuddy/messages/ws/DirectChatEndpoint.class
 com/questbuddy/tripmember/model/TripMember.class
 com/questbuddy/messages/trip/model/TripMessage.class
 com/questbuddy/messages/trip/model/MessageReaction.class

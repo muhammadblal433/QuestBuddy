@@ -10,6 +10,7 @@ import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
 import jakarta.validation.ValidationException;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -79,9 +80,35 @@ public class BudgetServiceImplemented implements BudgetService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<BudgetResponseDTO> list(Long ownerId, String requesterUsername) {
+        // If requester is null/blank, treat as not authorized (should be handled by controller)
+        if (requesterUsername == null || requesterUsername.isBlank()) {
+            return List.of();
+        }
+        // Load owner's budgets and filter to those where requester appears in splits
+        return budgets.findAllByOwner_Id(ownerId, Sort.by("createdAt").descending())
+                .stream()
+                .filter(b -> canViewAsParticipant(b, requesterUsername))
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public BudgetResponseDTO get(Long ownerId, Long budgetId) {
         Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        return mapper.toResponse(b);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BudgetResponseDTO get(Long ownerId, Long budgetId, String requesterUsername) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        if (!canViewAsParticipant(b, requesterUsername)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
         return mapper.toResponse(b);
     }
 
@@ -173,6 +200,17 @@ public class BudgetServiceImplemented implements BudgetService {
         return mapper.toBalances(b);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<BudgetBalanceDTO> balances(Long ownerId, Long budgetId, String requesterUsername) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        if (!canViewAsParticipant(b, requesterUsername)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
+        return mapper.toBalances(b);
+    }
+
     // helpers
     private User requireUser(Long id) {
         return users.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + id));
@@ -182,4 +220,16 @@ public class BudgetServiceImplemented implements BudgetService {
         return s.trim();
     }
     private static BigDecimal nz(BigDecimal x) { return x == null ? BigDecimal.ZERO : x; }
+
+    /** True if requesterUsername matches any split participant (by username, case-insensitive). */
+    private static boolean canViewAsParticipant(Budget b, String requesterUsername) {
+        if (requesterUsername == null || requesterUsername.isBlank()) return false;
+        String req = requesterUsername.trim().toLowerCase();
+        for (BudgetSplit s : b.getSplits()) {
+            String uname = s.getUser() != null && s.getUser().getUsername() != null
+                    ? s.getUser().getUsername().trim().toLowerCase() : null;
+            if (uname != null && uname.equals(req)) return true;
+        }
+        return false;
+    }
 }
