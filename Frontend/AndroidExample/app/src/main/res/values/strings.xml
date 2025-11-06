@@ -12,10 +12,13 @@
         <item>Friends</item>
         <item>Currency Converter</item>
         <item>Group Chat</item>
+        <item>Budget Manager</item>
         <item>Settings</item>
         <item>Logout</item>
     </string-array>
     <string name="navigation_drawer_open">Open Navigation</string>
     <string name="navigation_drawer_close">Close Navigation</string>
+    <string name="mark_read">Mark Read</string>
+    <string name="delete">Delete</string>
 
 </resources>

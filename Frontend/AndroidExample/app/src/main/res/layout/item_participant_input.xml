@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#FFF3E0"
+    android:layout_marginBottom="12dp"
+    android:elevation="2dp">
+
+    <!-- Header Row with Participant Title + Delete Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <!-- label for participant number -->
+        <TextView
+            android:id="@+id/tvParticipantLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Participant"
+            android:textStyle="bold"
+            android:textColor="#E65100"
+            android:textSize="16sp" />
+
+        <!-- delete button for removing participant -->
+        <Button
+            android:id="@+id/btnDeleteParticipant"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✖"
+            android:backgroundTint="#F44336"
+            android:textColor="#FFFFFF"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:textSize="14sp"
+            android:layout_marginLeft="8dp" />
+    </LinearLayout>
+
+    <!-- username input -->
+    <EditText
+        android:id="@+id/etUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Username"
+        android:background="@drawable/rounded_edittext"
+        android:padding="10dp"
+        android:textColor="#212121"
+        android:textColorHint="#9E9E9E"
+        android:layout_marginBottom="8dp" />
+
+    <!-- share amount input -->
+    <EditText
+        android:id="@+id/etShareAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Share Amount"
+        android:background="@drawable/rounded_edittext"
+        android:padding="10dp"
+        android:inputType="numberDecimal"
+        android:textColor="#212121"
+        android:textColorHint="#9E9E9E"
+        android:layout_marginBottom="8dp" />
+
+    <!-- paid amount input -->
+    <EditText
+        android:id="@+id/etPaidAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Paid Amount"
+        android:background="@drawable/rounded_edittext"
+        android:padding="10dp"
+        android:inputType="numberDecimal"
+        android:textColor="#212121"
+        android:textColorHint="#9E9E9E" />
+
+</LinearLayout>
