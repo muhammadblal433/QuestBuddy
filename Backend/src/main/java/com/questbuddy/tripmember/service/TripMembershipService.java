@@ -2,7 +2,6 @@ package com.questbuddy.tripmember.service;
 
 import com.questbuddy.repository.UserRepository;
 import com.questbuddy.tripmember.model.TripMember;
-import com.questbuddy.tripmember.model.TripMember;
 import com.questbuddy.tripmember.model.TripMember.Role;
 import com.questbuddy.tripmember.model.TripMember.Status;
 import com.questbuddy.tripmember.repository.TripMemberRepository;
@@ -11,8 +10,6 @@ import com.questbuddy.tripmember.security.TripMembershipGate;
 import com.questbuddy.model.User;
 import com.questbuddy.trip.Trip;
 
-
-import com.questbuddy.repository.UserRepository;
 import com.questbuddy.trip.TripRepository;
 
 import com.questbuddy.notification.NotificationService;
@@ -73,12 +70,14 @@ public class TripMembershipService {
         m.setInvitedBy(inviter);
         members.save(m);
 
-        // Notification
-        safelyNotify(invitee.getId(),
+        // Notification  ➜ invitee (real-time WS to /ws/notifications/{inviteeId})
+        notifyNow(
+                invitee.getId(),
                 "Trip invite",
-                display(inviter) + " invited you to Trip #" + trip.getId(),
+                display(inviter) + " invited you to " + tripLabel(trip),
                 NotificationType.INVITE,
-                null, trip.getId(), null);
+                null, trip.getId(), null
+        );
     }
 
     /** Invitee approves (accepts) their own pending invite. */
@@ -92,15 +91,47 @@ public class TripMembershipService {
         m.setStatus(Status.ACCEPTED);
         members.save(m);
 
-        // notification
+        // notification ➜ inviter/owner
         User approver = m.getUser();
         User inviter  = m.getInvitedBy();
         Trip trip     = m.getTrip();
-        safelyNotify(inviter.getId(),
+
+        notifyNow(
+                inviter.getId(),
                 "Invite accepted",
-                display(approver) + " joined Trip #" + trip.getId(),
+                display(approver) + " joined " + tripLabel(trip),
                 NotificationType.APPROVAL,
-                null, trip.getId(), null);
+                null, trip.getId(), null
+        );
+    }
+
+    // Invitee declines (rejects) their pending invite
+    @Transactional
+    public void decline(Long userId, Long tripId) {
+        TripMember m = members.findByTrip_IdAndUser_Id(tripId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "membership_not_found"));
+
+        if (m.getStatus() == Status.ACCEPTED) {
+            // If already accepted, treat as no-op or enforce a different flow (leave/remove)
+            return;
+        }
+
+        User invitee = m.getUser();
+        User inviter = m.getInvitedBy();
+        Trip trip    = m.getTrip();
+
+        // Remove the pending invite row on decline
+        members.delete(m);
+
+        // Notify the owner/inviter that the invitee declined
+        notifyNow(
+                inviter.getId(),
+                "Invite declined",
+                display(invitee) + " declined " + tripLabel(trip),
+                // Using REMINDER for decline with your current enum
+                NotificationType.REMINDER,
+                null, trip.getId(), null
+        );
     }
 
     /**
@@ -166,6 +197,19 @@ public class TripMembershipService {
         return "User#" + u.getId();
     }
 
+    private static String tripLabel(Trip t) {
+        // Prefer name; else destination; else fallback to #id
+        try {
+            String name = safe(t.getName());
+            if (name != null) return "“" + name + "”";
+        } catch (NoSuchMethodError | Exception ignored) {}
+        try {
+            String dest = safe(t.getDestination());
+            if (dest != null) return "Trip to " + dest;
+        } catch (NoSuchMethodError | Exception ignored) {}
+        return "Trip #" + t.getId();
+    }
+
     // check for string
     private static String safe(String s) {
         if (s == null) return null;
@@ -173,28 +217,17 @@ public class TripMembershipService {
         return t.isEmpty() ? null : t;
     }
 
-    // helper to create a notification based on an invite
-    private void safelyNotify(Long recipientUserId,
-                              String title,
-                              String message,
-                              NotificationType type,
-                              Long eventId,
-                              Long tripId,
-                              Long taskId) {
-        try {
-            if (notifications != null && recipientUserId != null) {
-                notifications.create(new NotificationCreateDTO(
-                        recipientUserId,
-                        title,
-                        message,
-                        type,
-                        eventId,
-                        tripId,
-                        taskId
-                ));
-            }
-        } catch (Exception ignored) {
-            // Notifications shouldn't break core flow; swallow and continue.
-        }
+    /** Send a notification immediately (no swallowing). */
+    private void notifyNow(Long recipientUserId,
+                           String title,
+                           String message,
+                           NotificationType type,
+                           Long eventId,
+                           Long tripId,
+                           Long taskId) {
+        if (notifications == null || recipientUserId == null) return;
+        notifications.create(new NotificationCreateDTO(
+                recipientUserId, title, message, type, eventId, tripId, taskId
+        ));
     }
 }

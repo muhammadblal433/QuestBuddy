@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -41,7 +42,10 @@
         <activity android:name=".FriendProfileActivity" />
         <activity android:name=".TripChatActivity"/>
         <activity android:name=".DirectChatActivity"/>
-
+        <activity android:name=".NotificationsActivity" android:exported="true" />
+        <activity android:name=".BudgetListActivity" android:exported="true" />
+        <activity android:name=".CreateBudgetActivity" android:exported="true" />
+        <activity android:name=".BudgetDetailActivity" android:exported="true" />
 
     </application>
 

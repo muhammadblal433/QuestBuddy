@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF8E1"
+    android:padding="8dp"
+    tools:context=".BudgetDetailActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/tvDetailHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FF9800"
+            android:text="Budget Details"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="16dp"
+            android:elevation="3dp" />
+
+        <!-- Budget Info Card -->
+        <LinearLayout
+            android:id="@+id/layoutBudgetInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_margin="8dp"
+            android:background="#FFF3E0"
+            android:elevation="2dp"
+            android:clipToOutline="true">
+
+            <TextView
+                android:id="@+id/tvBudgetName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fuel and Snacks"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#E65100" />
+
+            <TextView
+                android:id="@+id/tvOwner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Owner: alice123"
+                android:textColor="#424242"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvTotals"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Paid: $100 | Total Share: $90"
+                android:textColor="#212121"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvCreatedAt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Created: 2025-11-05"
+                android:textColor="#757575"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Splits Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Participants"
+            android:textColor="#E65100"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp" />
+
+        <!-- RecyclerView for Splits -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerSplits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:scrollbars="vertical"
+            tools:listitem="@layout/item_split" />
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="16dp"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/btnUpdateBudget"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Update"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:backgroundTint="#E65100"
+                android:background="@drawable/rounded_edittext"
+                android:elevation="2dp" />
+
+            <Button
+                android:id="@+id/btnDeleteBudget"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Delete"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:backgroundTint="#F44336"
+                android:background="@drawable/rounded_edittext"
+                android:layout_marginStart="8dp"
+                android:elevation="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

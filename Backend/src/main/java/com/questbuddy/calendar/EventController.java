@@ -1,16 +1,17 @@
 package com.questbuddy.calendar;
 
-
 import com.questbuddy.calendar.dto.*;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.util.List;
-
+import java.util.Map;
 
 /**
  * Controller for events
@@ -22,24 +23,22 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
 
-
     public EventController(EventService service) {
         eventService = service;
     }
 
-
     // POST - create event
-    @PostMapping
-    public EventResponseDTO create(
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<EventResponseDTO> create(
             @RequestHeader("X-User-Id") Long userId,
             @RequestBody @Valid EventCreateDTO body
     ) {
-        return eventService.create(userId, body);
+        var out = eventService.create(userId, body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(out);
     }
 
-
     // GET - list of all events so far by userId
-    @GetMapping
+    @GetMapping(produces = "application/json")
     public List<EventResponseDTO> list(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam(required = false)
@@ -50,9 +49,8 @@ public class EventController {
         return eventService.list(userId, from, to);
     }
 
-
     // GET - list of all events by everyone (if from and to not null; then include range; else just ignore range)
-    @GetMapping("/all")
+    @GetMapping(value = "/all", produces = "application/json")
     public List<EventResponseDTO> listAll(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam(required = false)
@@ -66,9 +64,8 @@ public class EventController {
         return eventService.listAllBetween(from, to);
     }
 
-
     // GET - list of all events by userId (if from and to not null; then include range; else just ignore range)
-    @GetMapping("/user/{userId}")
+    @GetMapping(value = "/user/{userId}", produces = "application/json")
     public List<EventResponseDTO> listByUser(
             @RequestHeader("X-User-Id") Long requesterId,
             @PathVariable Long userId,
@@ -83,9 +80,8 @@ public class EventController {
         return eventService.listByUserBetween(userId, from, to);
     }
 
-
     // GET - event by id
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = "application/json")
     public EventResponseDTO get(
             @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id
@@ -93,9 +89,8 @@ public class EventController {
         return eventService.get(userId, id);
     }
 
-
     // PUT - update event by id
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     public EventResponseDTO update(
             @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id,
@@ -103,7 +98,6 @@ public class EventController {
     ) {
         return eventService.update(userId, id, body);
     }
-
 
     // DELETE - Delete event by id
     @DeleteMapping("/{id}")
@@ -113,9 +107,36 @@ public class EventController {
     ) {
         eventService.delete(userId, id);
     }
+
     // Health/test check to make sure that the file is being read
     @GetMapping("/ping")
     public String ping() {
         return "EventController is alive!";
+    }
+
+    // Map common exceptions
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, Object>> onValidation(ValidationException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", "validation_error",
+                "message", e.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(EventService.ResourceNotFound.class)
+    public ResponseEntity<Map<String, Object>> onNotFound(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "not_found",
+                "message", e.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> onBadRequest(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", "bad_request",
+                "message", e.getMessage()
+        ));
     }
 }

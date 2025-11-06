@@ -3,9 +3,12 @@ package com.example.androidexample;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.ImageView;
+import android.view.View;
 import android.widget.Toast;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +28,9 @@ public class HomeActivity extends AppCompatActivity {
     private String[] drawerItems;
 
     private int userId;
+
+    private TextView tvBadgeCount;
+    private int notificationCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +60,51 @@ public class HomeActivity extends AppCompatActivity {
         // Enable home button as drawer toggle
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+
+        tvBadgeCount = findViewById(R.id.tvBadgeCount);
+        ImageView btnNotifications = findViewById(R.id.btnNotifications);
+        btnNotifications.setOnClickListener(v -> {
+            // Reset badge when opening notifications
+            notificationCount = 0;
+            updateBadge();
+
+            getSharedPreferences("session", MODE_PRIVATE)
+                    .edit()
+                    .putInt("badgeCount", 0)
+                    .apply();
+
+            Intent intent = new Intent(HomeActivity.this, NotificationsActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);
+        });
+
+        WebSocketManager.getInstance().setWebSocketListener(new WebSocketListener() {
+            @Override
+            public void onWebSocketOpen(org.java_websocket.handshake.ServerHandshake handshake) {}
+
+            @Override
+            public void onWebSocketMessage(String message) {
+                runOnUiThread(() -> {
+                    notificationCount++;
+                    updateBadge();
+
+                    getSharedPreferences("session", MODE_PRIVATE)
+                            .edit()
+                            .putInt("badgeCount", notificationCount)
+                            .apply();
+                });
+            }
+
+            @Override
+            public void onWebSocketClose(int code, String reason, boolean remote) {}
+            @Override
+            public void onWebSocketError(Exception ex) {}
+        });
+
+        if (!WebSocketManager.getInstance().isConnected()) {
+            WebSocketManager.getInstance()
+                    .connectWebSocket("ws://coms-3090-026.class.las.iastate.edu:8080/ws/notifications/" + userId);
+        }
 
 
         // Add items (ex. Home, Profile, etc) into the navigation bar
@@ -109,6 +160,14 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
+
+            else if(drawerItems[position].equals("Budget Manager")){
+                Intent intent = new Intent(HomeActivity.this, BudgetListActivity.class);
+                startActivity(intent);
+                finish();
+                Toast.makeText(this, "Let's manage your trip budgets!", Toast.LENGTH_SHORT).show();
+            }
+
             else if(drawerItems[position].equals("Logout")){
                 Intent intent = new Intent(HomeActivity.this, SignupActivity.class);
                 startActivity(intent);
@@ -141,6 +200,19 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    // updates the notification badge visibility and count on the screen
+    private void updateBadge() {
+        Log.d("BadgeDebug", "Updating badge: count=" + notificationCount);
+        if (notificationCount > 0) {
+            tvBadgeCount.setText(String.valueOf(notificationCount));
+            tvBadgeCount.setVisibility(View.VISIBLE);
+        } else {
+            tvBadgeCount.setVisibility(View.GONE);
+        }
+    }
+
+
+    // loads the username of the logged-in user from the server and displays it
     private void loadUserProfile(int userId) {
         String url = "http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/" + userId;
 
@@ -159,5 +231,44 @@ public class HomeActivity extends AppCompatActivity {
         );
 
         Volley.newRequestQueue(this).add(request);
+    }
+
+    // saves the current notification badge count when the activity pauses
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getSharedPreferences("session", MODE_PRIVATE)
+                .edit()
+                .putInt("badgeCount", notificationCount)
+                .apply();
+    }
+
+    // restores the badge count and reconnects websocket if needed
+    @Override
+    protected void onResume() {
+        super.onResume();
+        notificationCount = getSharedPreferences("session", MODE_PRIVATE)
+                .getInt("badgeCount", 0);
+        updateBadge();
+
+        if (!WebSocketManager.getInstance().isConnected()) {
+            WebSocketManager.getInstance()
+                    .connectWebSocket("ws://coms-3090-026.class.las.iastate.edu:8080/ws/notifications/" + userId);
+        }
+    }
+
+    // disconnects websocket if the activity is closing
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isFinishing()) {
+            WebSocketManager.getInstance().disconnectWebSocket();
+        }
+    }
+
+    // removes websocket listener to prevent memory leaks
+    protected void onDestroy() {
+        super.onDestroy();
+        WebSocketManager.getInstance().removeWebSocketListener();
     }
 }

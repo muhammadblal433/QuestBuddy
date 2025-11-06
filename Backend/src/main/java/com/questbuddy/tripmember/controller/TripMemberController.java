@@ -7,12 +7,14 @@ import com.questbuddy.tripmember.service.TripMembershipService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/v12/trips/{tripId}/members")
 public class TripMemberController {
 
@@ -49,6 +51,18 @@ public class TripMemberController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be ACCEPTED");
         }
         svc.approve(me, tripId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Invitee declines their pending invite. Body must be { "status": "DECLINED" }. */
+    @PutMapping("/decline")
+    public ResponseEntity<Void> decline(@RequestHeader("X-User-Id") Long me,
+                                        @PathVariable Long tripId,
+                                        @Valid @RequestBody UpdateStatusDTO body) {
+        if (!"DECLINED".equals(body.status())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be DECLINED");
+        }
+        svc.decline(me, tripId);
         return ResponseEntity.noContent().build();
     }
 

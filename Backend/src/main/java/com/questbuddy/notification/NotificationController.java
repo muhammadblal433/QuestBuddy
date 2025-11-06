@@ -25,6 +25,12 @@ public class NotificationController {
         this.mapper = mapper;
     }
 
+    /** Simple health check for Notifications controller */
+    @GetMapping("/ping")
+    public String ping() {
+        return "NotificationController v7 is alive!";
+    }
+
     /**
      * POST - create a notification
      *

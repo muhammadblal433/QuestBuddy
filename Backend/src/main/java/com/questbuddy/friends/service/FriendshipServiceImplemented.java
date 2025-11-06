@@ -7,6 +7,11 @@ import com.questbuddy.friends.model.FriendshipStatus;
 import com.questbuddy.friends.repository.FriendshipRepository;
 import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
+
+import com.questbuddy.notification.NotificationService;
+import com.questbuddy.notification.NotificationType;
+import com.questbuddy.notification.dto.NotificationCreateDTO;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,9 +28,15 @@ public class FriendshipServiceImplemented implements FriendshipService {
     private final FriendshipRepository friendshipRepo;
     private final UserRepository userRepo;
 
-    public FriendshipServiceImplemented(FriendshipRepository friendshipRepo, UserRepository userRepo) {
+    private final NotificationService notificationService;
+
+    // constructor injection extended
+    public FriendshipServiceImplemented(FriendshipRepository friendshipRepo,
+                                        UserRepository userRepo,
+                                        NotificationService notificationService) {
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -40,6 +51,17 @@ public class FriendshipServiceImplemented implements FriendshipService {
                 .orElse(null);
         if (incoming != null) {
             incoming.setStatus(FriendshipStatus.ACCEPTED);
+
+            // notify original requester that the receiver auto-accepted (mutual pending)
+            User target = getUser(targetUserId);
+            notificationService.create(new NotificationCreateDTO(
+                    meId,
+                    "Friend Request Accepted",
+                    userLabel(target) + " accepted your request.",
+                    // reuse an existing type to avoid enum changes
+                    NotificationType.REMINDER,
+                    null, null, null
+            ));
             return;
         }
 
@@ -58,6 +80,16 @@ public class FriendshipServiceImplemented implements FriendshipService {
         f.setFriend(getUser(targetUserId));
         f.setStatus(FriendshipStatus.PENDING);
         friendshipRepo.save(f);
+
+        // notify the recipient of the friend request
+        User me = getUser(meId);
+        notificationService.create(new NotificationCreateDTO(
+                targetUserId,
+                "Friend Request",
+                userLabel(me) + " sent you a friend request.",
+                NotificationType.INVITE,
+                null, null, null
+        ));
     }
 
     @Override
@@ -70,15 +102,27 @@ public class FriendshipServiceImplemented implements FriendshipService {
         f.setStatus(FriendshipStatus.ACCEPTED);
 
         // need to do this: hook chat/DM creation after acceptance
+
+        // notify original requester that their request was accepted
+        User me = getUser(meId);
+        notificationService.create(new NotificationCreateDTO(
+                requesterId,
+                "Friend Request Accepted",
+                userLabel(me) + " accepted your request.",
+                NotificationType.REMINDER,
+                null, null, null
+        ));
     }
 
     @Override
     public void reject(Long meId, Long requesterId) {
-        Friendship f = friendshipRepo.findByUser_IdAndFriend_Id(requesterId, meId)
+        var f = friendshipRepo.findByUser_IdAndFriend_Id(requesterId, meId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No incoming request"));
         if (f.getStatus() != FriendshipStatus.PENDING)
             throw new ResponseStatusException(CONFLICT, "Not pending");
         friendshipRepo.delete(f);
+
+        // No notification on reject (silent UX).
     }
 
     @Override
@@ -193,6 +237,16 @@ public class FriendshipServiceImplemented implements FriendshipService {
         if (!uname.isBlank()) return uname;
         String email = safe(u.getEmail());
         return email;
+    }
+
+    // Compact label for notifications (prefer username, else full name, else email, else "User {id}")
+    private String userLabel(User u) {
+        String uname = safe(u.getUsername());
+        if (!uname.isBlank()) return uname;
+        String dn = displayName(u);
+        if (!dn.isBlank()) return dn;
+        String email = safe(u.getEmail());
+        return email.isBlank() ? ("User " + u.getId()) : email;
     }
 
     private static String safe(String s) { return s == null ? "" : s; }
