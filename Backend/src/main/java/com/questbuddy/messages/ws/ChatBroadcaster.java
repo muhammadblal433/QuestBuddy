@@ -17,7 +17,11 @@ import java.util.Map;
 @Component
 public class ChatBroadcaster {
 
-    private static final ObjectMapper om = new ObjectMapper();
+    private final ObjectMapper om;
+
+    public ChatBroadcaster(ObjectMapper om) {
+        this.om = om;
+    }
 
     // TripMessage
 
@@ -47,18 +51,19 @@ public class ChatBroadcaster {
         TripChatEndpoint.sendToTrip(tripId, payload); // uses the same room your TYPING_* uses
     }
 
-    private static String json(String event, String channelType, Object channelId, Object messageDto, Map<String, Object> extra) {
+    private String json(String event, String channelType, Object channelId,
+                        Object messageDto, Map<String,Object> extra) {
         try {
-            Map<String, Object> m = new HashMap<>();
+            Map<String,Object> m = new java.util.HashMap<>();
             m.put("event", event);
             m.put("channelType", channelType);
             m.put("channelId", channelId);
-            m.put("timestamp", Instant.now().toString());
+            m.put("timestamp", java.time.Instant.now().toString());
             if (messageDto != null) m.put("message", messageDto);
             if (extra != null) m.putAll(extra);
-            return om.writeValueAsString(m);
+            return om.writeValueAsString(m);    // ← uses Spring’s mapper (has JavaTimeModule)
         } catch (Exception e) {
-            return "{\"event\":\"" + event + "\",\"channelType\":\"" + channelType + "\",\"channelId\":\"" + channelId + "\"}";
+            return "{\"event\":\""+event+"\",\"channelType\":\""+channelType+"\",\"channelId\":\""+channelId+"\"}";
         }
     }
 
