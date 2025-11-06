@@ -13,8 +13,27 @@
 
         <TextView
             android:id="@+id/text"
+            android:textColor="#FFFFFF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- tiny gray meta line: time + (edited) -->
+        <TextView
+            android:id="@+id/meta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white" />
+            android:textSize="11sp"
+            android:textColor="#CCFFFFFF"
+            android:paddingTop="4dp" />
+
+        <!-- reactions line. Keep it invisible if empty -->
+        <TextView
+            android:id="@+id/reactions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:paddingTop="6dp"
+            android:visibility="gone"/>
     </LinearLayout>
 </LinearLayout>

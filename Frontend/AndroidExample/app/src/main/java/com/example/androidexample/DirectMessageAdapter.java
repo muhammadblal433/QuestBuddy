@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.DirectMessageDTO;
 import com.example.androidexample.R;
@@ -54,7 +55,12 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
 
     public DirectMessageAdapter(Context ctx, Callbacks cb) {
         this.ctx = ctx;
-        this.cb  = cb;
+        this.cb = cb;
+        setHasStableIds(true);
+    }
+
+    @Override public long getItemId(int position) {
+        return data.get(position).id; // <-- unique DB id
     }
 
     // ---------------- dataset ops ----------------
@@ -94,22 +100,35 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
     public void onBindViewHolder(@NonNull VH h, int pos) {
         DirectMessageDTO m = data.get(pos);
 
-        // Simplified bubble text
-        if (m.edited && m.text == null) {
-            h.text.setText("(message edited)");
-        } else if (m.text == null || m.text.isEmpty()) {
+        // Content
+        if (m.text == null || m.text.isEmpty()) {
             h.text.setText(m.edited ? "(message edited)" : "(no content)");
         } else {
             h.text.setText(m.text);
         }
 
-        // Long-press actions
-        h.itemView.setOnLongClickListener(v -> {
-            showMessageActions(m);
-            return true;
-        });
+        // Meta: time + edited
+        String time = (m.createdAtEpochMs > 0)
+                ? java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+                .withZone(java.time.ZoneId.systemDefault())
+                .format(java.time.Instant.ofEpochMilli(m.createdAtEpochMs))
+                : "";
+        h.meta.setText(m.edited ? time + "  (edited)" : time);
 
-        // Mark read when the last visible incoming message is rendered
+        // Reactions
+        String rx = m.reactionsDisplay();
+        if (rx.isEmpty()) {
+            h.reactions.setVisibility(View.GONE);
+            h.reactions.setText("");
+        } else {
+            h.reactions.setVisibility(View.VISIBLE);
+            h.reactions.setText(rx);
+        }
+
+        // Long-press menu
+        h.itemView.setOnLongClickListener(v -> { showMessageActions(m); return true; });
+
+        // Mark read for newest incoming
         if (pos == getItemCount() - 1 && m.senderId == cb.peerId()) {
             markRead(m.id);
         }
@@ -119,9 +138,13 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
 
     static class VH extends RecyclerView.ViewHolder {
         TextView text;
+        TextView meta;
+        TextView reactions;
         VH(@NonNull View item) {
             super(item);
             text = item.findViewById(R.id.text);
+            meta = item.findViewById(R.id.meta);
+            reactions = item.findViewById(R.id.reactions);
         }
     }
 
@@ -189,21 +212,50 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
 
     /**
      * PUT /{peerId}/messages/{messageId}
-     * NOTE: Server edit DTO expects "content". We send "content" even though
-     * the local DTO uses field name "text".
      */
     private void editMessage(long messageId, String newContent) {
+        int idx = indexOf(messageId);
+        if (idx < 0) { cb.onError("Message not found"); return; }
+
+        DirectMessageDTO row = data.get(idx);
+        String oldText = row.text;
+        Integer currentVersion = row.version != null ? row.version : 0;
+
+        // locally updates text only
+        applyLocalEdit(messageId, newContent);
+
         String url = baseV10() + "/messages/" + messageId;
         JSONObject body = new JSONObject();
-        try { body.put("content", newContent); } catch (JSONException ignored) {}
+        try {
+            body.put("content", newContent.trim());
+            body.put("version", currentVersion);
+        } catch (JSONException ignored) {}
 
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.PUT, url, body,
-                res -> { /* Optionally refresh message list or update locally */ },
-                err -> cb.onError("Edit failed")
+                res -> {
+                    DirectMessageDTO updated = DirectMessageDTO.fromJson(res);
+                    data.set(idx, updated);
+                    notifyItemChanged(idx);
+                },
+                err -> {
+                    int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;
+                    // revert optimistic text
+                    row.text = oldText;
+                    notifyItemChanged(idx);
+
+                    if (code == 409 || code == 412) {
+                        cb.onError("Someone edited this message. Reloaded latest.");
+                        // Optional: refetch page or single row here
+                        // fetchMessages(null, 50, false);
+                    } else {
+                        cb.onError("Edit failed" + (code>0?" ("+code+")":""));
+                    }
+                }
         ) {
             @Override public Map<String, String> getHeaders() { return authHeader(); }
         };
+        req.setShouldCache(false);
         Volley.newRequestQueue(ctx).add(req);
     }
 
@@ -212,13 +264,28 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
      */
     private void deleteMessage(long messageId) {
         String url = baseV10() + "/messages/" + messageId;
-        JsonObjectRequest req = new JsonObjectRequest(
-                Request.Method.DELETE, url, null,
-                res -> { /* Optionally remove item locally or refetch */ },
-                err -> cb.onError("Delete failed")
+
+        int beforeIndex = indexOf(messageId);
+        DirectMessageDTO backup = (beforeIndex >= 0) ? data.get(beforeIndex) : null;
+        removeById(messageId);
+
+        StringRequest req = new StringRequest(
+                Request.Method.DELETE,
+                url,
+                res -> {
+                    Toast.makeText(ctx, "Message Deleted!", Toast.LENGTH_SHORT).show();
+                },
+                err -> {
+                    cb.onError("Delete failed");
+                    if (backup != null) {
+                        data.add(beforeIndex, backup);
+                        notifyItemInserted(beforeIndex);
+                    }
+                }
         ) {
             @Override public Map<String, String> getHeaders() { return authHeader(); }
         };
+
         Volley.newRequestQueue(ctx).add(req);
     }
 
@@ -227,10 +294,28 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
      */
     private void toggleReaction(long messageId, String emoji) {
         String url = baseV10() + "/messages/" + messageId + "/reactions?emoji=" + android.net.Uri.encode(emoji);
+
+        // optimistic: add (or bump) locally
+        applyLocalReaction(messageId, emoji, true);
+
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.POST, url, null,
-                res -> { /* Server returns counts; you can refetch a single message if desired */ },
-                err -> cb.onError("Reaction failed")
+                res -> {
+                    // If server returns reaction map/counters, sync precisely:
+                    // DirectMessageDTO updated = DirectMessageDTO.fromJson(res);
+                    // replace local reactions and notify.
+                    int i = indexOf(messageId);
+                    if (i >= 0 && res.has("reactions")) {
+                        DirectMessageDTO m = data.get(i);
+                        m.reactions = res.optJSONObject("reactions");
+                        notifyItemChanged(i);
+                    }
+                },
+                err -> {
+                    cb.onError("Reaction failed");
+                    // optional: revert optimistic change by decrementing
+                    applyLocalReaction(messageId, emoji, false);
+                }
         ) {
             @Override public Map<String, String> getHeaders() { return authHeader(); }
         };
@@ -250,5 +335,43 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
             @Override public Map<String, String> getHeaders() { return authHeader(); }
         };
         Volley.newRequestQueue(ctx).add(req);
+    }
+
+    /** Find adapter index by message id */
+    private int indexOf(long messageId) {
+        for (int i = 0; i < data.size(); i++) if (data.get(i).id == messageId) return i;
+        return -1;
+    }
+
+    private void applyLocalEdit(long messageId, String newText) {
+        int i = indexOf(messageId);
+        if (i < 0) return;
+        DirectMessageDTO m = data.get(i);
+        m.text = newText;
+        m.edited = true;
+        notifyItemChanged(i);
+    }
+
+    private void removeById(long messageId) {
+        int i = indexOf(messageId);
+        if (i < 0) {
+            android.util.Log.w("DM", "removeById: not found id=" + messageId);
+            return;
+        }
+        data.remove(i);
+        notifyItemRemoved(i);
+    }
+
+    private void applyLocalReaction(long messageId, String emoji, boolean addOrToggleOn) {
+        int i = indexOf(messageId);
+        if (i < 0) return;
+        DirectMessageDTO m = data.get(i);
+        if (m.reactions == null) m.reactions = new org.json.JSONObject();
+        int prev = m.reactions.optInt(emoji, 0);
+        try {
+            int next = addOrToggleOn ? Math.max(prev + 1, 1) : Math.max(prev - 1, 0);
+            if (next <= 0) m.reactions.remove(emoji); else m.reactions.put(emoji, next);
+        } catch (Exception ignored) {}
+        notifyItemChanged(i);
     }
 }

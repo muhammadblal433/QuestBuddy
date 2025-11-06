@@ -130,7 +130,10 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
                     List<DirectMessageDTO> list = new ArrayList<>();
                     for (int i = 0; i < res.length(); i++) {
                         JSONObject o = res.optJSONObject(i);
-                        if (o != null) list.add(DirectMessageDTO.fromJson(o));
+                        if (o == null) continue;
+                        DirectMessageDTO m = DirectMessageDTO.fromJson(o);
+                        if (m.deleted) continue;               // <--- hide deleted rows
+                        list.add(m);
                     }
 
                     // Ensure oldest -> newest within this page

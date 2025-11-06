@@ -5,9 +5,13 @@ public class DirectMessageDTO {
     public long id;
     public long senderId;
     public long recipientId;
-    public String text;              // keep this name in your app, but map from "content"
+
+    public String text;              // the content of the message
     public long createdAtEpochMs;    // map from sentAt/savedAt if present
     public boolean edited;
+    public boolean deleted;
+
+    public Integer version;
     public JSONObject reactions;
     // (optional) include deleted/read flags if you want:
     // public boolean deleted;
@@ -18,10 +22,12 @@ public class DirectMessageDTO {
         m.senderId = o.optLong("senderId");
         m.recipientId = o.optLong("recipientId");
 
-        // Server uses "content" (fallback to "text" if your older API ever returns it)
-        m.text = o.has("content") ? o.optString("content", "") : o.optString("text", "");
+        // content of the message
+        m.text   = o.optString("content", "");
+        m.edited = o.optBoolean("edited", false);
+        m.version = o.has("version") ? o.optInt("version") : null;
 
-        // Server uses ISO-8601 Instants: sentAt/savedAt. Fallback to legacy "createdAt" long.
+        // time when message was sent
         String sentAt  = o.optString("sentAt", null);
         String savedAt = o.optString("savedAt", null);
         if (sentAt != null && !sentAt.isEmpty()) {
@@ -32,9 +38,8 @@ public class DirectMessageDTO {
             m.createdAtEpochMs = o.optLong("createdAt", 0L);
         }
 
-        m.edited = o.optBoolean("edited", false);
         m.reactions = o.optJSONObject("reactions");
-        // m.deleted = o.optBoolean("deleted", false); // if you add this field to DTO
+        m.deleted   = o.optBoolean("deleted", false);
         return m;
     }
 
@@ -44,5 +49,21 @@ public class DirectMessageDTO {
         } catch (Exception e) {
             return 0L;
         }
+    }
+
+    public String reactionsDisplay() {
+        if (reactions == null || reactions.length() == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        java.util.Iterator<String> it = reactions.keys();
+        boolean first = true;
+        while (it.hasNext()) {
+            String emo = it.next();
+            int count = reactions.optInt(emo, 0);
+            if (count <= 0) continue;
+            if (!first) sb.append("   ");
+            sb.append(emo).append(" x").append(count);
+            first = false;
+        }
+        return sb.toString();
     }
 }
