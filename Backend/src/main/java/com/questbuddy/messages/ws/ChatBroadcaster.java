@@ -17,7 +17,7 @@ import java.util.Map;
 @Component
 public class ChatBroadcaster {
 
-    private final ObjectMapper om = new ObjectMapper();
+    private static final ObjectMapper om = new ObjectMapper();
 
     // TripMessage
 
@@ -35,31 +35,30 @@ public class ChatBroadcaster {
 
     // clients can refresh counts if needed
     public void tripReactionToggle(Long tripId, Long messageId, String emoji) {
-        Map<String, Object> extra = new HashMap<>();
+        Map<String,Object> extra = new HashMap<>();
         extra.put("messageId", messageId);
         extra.put("emoji", emoji);
         sendTrip(tripId, json("REACTION_TOGGLE", "TRIP", tripId, null, extra));
     }
 
     // Helper funcs for TripMessage
-
     private void sendTrip(Long tripId, String payload) {
         if (payload == null) return;
-        TripChatEndpoint.sendToTrip(tripId, payload);
+        TripChatEndpoint.sendToTrip(tripId, payload); // uses the same room your TYPING_* uses
     }
 
-    private String json(String event, String channelType, Object channelId, Object messageDto, Map<String, Object> extra) {
+    private static String json(String event, String channelType, Object channelId, Object messageDto, Map<String, Object> extra) {
         try {
-            Map<String, Object> p = new HashMap<>();
-            p.put("event", event);
-            p.put("channelType", channelType);
-            p.put("channelId", channelId);
-            if (messageDto != null) p.put("message", messageDto);
-            p.put("timestamp", Instant.now().toString());
-            if (extra != null) p.putAll(extra);
-            return om.writeValueAsString(p);
+            Map<String, Object> m = new HashMap<>();
+            m.put("event", event);
+            m.put("channelType", channelType);
+            m.put("channelId", channelId);
+            m.put("timestamp", Instant.now().toString());
+            if (messageDto != null) m.put("message", messageDto);
+            if (extra != null) m.putAll(extra);
+            return om.writeValueAsString(m);
         } catch (Exception e) {
-            return null;
+            return "{\"event\":\"" + event + "\",\"channelType\":\"" + channelType + "\",\"channelId\":\"" + channelId + "\"}";
         }
     }
 
