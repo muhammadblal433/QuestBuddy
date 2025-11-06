@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Two-way Trip chat WebSocket endpoint.
- * Connect to: ws://<host>/ws/messages/trips/{tripId}/{userId}
+ * Connect to: ws://coms-3090-026.class.las.iastate.edu:8080/ws/messages/trips/{tripId}/{userId}
  *
  * This endpoint takes into account for creating messages, editing and deleting them,
  * reacting and toggling reactions to a message, and "is typing".
