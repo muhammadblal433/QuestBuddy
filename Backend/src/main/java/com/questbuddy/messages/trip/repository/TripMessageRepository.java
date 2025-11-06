@@ -20,4 +20,7 @@ public interface TripMessageRepository extends JpaRepository<TripMessage, Long> 
     // helpers
     boolean existsByIdAndTripId(Long id, Long tripId);
     Optional<TripMessage> findByIdAndTripId(Long id, Long tripId);
+
+    // Count all messages newer than lastReadMessageId that aren't by the user
+    long countByTripIdAndIdGreaterThanAndSenderIdNotAndDeletedFalse(Long tripId, Long lastReadMessageId, Long notSenderId);
 }
