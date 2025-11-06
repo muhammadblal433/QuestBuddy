@@ -8,4 +8,7 @@ import java.util.Optional;
 /** This repo is for per-user read receipts progress in a trip. */
 public interface TripReadProgressRepository extends JpaRepository<TripReadProgress, Long> {
     Optional<TripReadProgress> findByTripIdAndUserId(Long tripId, Long userId);
+
+    // Count all messages newer than lastReadMessageId that aren't by the user
+    long countByTripIdAndIdGreaterThanAndSenderIdNotAndDeletedFalse(Long tripId, Long lastReadMessageId, Long notSenderId);
 }
