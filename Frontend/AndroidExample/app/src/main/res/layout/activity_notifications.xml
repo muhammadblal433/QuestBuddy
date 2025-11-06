@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF8E1"
+    tools:context=".NotificationsActivity">
+
+    <TextView
+        android:id="@+id/tvNotificationsHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FF9800"
+        android:text="Notifications"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/btnAll"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ALL"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#E65100"
+            android:background="@drawable/rounded_edittext"
+            android:layout_marginEnd="6dp" />
+
+        <Button
+            android:id="@+id/btnRead"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="READ"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#FF9800"
+            android:background="@drawable/rounded_edittext" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvNoNotifications"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No notifications yet!"
+        android:textAlignment="center"
+        android:textColor="#9E9E9E"
+        android:layout_marginTop="12dp"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerNotifications"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_margin="12dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_notification" />
+
+    <Button
+        android:id="@+id/btnReturnHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Return to Home"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#FF9800"
+        android:background="@drawable/rounded_edittext"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp" />
+
+</LinearLayout>
+

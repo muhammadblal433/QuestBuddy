@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- layout for one budget item card -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_margin="8dp"
+    android:background="#FFF3E0"
+    android:elevation="2dp"
+    android:clipToOutline="true">
+
+    <!-- budget name text -->
+    <TextView
+        android:id="@+id/tvBudgetName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Budget Name"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#E65100" />
+
+    <!-- owner name text -->
+    <TextView
+        android:id="@+id/tvOwner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Owner: alice123"
+        android:textSize="15sp"
+        android:textColor="#424242"
+        android:layout_marginTop="4dp" />
+
+    <!-- total paid and share info -->
+    <TextView
+        android:id="@+id/tvTotals"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Paid: $100 | Total Share: $90"
+        android:textSize="14sp"
+        android:textColor="#212121"
+        android:layout_marginTop="4dp" />
+
+    <!-- date created -->
+    <TextView
+        android:id="@+id/tvCreatedAt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Created: 2025-11-05"
+        android:textSize="13sp"
+        android:textColor="#757575"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>
