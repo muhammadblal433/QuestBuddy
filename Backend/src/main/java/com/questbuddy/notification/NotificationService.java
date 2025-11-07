@@ -129,7 +129,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public List<Notification> listForUser(Long recipientId, Boolean unreadOnly) {
         if (Boolean.TRUE.equals(unreadOnly)) {
-            return notifications.findUnreadIncludingNull(recipientId);
+            return notifications.findAllByRecipient_IdAndIsReadOrderByCreatedAtDesc(recipientId, false);
         }
         return notifications.findAllByRecipient_IdOrderByCreatedAtDesc(recipientId);
     }
@@ -156,9 +156,7 @@ public class NotificationService {
             noti.setRead(true);
             // ensure change is persisted within the write transaction
             noti = notifications.save(noti);
-            // force SQL UPDATE to be executed before broadcasting over WS
-            notifications.flush();
-            long unread = notifications.countUnreadIncludingNull(recipientId);
+            long unread = notifications.countByRecipient_IdAndIsReadFalse(recipientId);
             ws.publishRead(recipientId, noti.getId(), unread);
         }
 
@@ -172,7 +170,7 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public long countUnread(Long recipientId) {
-        return notifications.countUnreadIncludingNull(recipientId);
+        return notifications.countByRecipient_IdAndIsReadFalse(recipientId);
     }
 
     /**
