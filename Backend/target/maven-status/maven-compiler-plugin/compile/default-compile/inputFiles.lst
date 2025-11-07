@@ -61,8 +61,10 @@
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/mapper/TripMessageMapper.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/model/MessageReaction.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/model/TripMessage.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/model/TripReadProgress.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/repository/MessageReactionRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/repository/TripMessageRepository.java
+/Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/repository/TripReadProgressRepository.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/trip/service/TripMessageService.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/ws/ChatBroadcaster.java
 /Users/muhammadblal/Desktop/2_jubair_1/Backend/src/main/java/com/questbuddy/messages/ws/DirectChatEndpoint.java
