@@ -34,7 +34,7 @@
     <!--button to add a new task-->
     <Button
         android:id="@+id/btnAddTask"
-        android:background = "@drawable/rounded_button"
+        android:background = "@drawable/rounded_button_orange"
         android:text="Add Task"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -46,7 +46,7 @@
     <!-- button to go back to home-->
     <Button
         android:id="@+id/btnHome"
-        android:background="@drawable/rounded_button"
+        android:background="@drawable/rounded_button_orange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Back to Home"

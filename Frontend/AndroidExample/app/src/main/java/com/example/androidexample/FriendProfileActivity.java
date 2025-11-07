@@ -1,7 +1,9 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,14 +15,16 @@ public class FriendProfileActivity extends AppCompatActivity {
 
     private static final String BASE = "http://coms-3090-026.class.las.iastate.edu:8080/api/v8";
 
-    private String username;
-    private String displayName;
-    private String currentUser;
-
-    private String id;
+    private String username;      // friend's username
+    private String displayName;   // friend's display name
+    private String currentUser;   // current user's username
+    private long id;              // friend's numeric id
+    private long userId;          // current user's numeric id
 
     private TextView tvProfileName, tvProfileUsername, tvProfileEmail;
-    private Button btnMessage, btnUnfriend, btnBlock;
+    private Button btnUnfriend, btnBlock;
+
+    private ImageButton imgBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,17 +33,18 @@ public class FriendProfileActivity extends AppCompatActivity {
 
         // retrieve data passed from previous activity
         username = getIntent().getStringExtra("username");
-        id = getIntent().getStringExtra("id");
+        id = getIntent().getLongExtra("id", -1L);
         displayName = getIntent().getStringExtra("displayName");
-        currentUser = getIntent().getStringExtra("currentUser");
+        currentUser = getIntent().getStringExtra("currentUser"); // username
+        userId = getIntent().getLongExtra("userId", -1L);        // numeric id
 
         // initialize ui components
         tvProfileName = findViewById(R.id.tvProfileName);
         tvProfileUsername = findViewById(R.id.tvProfileUsername);
         tvProfileEmail = findViewById(R.id.tvProfileEmail);
-        btnMessage = findViewById(R.id.btnMessage);
         btnUnfriend = findViewById(R.id.btnUnfriend);
         btnBlock = findViewById(R.id.btnBlock);
+        imgBtn = findViewById(R.id.btnBack);
 
         // display basic user info
         tvProfileName.setText(displayName);
@@ -56,17 +61,22 @@ public class FriendProfileActivity extends AppCompatActivity {
                 err -> tvProfileEmail.setText("Email: Not available"));
         Volley.newRequestQueue(this).add(req);
 
-        // handle message button click
-        btnMessage.setOnClickListener(v ->
-                Toast.makeText(this, "Messaging feature coming soon!", Toast.LENGTH_SHORT).show());
 
-        // handle unfriend button click
+        // handle unfriend button click (these endpoints use the username path variable)
         btnUnfriend.setOnClickListener(v -> {
             String unfriendUrl = BASE + "/users/" + currentUser + "/friends/" + username;
             JsonObjectRequest r = new JsonObjectRequest(Request.Method.DELETE, unfriendUrl, null,
                     res -> Toast.makeText(this, "Unfriended @" + username, Toast.LENGTH_SHORT).show(),
                     err -> Toast.makeText(this, "Unfriend failed: " + err.getMessage(), Toast.LENGTH_SHORT).show());
             Volley.newRequestQueue(this).add(r);
+        });
+
+        imgBtn.setOnClickListener(v -> {
+            Intent i = new Intent(this, FriendsListActivity.class);
+            i.putExtra("username", currentUser);
+            i.putExtra("userId", userId);
+            startActivity(i);
+            finish();
         });
 
         // handle block button click

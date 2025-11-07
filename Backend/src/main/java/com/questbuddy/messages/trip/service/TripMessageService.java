@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// For read reciepts
+import com.questbuddy.messages.trip.model.TripReadProgress;
+import com.questbuddy.messages.trip.repository.TripReadProgressRepository;
+
 import com.questbuddy.messages.ws.ChatBroadcaster; //add for websocket
 
 @Service
@@ -33,17 +37,20 @@ public class TripMessageService {
     private final TripMembershipGate membershipGate;
     private final TripMessageMapper mapper;
     private final ChatBroadcaster chatBroadcaster;
+    private final TripReadProgressRepository readProgress;
 
     public TripMessageService(TripMessageRepository messages,
                               MessageReactionRepository reactions,
                               TripMembershipGate membershipGate,
                               TripMessageMapper mapper,
-                              ChatBroadcaster chatBroadcaster) {
+                              ChatBroadcaster chatBroadcaster,
+                              TripReadProgressRepository readProgress) {
         this.messages = messages;
         this.reactions = reactions;
         this.membershipGate = membershipGate;
         this.mapper = mapper;
         this.chatBroadcaster = chatBroadcaster;
+        this.readProgress = readProgress;
     }
 
     // ----- helpers -----
@@ -361,5 +368,44 @@ public class TripMessageService {
         chatBroadcaster.tripReactionToggle(tripId, messageId, trimmed);
 
         return recountFor(messageId);
+    }
+
+    // Read reciepts
+    @Transactional
+    public int markReadProgress(Long me, Long tripId, Long upToMessageId) {
+        if (!membershipGate.isMember(tripId, me)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Not a member of this trip");
+        }
+        if (upToMessageId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "messageId is required");
+        }
+
+        // validate the pointer belongs to this trip
+        TripMessage last = findByIdAndTrip(upToMessageId, tripId);
+        if (last == null) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "messageId not in this trip");
+        }
+
+        java.time.Instant now = java.time.Instant.now();
+        TripReadProgress pr = readProgress.findByTripIdAndUserId(tripId, me).orElse(null);
+
+        if (pr == null) {
+            pr = new TripReadProgress();
+            pr.setTripId(tripId);
+            pr.setUserId(me);
+            pr.setLastReadMessageId(upToMessageId);
+            pr.setLastReadAt(now);
+            readProgress.save(pr);
+        } else if (pr.getLastReadMessageId() == null || pr.getLastReadMessageId() < upToMessageId) {
+            pr.setLastReadMessageId(upToMessageId);
+            pr.setLastReadAt(now);
+            readProgress.save(pr);
+        } // else: no advance; keep previous pointer
+
+        int unread = (int) messages.countByTripIdAndIdGreaterThanAndSenderIdNotAndDeletedFalse(tripId, pr.getLastReadMessageId(), me);
+
+        // broadcast to the trip (small payload; no message content)
+        chatBroadcaster.tripReadReceipt(tripId, me, pr.getLastReadMessageId(), unread);
+        return unread;
     }
 }

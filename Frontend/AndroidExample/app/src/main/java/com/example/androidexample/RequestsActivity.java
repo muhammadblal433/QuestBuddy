@@ -23,6 +23,7 @@ public class RequestsActivity extends AppCompatActivity {
     private FriendAdapter adapter;
     private List<Friend> requests;
     private String currentUsername;
+    private long currentUserID;
     private ProgressDialog progressDialog;
 
     @Override
@@ -31,10 +32,11 @@ public class RequestsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_friends_list);
 
         currentUsername = getIntent().getStringExtra("username");
+        currentUserID = getIntent().getLongExtra("userId", -1);
         recyclerRequests = findViewById(R.id.recyclerFriends);
         recyclerRequests.setLayoutManager(new LinearLayoutManager(this));
         requests = new ArrayList<>();
-        adapter = new FriendAdapter(this, requests, currentUsername);
+        adapter = new FriendAdapter(this, requests, currentUsername, currentUserID);
         recyclerRequests.setAdapter(adapter);
 
         progressDialog = new ProgressDialog(this);

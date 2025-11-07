@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Two-way Trip chat WebSocket endpoint.
- * Connect to: ws://<host>/ws/messages/trips/{tripId}/{userId}
+ * Connect to: ws://coms-3090-026.class.las.iastate.edu:8080/ws/messages/trips/{tripId}/{userId}
  *
  * This endpoint takes into account for creating messages, editing and deleting them,
  * reacting and toggling reactions to a message, and "is typing".
@@ -92,6 +92,9 @@ public class TripChatEndpoint {
                 case "TYPING_START":
                 case "TYPING_STOP":
                     handleTyping(userId, tripId, event);
+                    break;
+                case "READ_RECEIPT":
+                    handleReadReceipt(session, userId, tripId, clientMsgId, root.path("payload"));
                     break;
                 default:
                     sendSafe(session, json(java.util.Map.of("event", "ERROR", "reason", "unknown event")));
@@ -239,6 +242,25 @@ public class TripChatEndpoint {
                 "senderId", me,
                 "timestamp", Instant.now().toString()
         )));
+    }
+
+    private void handleReadReceipt(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+        try {
+            Long upTo = longOrNull(p, "messageId");
+            // Service updates per-user pointer and BROADCASTS to the trip
+            tripSvc().markReadProgress(me, tripId, upTo);
+
+            // ACK only from the endpoint
+            sendSafe(session, json(Map.of(
+                    "event", "ACK",
+                    "channelType", "TRIP",
+                    "channelId", tripId,
+                    "clientMsgId", clientMsgId,
+                    "serverMsgId", upTo
+            )));
+        } catch (Exception e) {
+            sendSafe(session, json(Map.of("event", "ERROR", "reason", safeReason(e))));
+        }
     }
 
     // helper functions
