@@ -70,6 +70,7 @@
             android:layout_height="wrap_content"
             android:text="Send"
             android:textColor="#FFFFFF"
-            android:background="@drawable/rounded_button_orange"/>
+            android:background="@drawable/rounded_buttons"
+            android:backgroundTint="#04AA6D"/>
     </LinearLayout>
 </LinearLayout>
