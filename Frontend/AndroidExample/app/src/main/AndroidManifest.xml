@@ -46,6 +46,7 @@
         <activity android:name=".BudgetListActivity" android:exported="true" />
         <activity android:name=".CreateBudgetActivity" android:exported="true" />
         <activity android:name=".BudgetDetailActivity" android:exported="true" />
+        <activity android:name=".TripListActivity" android:exported="true" />
 
     </application>
 

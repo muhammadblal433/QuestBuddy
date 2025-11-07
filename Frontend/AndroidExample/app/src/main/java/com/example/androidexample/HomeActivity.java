@@ -160,7 +160,12 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
-
+            else if(drawerItems[position].equals("Trips")){
+                Intent intent = new Intent(HomeActivity.this, TripListActivity.class);
+                intent.putExtra("userId", userId);
+                startActivity(intent);
+                finish();
+            }
             else if(drawerItems[position].equals("Budget Manager")){
                 Intent intent = new Intent(HomeActivity.this, BudgetListActivity.class);
                 startActivity(intent);
