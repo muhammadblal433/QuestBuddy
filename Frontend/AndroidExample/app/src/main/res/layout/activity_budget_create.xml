@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FFF8E1"
     android:padding="16dp"
-    tools:context=".CreateBudgetActivity">
+    tools:context=".budget.CreateBudgetActivity">
 
     <LinearLayout
         android:id="@+id/layoutRoot"

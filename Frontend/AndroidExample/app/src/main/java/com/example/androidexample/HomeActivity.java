@@ -8,6 +8,16 @@ import org.json.JSONObject;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ImageView;
+
+import com.example.androidexample.budget.BudgetListActivity;
+import com.example.androidexample.friends.FriendsListActivity;
+import com.example.androidexample.notifications.NotificationsActivity;
+import com.example.androidexample.notifications.WebSocketListener;
+import com.example.androidexample.notifications.WebSocketManager;
+import com.example.androidexample.packing.PackingChecklistActivity;
+import com.example.androidexample.tasks.TaskManagerActivity;
+import com.example.androidexample.trips.TripChatActivity;
+import com.example.androidexample.trips.TripListActivity;
 import com.nex3z.notificationbadge.NotificationBadge;
 import android.widget.Toast;
 import androidx.appcompat.app.ActionBarDrawerToggle;
