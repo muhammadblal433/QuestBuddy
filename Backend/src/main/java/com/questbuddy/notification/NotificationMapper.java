@@ -46,9 +46,9 @@ public class NotificationMapper {
                 n.getTitle(),
                 n.getMessage(),
                 n.getType(),
-                n.getTrip()  != null ? n.getTrip().getId()  : null,
-                n.getEvent() != null ? n.getEvent().getId() : null,
-                n.getTask()  != null ? n.getTask().getTaskId()  : null,
+                /* eventId */ n.getEvent() != null ? n.getEvent().getId() : null,
+                /* tripId  */ n.getTrip()  != null ? n.getTrip().getId()  : null,
+                /* taskId  */ n.getTask()  != null ? n.getTask().getTaskId()  : null,
                 n.getCreatedAt(),
                 n.isRead()
         );
