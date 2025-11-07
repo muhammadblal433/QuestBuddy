@@ -69,6 +69,11 @@ public class FriendProfileActivity extends AppCompatActivity {
                     res -> Toast.makeText(this, "Unfriended @" + username, Toast.LENGTH_SHORT).show(),
                     err -> Toast.makeText(this, "Unfriend failed: " + err.getMessage(), Toast.LENGTH_SHORT).show());
             Volley.newRequestQueue(this).add(r);
+            Intent i = new Intent(this, FriendsListActivity.class);
+            i.putExtra("username", currentUser);
+            i.putExtra("userId", userId);
+            startActivity(i);
+            finish();
         });
 
         imgBtn.setOnClickListener(v -> {
@@ -86,6 +91,11 @@ public class FriendProfileActivity extends AppCompatActivity {
                     res -> Toast.makeText(this, "Blocked @" + username, Toast.LENGTH_SHORT).show(),
                     err -> Toast.makeText(this, "Block failed: " + err.getMessage(), Toast.LENGTH_SHORT).show());
             Volley.newRequestQueue(this).add(r);
+            Intent i = new Intent(this, FriendsListActivity.class);
+            i.putExtra("username", currentUser);
+            i.putExtra("userId", userId);
+            startActivity(i);
+            finish();
         });
     }
 }

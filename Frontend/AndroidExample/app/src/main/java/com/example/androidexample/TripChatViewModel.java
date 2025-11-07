@@ -4,16 +4,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.android.volley.RequestQueue;
-import com.example.androidexample.TripApi;
-import com.example.androidexample.TripMessageCreateDTO;
-import com.example.androidexample.TripMessageResponseDTO;
-import com.example.androidexample.TripWebSocket;
-import java.text.SimpleDateFormat;
+
 import java.util.*;
 
 
 public class TripChatViewModel extends ViewModel {
-    private final TripApi api;
+    private final TripChatApi api;
     private final long me;
     private final long tripId;
 
@@ -24,7 +20,7 @@ public class TripChatViewModel extends ViewModel {
 
 
     public TripChatViewModel(String baseUrl, String baseWsUrl, long me, long tripId, RequestQueue queue) {
-        this.api = new TripApi(baseUrl, queue);
+        this.api = new TripChatApi(baseUrl, queue);
         this.me = me; this.tripId = tripId;
 
         // Only create/connect WS if we have a valid ws:// or wss:// URL
@@ -50,7 +46,7 @@ public class TripChatViewModel extends ViewModel {
 
 
     private void reloadLatest() {
-        api.listMessages(me, tripId, null, 50, new TripApi.Callback<List<TripMessageResponseDTO>>() {
+        api.listMessages(me, tripId, null, 50, new TripChatApi.Callback<List<TripMessageResponseDTO>>() {
             @Override public void onSuccess(List<TripMessageResponseDTO> list) {
                 list.sort((a,b) -> Long.compare(a.getId(), b.getId()));
                 messages.postValue(list);
@@ -66,7 +62,7 @@ public class TripChatViewModel extends ViewModel {
 
     public void loadMore() {
         if (oldestIdLoaded == null) return;
-        api.listMessages(me, tripId, oldestIdLoaded, 50, new TripApi.Callback<List<TripMessageResponseDTO>>() {
+        api.listMessages(me, tripId, oldestIdLoaded, 50, new TripChatApi.Callback<List<TripMessageResponseDTO>>() {
             @Override public void onSuccess(List<TripMessageResponseDTO> page) {
                 List<TripMessageResponseDTO> cur = new ArrayList<>(messages.getValue());
                 cur.addAll(0, page);
@@ -94,7 +90,7 @@ public class TripChatViewModel extends ViewModel {
 
 
         TripMessageCreateDTO body = new TripMessageCreateDTO(content, null, null, UUID.randomUUID().toString(), isoNow());
-        api.post(me, tripId, body, new TripApi.Callback<TripMessageResponseDTO>() {
+        api.post(me, tripId, body, new TripChatApi.Callback<TripMessageResponseDTO>() {
             @Override public void onSuccess(TripMessageResponseDTO server) {
                 List<TripMessageResponseDTO> list = new ArrayList<>(messages.getValue());
                 for (int i = 0; i < list.size(); i++) if (list.get(i).getId() == tempId) { list.set(i, server); break; }
