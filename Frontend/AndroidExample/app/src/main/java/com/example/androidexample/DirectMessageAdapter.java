@@ -44,6 +44,7 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
         void onNeedMore(long beforeId);
         void onError(String msg);
         void onMarkedRead(long messageId);
+        default void onWantsLatestRefresh() {}
     }
 
     private static final int SELF  = 1;
@@ -100,22 +101,25 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
     public void onBindViewHolder(@NonNull VH h, int pos) {
         DirectMessageDTO m = data.get(pos);
 
-        // Content
-        if (m.text == null || m.text.isEmpty()) {
+        // Text
+        if (m.deleted) {
+            h.text.setText("(message deleted)");
+        } else if (m.text == null || m.text.isEmpty()) {
             h.text.setText(m.edited ? "(message edited)" : "(no content)");
         } else {
             h.text.setText(m.text);
         }
 
-        // Meta: time + edited
+        // Meta
         String time = (m.createdAtEpochMs > 0)
                 ? java.time.format.DateTimeFormatter.ofPattern("h:mm a")
                 .withZone(java.time.ZoneId.systemDefault())
                 .format(java.time.Instant.ofEpochMilli(m.createdAtEpochMs))
                 : "";
-        h.meta.setText(m.edited ? time + "  (edited)" : time);
+        h.meta.setText(m.deleted ? time + "  (deleted)"
+                : (m.edited ? time + "  (edited)" : time));
 
-        // Reactions
+        // Reactions (unchanged for non-deleted)
         if (m.deleted) {
             h.reactions.setVisibility(View.GONE);
             h.reactions.setText("");
@@ -125,8 +129,8 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
             h.reactions.setText(rx);
         }
 
-        // Long-press menu
-        h.itemView.setOnLongClickListener(v -> { showMessageActions(m); return true; });
+        // Long-press
+        h.itemView.setOnLongClickListener(m.deleted ? null : v -> { showMessageActions(m); return true; });
 
         // Mark read for newest incoming
         if (pos == getItemCount() - 1 && m.senderId == cb.peerId()) {
@@ -292,30 +296,29 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
     /**
      * POST /{peerId}/messages/{messageId}/reactions?emoji=...
      */
-    private void toggleReaction(long messageId, String emoji) {
-        int idx = indexOf(messageId);
-        if (idx < 0) return;
+    private void toggleReaction(long messageId, String key) {
+        int idx = indexOf(messageId); if (idx < 0) return;
         DirectMessageDTO row = data.get(idx);
         if (row.deleted) { cb.onError("Can't react to a deleted message"); return; }
 
         String url = baseV10() + "/messages/" + messageId
-                + "/reactions?emoji=" + android.net.Uri.encode(emoji == null ? "" : emoji);
+                + "/reactions?emoji=" + android.net.Uri.encode(key == null ? "" : key);
 
-        // optimistic +1
-        applyLocalReaction(messageId, emoji, /*add*/ true);
+        // optimistic +1 using the EXACT key you sent to the server
+        applyLocalReaction(messageId, key, /*add*/ true);
 
         JsonObjectRequest req = new JsonObjectRequest(
-                Request.Method.POST, url, /*body*/ null,
+                Request.Method.POST, url, null,
                 res -> {
-                    // Server returns a JSON map: {"Heart":2,"👍":1} — trust it
+                    // Trust server's reaction object (keys as stored in DB)
                     DirectMessageDTO m = data.get(idx);
                     m.reactions = res;
                     notifyItemChanged(idx);
+                    cb.onWantsLatestRefresh();
                 },
                 err -> {
                     // revert optimistic change
-                    applyLocalReaction(messageId, emoji, /*add*/ false);
-
+                    applyLocalReaction(messageId, key, /*add*/ false);
                     int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;
                     String body = (err.networkResponse != null && err.networkResponse.data != null)
                             ? new String(err.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8) : null;
@@ -328,7 +331,6 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
                 h.put("Accept", "application/json");
                 return h;
             }
-            // accept empty-body success just in case
             @Override
             protected com.android.volley.Response<org.json.JSONObject> parseNetworkResponse(
                     com.android.volley.NetworkResponse response) {
@@ -464,12 +466,8 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
     public void upsert(DirectMessageDTO m) {
         if (m == null) return;
         int i = indexOf(m.id);
-        if (i >= 0) {
-            data.set(i, m);           // replace full row (text/edited/reactions/version/deleted)
-            notifyItemChanged(i);
-        } else {
-            append(m);                // reuse your existing append()
-        }
+        if (i >= 0) { data.set(i, m); notifyItemChanged(i); }
+        else { append(m); }
     }
 
     // make this one public so activity can call it on remote deletes
@@ -482,6 +480,14 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
         m.deleted = true;
         m.text = "(message deleted)";
         m.reactions = null;
+        notifyItemChanged(i);
+    }
+
+    public void setReactions(long messageId, org.json.JSONObject reactions) {
+        int i = indexOf(messageId);
+        if (i < 0) return;
+        DirectMessageDTO m = data.get(i);
+        m.reactions = reactions;
         notifyItemChanged(i);
     }
 }

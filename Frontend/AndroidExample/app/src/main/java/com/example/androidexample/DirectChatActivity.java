@@ -83,14 +83,17 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         btnSend = findViewById(R.id.btnSend);
         btnback = findViewById(R.id.btnBack);
 
-
-
         LinearLayoutManager lm = new LinearLayoutManager(this);
         lm.setStackFromEnd(true);
         rv.setLayoutManager(lm);
 
-
         adapter = new DirectMessageAdapter(this, this);
+        rv.setHasFixedSize(true); // items are uniform height (bubbles), helps RecyclerView
+
+        androidx.recyclerview.widget.RecyclerView.ItemAnimator anim = rv.getItemAnimator();
+        if (anim instanceof androidx.recyclerview.widget.SimpleItemAnimator) {
+            ((androidx.recyclerview.widget.SimpleItemAnimator) anim).setSupportsChangeAnimations(false);
+        }
         rv.setAdapter(adapter);
 
 
@@ -224,11 +227,13 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
                 }
         );
         dmWs.connect();
+        liveRefreshHandler.postDelayed(liveRefreshTick, 4000);
     }
 
     @Override protected void onStop() {
         super.onStop();
         if (dmWs != null) { dmWs.close(); dmWs = null; }
+        liveRefreshHandler.postDelayed(liveRefreshTick, 4000);
     }
 
     private void handleWsEvent(org.json.JSONObject evt) {
@@ -240,38 +245,22 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
             return;
         }
 
-        // --- NEW: handle messageId-only delete/update frames ---
-        if (evt.has("messageId") && !"".equals(event)) {
+        // --- reaction-only compact frames, e.g. {event:"DM_REACTION", messageId, reactions:{...}} ---
+        if (evt.has("messageId")) {
             final long mid = evt.optLong("messageId", -1);
             if (mid > 0) {
-                if (event.contains("DELET")) { // DM_DELETE or DM_DELETED etc.
-                    runOnUiThread(() -> adapter.markDeleted(mid));
-                    return;
-                }
-                // If reactions arrive as {event:"DM_REACTION", messageId, reactions:{...}}
+                // delete compacts handled elsewhere if you have them
                 org.json.JSONObject rx = evt.optJSONObject("reactions");
                 if (rx != null) {
-                    runOnUiThread(() -> {
-                        int i = adapter.indexOfId(mid);
-                        if (i >= 0) {
-                            // Rebuild just this row’s reactions field
-                            // (Safest is to request a fresh row, but we can patch in place)
-                            // If you prefer: fetch single row via REST here.
-                            // Quick patch-in-place:
-                            // NOTE: You'll need a tiny getter to access by index or set directly:
-                            // data.get(i).reactions = rx; notifyItemChanged(i);
-                        }
-                    });
+                    runOnUiThread(() -> adapter.setReactions(mid, rx));
                     return;
                 }
             }
         }
-        // --- end new branch ---
 
+        // full message payload
         org.json.JSONObject m = evt.optJSONObject("message");
-        if (m == null && (evt.has("content") || evt.has("id"))) {
-            m = evt;
-        }
+        if (m == null && (evt.has("content") || evt.has("id"))) m = evt;
         if (m == null) {
             android.util.Log.d("DM-WS", "unhandled frame: " + evt.toString());
             return;
@@ -280,9 +269,9 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         DirectMessageDTO row = DirectMessageDTO.fromJson(m);
         if (!belongsToThisChat(row)) return;
 
-        // Upsert (from step 2)
+        // Upsert (replace if exists, append if new)
         runOnUiThread(() -> {
-            if (row.deleted) { adapter.markDeleted(row.id);; return; }
+            if (row.deleted) { adapter.markDeleted(row.id); return; }
             int existing = adapter.indexOfId(row.id);
             boolean wasMissing = existing < 0;
             adapter.upsert(row);
@@ -316,6 +305,45 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
         return id.length() <= 64 ? id : id.substring(0, 64);
     }
 
+    private final android.os.Handler liveRefreshHandler =
+            new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable liveRefreshTick = new Runnable() {
+        @Override public void run() {
+            refreshLatest(30);                 // pull a small recent window
+            liveRefreshHandler.postDelayed(this, 4000);  // every ~4s
+        }
+    };
+
+    // Pull latest N messages and merge into adapter without jumping scroll
+    private void refreshLatest(int limit) {
+        String url = BASE_V10() + "/messages?limit=" + limit;
+        JsonArrayRequest req = new JsonArrayRequest(
+                com.android.volley.Request.Method.GET, url, null,
+                res -> {
+                    List<DirectMessageDTO> list = new ArrayList<>();
+                    for (int i = 0; i < res.length(); i++) {
+                        org.json.JSONObject o = res.optJSONObject(i);
+                        if (o == null) continue;
+                        DirectMessageDTO m = DirectMessageDTO.fromJson(o);
+                        if (m.deleted) { m.text = "(message deleted)"; m.reactions = null; }
+                        list.add(m);
+                    }
+                    // oldest -> newest
+                    list.sort(java.util.Comparator
+                            .comparingLong((DirectMessageDTO m) -> m.createdAtEpochMs)
+                            .thenComparingLong(m -> m.id));
+
+                    // merge into existing list using your adapter.upsert
+                    for (DirectMessageDTO m : list) {
+                        adapter.upsert(m);
+                    }
+                },
+                err -> { /* ignore polling errors */ }
+        ) { @Override public Map<String,String> getHeaders() { return authHeader(); } };
+        req.setShouldCache(false);
+        com.android.volley.toolbox.Volley.newRequestQueue(this).add(req);
+    }
+
 
     // ==== Adapter callbacks ====
     @Override public long me() { return me; }
@@ -323,4 +351,5 @@ public class DirectChatActivity extends AppCompatActivity implements DirectMessa
     @Override public void onNeedMore(long beforeId) { fetchMessages(beforeId, 50, true); }
     @Override public void onError(String msg) { Toast.makeText(this, msg, Toast.LENGTH_SHORT).show(); }
     @Override public void onMarkedRead(long messageId) { /* optionally show a tick */ }
+    @Override public void onWantsLatestRefresh() { refreshLatest(30); }
 }
