@@ -40,7 +40,6 @@ public class TripListActivity extends AppCompatActivity {
         btnAdd = findViewById(R.id.btnAdd);
 
         userId = getIntent().getIntExtra("userId", -1);
-        Toast.makeText(this, " " + userId, Toast.LENGTH_SHORT).show();
 
         adapter = new TripAdapter(new TripAdapter.Listener() {
             @Override public void onOpen(TripDTO t) {
