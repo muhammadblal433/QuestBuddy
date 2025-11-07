@@ -10,6 +10,7 @@ import com.questbuddy.model.User;
 import com.questbuddy.repository.UserRepository;
 import jakarta.validation.ValidationException;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -79,9 +80,35 @@ public class BudgetServiceImplemented implements BudgetService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<BudgetResponseDTO> list(Long ownerId, String requesterUsername) {
+        // If requester is null/blank, treat as not authorized (should be handled by controller)
+        if (requesterUsername == null || requesterUsername.isBlank()) {
+            return List.of();
+        }
+        // Load owner's budgets and filter to those where requester appears in splits
+        return budgets.findAllByOwner_Id(ownerId, Sort.by("createdAt").descending())
+                .stream()
+                .filter(b -> canViewAsParticipant(b, requesterUsername))
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public BudgetResponseDTO get(Long ownerId, Long budgetId) {
         Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        return mapper.toResponse(b);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BudgetResponseDTO get(Long ownerId, Long budgetId, String requesterUsername) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        if (!canViewAsParticipant(b, requesterUsername)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
         return mapper.toResponse(b);
     }
 
@@ -158,6 +185,70 @@ public class BudgetServiceImplemented implements BudgetService {
         return mapper.toResponse(saved);
     }
 
+    // participant update - requesterUsername is not the owner; can only edit their own split amounts
+    @Override
+    @Transactional
+    public BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body, String requesterUsername) {
+        if (requesterUsername == null || requesterUsername.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
+
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+
+        // Must be a listed participant
+        BudgetSplit self = findSplitByUsername(b, requesterUsername);
+        if (self == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
+
+        // Participants cannot rename the budget
+        if (body.name() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "participants_cannot_rename");
+        }
+
+        // Participants can only modify their own split amounts.
+        if (body.splits() == null || body.splits().isEmpty()) {
+            // No changes; return current state
+            return mapper.toResponse(b);
+        }
+
+        // Only accept a single entry that matches the requester
+        BudgetSplitCreateDTO mine = null;
+        for (BudgetSplitCreateDTO s : body.splits()) {
+            if (s.username() == null || s.username().isBlank()) {
+                throw new ValidationException("username required in split");
+            }
+            String uname = s.username().trim();
+            if (uname.equalsIgnoreCase(requesterUsername)) {
+                if (mine != null) {
+                    throw new ValidationException("duplicate self entry");
+                }
+                mine = s;
+            } else {
+                // participants cannot modify others
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "participants_can_only_update_self");
+            }
+        }
+
+        if (mine == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "missing_self_split_update");
+        }
+
+        // Apply changes to own split (only fields provided)
+        if (mine.shareAmount() != null) {
+            if (mine.shareAmount().signum() < 0) throw new ValidationException("amounts cannot be negative");
+            self.setShareAmount(mine.shareAmount());
+        }
+        if (mine.paidAmount() != null) {
+            if (mine.paidAmount().signum() < 0) throw new ValidationException("amounts cannot be negative");
+            self.setPaidAmount(mine.paidAmount());
+        }
+
+        Budget saved = budgets.save(b);
+        return mapper.toResponse(saved);
+    }
+
     @Override
     @Transactional
     public void delete(Long ownerId, Long budgetId) {
@@ -173,6 +264,17 @@ public class BudgetServiceImplemented implements BudgetService {
         return mapper.toBalances(b);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<BudgetBalanceDTO> balances(Long ownerId, Long budgetId, String requesterUsername) {
+        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+        if (!canViewAsParticipant(b, requesterUsername)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
+        return mapper.toBalances(b);
+    }
+
     // helpers
     private User requireUser(Long id) {
         return users.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + id));
@@ -182,4 +284,27 @@ public class BudgetServiceImplemented implements BudgetService {
         return s.trim();
     }
     private static BigDecimal nz(BigDecimal x) { return x == null ? BigDecimal.ZERO : x; }
+
+    /** True if requesterUsername matches any split participant (by username, case-insensitive). */
+    private static boolean canViewAsParticipant(Budget b, String requesterUsername) {
+        if (requesterUsername == null || requesterUsername.isBlank()) return false;
+        String req = requesterUsername.trim().toLowerCase();
+        for (BudgetSplit s : b.getSplits()) {
+            String uname = s.getUser() != null && s.getUser().getUsername() != null
+                    ? s.getUser().getUsername().trim().toLowerCase() : null;
+            if (uname != null && uname.equals(req)) return true;
+        }
+        return false;
+    }
+
+    private static BudgetSplit findSplitByUsername(Budget b, String username) {
+        if (username == null) return null;
+        String req = username.trim().toLowerCase();
+        for (BudgetSplit s : b.getSplits()) {
+            String uname = s.getUser() != null && s.getUser().getUsername() != null
+                    ? s.getUser().getUsername().trim().toLowerCase() : null;
+            if (uname != null && uname.equals(req)) return s;
+        }
+        return null;
+    }
 }
