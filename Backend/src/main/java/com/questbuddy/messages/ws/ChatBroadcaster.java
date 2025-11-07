@@ -45,6 +45,14 @@ public class ChatBroadcaster {
         sendTrip(tripId, json("REACTION_TOGGLE", "TRIP", tripId, null, extra));
     }
 
+    public void tripReadReceipt(Long tripId, Long readerId, Long upToMessageId, Integer unreadCount) {
+        java.util.Map<String,Object> extra = new java.util.HashMap<>();
+        extra.put("readerId", readerId);
+        extra.put("upToMessageId", upToMessageId);
+        if (unreadCount != null) extra.put("unreadCount", unreadCount);
+        sendTrip(tripId, json("READ_RECEIPT", "TRIP", tripId, null, extra));
+    }
+
     // Helper funcs for TripMessage
     private void sendTrip(Long tripId, String payload) {
         if (payload == null) return;
