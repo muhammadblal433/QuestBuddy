@@ -116,12 +116,12 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
         h.meta.setText(m.edited ? time + "  (edited)" : time);
 
         // Reactions
-        String rx = m.reactionsDisplay();
-        if (rx.isEmpty()) {
+        if (m.deleted) {
             h.reactions.setVisibility(View.GONE);
             h.reactions.setText("");
         } else {
-            h.reactions.setVisibility(View.VISIBLE);
+            String rx = m.reactionsDisplay();
+            h.reactions.setVisibility(rx.isEmpty() ? View.GONE : View.VISIBLE);
             h.reactions.setText(rx);
         }
 
@@ -267,7 +267,7 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
 
         int beforeIndex = indexOf(messageId);
         DirectMessageDTO backup = (beforeIndex >= 0) ? data.get(beforeIndex) : null;
-        removeById(messageId);
+        markDeleted(messageId);
 
         StringRequest req = new StringRequest(
                 Request.Method.DELETE,
@@ -443,6 +443,45 @@ public class DirectMessageAdapter extends RecyclerView.Adapter<DirectMessageAdap
         int prev = m.reactions.optInt(emoji, 0);
         int next = Math.max(prev + (add ? 1 : -1), 0);
         try { if (next == 0) m.reactions.remove(emoji); else m.reactions.put(emoji, next); } catch (Exception ignored) {}
+        notifyItemChanged(i);
+    }
+
+    public boolean containsId(long id) {
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).id == id) return true;
+        }
+        return false;
+    }
+
+    // Add near other dataset ops
+    public int indexOfId(long messageId) { return indexOf(messageId); }
+
+    public void replaceAt(int index, DirectMessageDTO m) {
+        data.set(index, m);
+        notifyItemChanged(index);
+    }
+
+    public void upsert(DirectMessageDTO m) {
+        if (m == null) return;
+        int i = indexOf(m.id);
+        if (i >= 0) {
+            data.set(i, m);           // replace full row (text/edited/reactions/version/deleted)
+            notifyItemChanged(i);
+        } else {
+            append(m);                // reuse your existing append()
+        }
+    }
+
+    // make this one public so activity can call it on remote deletes
+    public void removeByIdPublic(long messageId) { removeById(messageId); }
+
+    public void markDeleted(long messageId) {
+        int i = indexOf(messageId);
+        if (i < 0) return;
+        DirectMessageDTO m = data.get(i);
+        m.deleted = true;
+        m.text = "(message deleted)";
+        m.reactions = null;
         notifyItemChanged(i);
     }
 }
