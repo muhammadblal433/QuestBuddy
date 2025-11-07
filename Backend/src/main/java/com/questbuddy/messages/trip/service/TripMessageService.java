@@ -402,8 +402,7 @@ public class TripMessageService {
             readProgress.save(pr);
         } // else: no advance; keep previous pointer
 
-        int unread = (int) messages.countByTripIdAndIdGreaterThanAndSenderIdNotAndDeletedFalse(tripId, pr.getLastReadMessageId(), me);
-
+        int unread = (int) messages.countByTripIdAndIdGreaterThanAndSenderIdNotAndIsDeletedFalse(tripId, pr.getLastReadMessageId(), me);
         // broadcast to the trip (small payload; no message content)
         chatBroadcaster.tripReadReceipt(tripId, me, pr.getLastReadMessageId(), unread);
         return unread;
