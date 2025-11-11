@@ -20,10 +20,13 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.ViewHolder
     private List<Budget> budgets; // list of budgets
     private OnBudgetClickListener listener; // click listener
 
+    private String currentUsername; // username of the current user
+
     // constructor to set data and listener
     public BudgetAdapter(List<Budget> budgets, OnBudgetClickListener listener) {
         this.budgets = budgets;
         this.listener = listener;
+        this.currentUsername = currentUsername;
     }
 
     // create new view for each budget
@@ -39,7 +42,12 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Budget b = budgets.get(position);
         holder.tvName.setText(b.getName());
-        holder.tvOwner.setText("Owner: " + b.getOwnerUsername());
+
+        if(b.getOwnerUsername().equalsIgnoreCase(currentUsername))
+            holder.tvOwner.setText("Owner: You");
+        else
+            holder.tvOwner.setText("Owner: " + b.getOwnerUsername());
+
         holder.tvTotals.setText("Paid: $" + b.getTotalPaid() + " | Share: $" + b.getTotalShare());
         holder.tvCreated.setText("Created: " + b.getCreatedAt());
         holder.itemView.setOnClickListener(v -> listener.onClick(b));
