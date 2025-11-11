@@ -18,6 +18,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
 
 // shows all budgets for the logged-in user
 public class BudgetListActivity extends AppCompatActivity {
@@ -84,10 +87,17 @@ public class BudgetListActivity extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                 },
                 error -> Toast.makeText(this, "Failed to load budgets", Toast.LENGTH_SHORT).show()
-        );
-
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("X-Username", username);
+                return headers;
+            }
+        };
         queue.add(request);
     }
+
 
     // opens budget details when clicked
     private void onBudgetClick(Budget budget) {
