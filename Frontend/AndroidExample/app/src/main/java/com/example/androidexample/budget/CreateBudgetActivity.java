@@ -40,7 +40,7 @@ public class CreateBudgetActivity extends AppCompatActivity {
 
         queue = Volley.newRequestQueue(this);
         username = getSharedPreferences("session", MODE_PRIVATE)
-                .getString("username", "alice123");
+                .getString("username", "null");
 
         addParticipantView();
         addParticipantView();
