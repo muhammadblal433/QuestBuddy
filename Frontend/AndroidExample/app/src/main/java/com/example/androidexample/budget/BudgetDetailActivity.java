@@ -13,12 +13,17 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.R;
+import com.example.androidexample.budget.SplitEditAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
+import androidx.appcompat.app.AlertDialog;
+import com.android.volley.toolbox.StringRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 // shows details for one budget
 public class BudgetDetailActivity extends AppCompatActivity {
@@ -29,7 +34,9 @@ public class BudgetDetailActivity extends AppCompatActivity {
     private SplitAdapter splitAdapter;
     private List<Split> splits = new ArrayList<>();
     private long budgetId;
-    private String username;
+    private SplitEditAdapter editAdapter;
+    private String username, ownerUsername;
+    private boolean isOwner = false;
     private static final String BASE_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v11";
 
     @Override
@@ -62,7 +69,7 @@ public class BudgetDetailActivity extends AppCompatActivity {
 
         loadBudget(); // loads the budget
 
-        btnUpdate.setOnClickListener(v -> Toast.makeText(this, "Update feature coming soon", Toast.LENGTH_SHORT).show());
+        btnUpdate.setOnClickListener(v -> showEditableSplits());
         btnDelete.setOnClickListener(v -> deleteBudget());
     }
 
@@ -74,7 +81,8 @@ public class BudgetDetailActivity extends AppCompatActivity {
                 response -> {
                     try {
                         String name = response.getString("name");
-                        String ownerUsername = response.getString("ownerUsername");
+                        ownerUsername = response.getString("ownerUsername");
+                        isOwner = ownerUsername.equalsIgnoreCase(username);
                         double totalShare = response.getDouble("totalShare");
                         double totalPaid = response.getDouble("totalPaid");
                         String createdAt = response.getString("createdAt");
@@ -96,24 +104,105 @@ public class BudgetDetailActivity extends AppCompatActivity {
                         }
                         splitAdapter.notifyDataSetChanged();
 
-                    } catch (JSONException e) { e.printStackTrace(); }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 },
                 error -> Toast.makeText(this, "Failed to load budget details", Toast.LENGTH_SHORT).show()
-        );
-        queue.add(request); // add to queue
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("X-Username", username);
+                return headers;
+            }
+        };
+        queue.add(request);
     }
 
-    //deletes budgets from the server
-    private void deleteBudget() {
-        String url = BASE_URL + "/users/" + username + "/budgets/" + budgetId;
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
+    // enables edit mode for budget splits and prompts user to save or cancel changes
+    private void showEditableSplits() {
+        if (!isOwner) {
+            Toast.makeText(this, "Only the owner can edit this budget", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        editAdapter = new SplitEditAdapter(splits, username, isOwner);
+        recyclerSplits.setAdapter(editAdapter);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Save Changes?")
+                .setMessage("Would you like to save the updates to this budget?")
+                .setPositiveButton("Save", (dialog, which) -> updateBudget())
+                .setNegativeButton("Cancel", (dialog, which) -> loadBudget())
+                .show();
+    }
+
+    // sends a put request to update the budget with edited split data
+    private void updateBudget() {
+        List<Split> updatedSplits = editAdapter.getUpdatedSplits();
+        JSONArray arr = new JSONArray();
+
+        for (Split s : updatedSplits) {
+            try {
+                JSONObject o = new JSONObject();
+                o.put("username", s.getUsername());
+                o.put("shareAmount", s.getShareAmount());
+                o.put("paidAmount", s.getPaidAmount());
+                arr.put(o);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("splits", arr);
+            body.put("name", tvBudgetName.getText().toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        String url = BASE_URL + "/users/" + ownerUsername + "/budgets/" + budgetId;
+
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.PUT, url, body,
                 response -> {
-                    Toast.makeText(this, "Budget deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Budget updated successfully!", Toast.LENGTH_SHORT).show();
+                    loadBudget();
+                },
+                error -> Toast.makeText(this, "Failed to update budget", Toast.LENGTH_SHORT).show()
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("X-Username", username);
+                return headers;
+            }
+        };
+        queue.add(req);
+    }
+
+
+    // sends a delete request to remove the current budget from the server
+    private void deleteBudget() {
+        String url = BASE_URL + "/users/" + ownerUsername + "/budgets/" + budgetId;
+
+        StringRequest request = new StringRequest(Request.Method.DELETE, url,
+                response -> {
+                    Toast.makeText(this, "Budget deleted successfully", Toast.LENGTH_SHORT).show();
                     finish();
                 },
                 error -> Toast.makeText(this, "Failed to delete budget", Toast.LENGTH_SHORT).show()
-        );
-        queue.add(request); // add to queue
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("X-Username", username);
+                return headers;
+            }
+        };
+
+        queue.add(request);
     }
 }
 
