@@ -24,4 +24,10 @@ public class Split {
 
     // get balance amount
     public double getBalance() { return balance; }
+
+    // set share amount
+    public void setShareAmount(double shareAmount) { this.shareAmount = shareAmount; }
+
+    // set paid amount
+    public void setPaidAmount(double paidAmount) { this.paidAmount = paidAmount; }
 }
