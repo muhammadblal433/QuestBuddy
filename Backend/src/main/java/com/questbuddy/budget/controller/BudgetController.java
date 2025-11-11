@@ -8,8 +8,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -49,6 +54,39 @@ public class BudgetController {
         }
         // participant-filtered view
         return service.list(ownerId, requesterUsername);
+    }
+
+    // Paged + searchable budgets list (keeps existing endpoints unchanged)
+    @GetMapping("/users/{ownerUsername}/budgets/paged")
+    public Page<BudgetResponseDTO> listPaged(@PathVariable String ownerUsername,
+                                             @RequestHeader(value = "X-Username", required = false) String requesterUsername,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "20") int size,
+                                             @RequestParam(required = false) String q) {
+        Long ownerId = idOf(ownerUsername);
+        List<BudgetResponseDTO> all;
+        if (requesterUsername == null || requesterUsername.isBlank()
+                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+            all = service.list(ownerId);
+        } else {
+            all = service.list(ownerId, requesterUsername);
+        }
+
+        if (q != null && !q.isBlank()) {
+            String needle = q.trim().toLowerCase();
+            all = all.stream()
+                    .filter(b -> b.name() != null && b.name().toLowerCase().contains(needle))
+                    .collect(Collectors.toList());
+        }
+
+        all.sort(Comparator.comparing(BudgetResponseDTO::createdAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+
+        var pageable = PageRequest.of(page, size);
+        int from = Math.min(page * size, all.size());
+        int to = Math.min(from + size, all.size());
+        List<BudgetResponseDTO> slice = all.subList(from, to);
+
+        return new PageImpl<>(slice, pageable, all.size());
     }
 
     // Get a single budget (with splits + totals)
