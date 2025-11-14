@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#FFF8E1"
-    tools:context=".BudgetListActivity">
+    tools:context=".budget.BudgetListActivity">
 
     <!-- Header -->
     <TextView
@@ -52,5 +52,18 @@
         android:paddingBottom="16dp"
         android:scrollbars="vertical"
         tools:listitem="@layout/item_budget" />
+
+    <Button
+        android:id="@+id/btnReturnHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Return to Home"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="#FF9800"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/rounded_edittext"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp" />
 
 </LinearLayout>

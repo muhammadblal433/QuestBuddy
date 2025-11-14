@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#FFF8E1"
     android:padding="8dp"
-    tools:context=".BudgetDetailActivity">
+    tools:context=".budget.BudgetDetailActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
