@@ -43,6 +43,12 @@ public class BudgetListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_budget_list);
 
         recyclerBudgets = findViewById(R.id.recyclerBudgets);
+        Button btnAdd = findViewById(R.id.btnAddBudget);
+
+        btnAdd.setOnClickListener(v -> {
+            Intent intent = new Intent(BudgetListActivity.this, CreateBudgetActivity.class);
+            startActivity(intent);
+        });
 
         recyclerBudgets.setLayoutManager(new LinearLayoutManager(this));
         adapter = new BudgetAdapter(budgetList, this::onBudgetClick);
@@ -96,6 +102,7 @@ public class BudgetListActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json");
                 headers.put("X-Username", username);
                 return headers;
             }
