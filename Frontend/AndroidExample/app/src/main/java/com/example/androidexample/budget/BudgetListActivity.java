@@ -12,6 +12,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.androidexample.HomeActivity;
 import com.example.androidexample.R;
 
 import org.json.JSONException;
@@ -34,20 +35,20 @@ public class BudgetListActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SharedPreferences prefs = getSharedPreferences("session", MODE_PRIVATE);
+        username = prefs.getString("username", null);
+        int userId = prefs.getInt("userId", -1);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_budget_list);
 
         recyclerBudgets = findViewById(R.id.recyclerBudgets);
-        Button btnAdd = findViewById(R.id.btnAddBudget);
 
         recyclerBudgets.setLayoutManager(new LinearLayoutManager(this));
         adapter = new BudgetAdapter(budgetList, this::onBudgetClick);
         recyclerBudgets.setAdapter(adapter);
 
         queue = Volley.newRequestQueue(this);
-
-        SharedPreferences prefs = getSharedPreferences("session", MODE_PRIVATE);
-        username = prefs.getString("username", null);
 
         if (username == null) {
             Toast.makeText(this, "No user logged in!", Toast.LENGTH_SHORT).show();
@@ -57,9 +58,13 @@ public class BudgetListActivity extends AppCompatActivity {
 
         loadBudgets(); // load budgets from server
 
-        btnAdd.setOnClickListener(v -> {
-            Intent i = new Intent(BudgetListActivity.this, CreateBudgetActivity.class);
-            startActivity(i); // open create budget page
+        // returns to home page
+        Button btnReturnHome = findViewById(R.id.btnReturnHome);
+        btnReturnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(BudgetListActivity.this, HomeActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);
+            finish();
         });
     }
 
