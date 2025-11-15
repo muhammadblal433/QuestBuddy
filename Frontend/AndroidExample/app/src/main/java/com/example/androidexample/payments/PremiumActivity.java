@@ -74,14 +74,15 @@ public class PremiumActivity extends AppCompatActivity {
 
     // Sets the marketing copy you requested
     private void setupPremiumText() {
-        tvTitle.setText("Unlock QuestBuddy Premium");
-        tvSubtitle.setText("Travel Like a Pro");
+        tvTitle.setText("Unlock QuestBuddy Premium, Travel Like a Pro");
+        // We no longer need a separate subtitle line
+        tvSubtitle.setText("");
 
         String featuresText =
-                "• Unlimited trips\n" +
-                        "• Custom group chat names\n" +
-                        "• AI budget planner for your trip\n" +
-                        "• AI-generated packing lists tailored to your plans";
+                "- Unlimited trips\n" +
+                        "- Custom group chat names\n" +
+                        "- AI budget planner for your trip\n" +
+                        "- AI-generated packing lists tailored to your plans";
 
         tvFeatures.setText(featuresText);
     }

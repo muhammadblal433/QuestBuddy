@@ -16,25 +16,26 @@
             android:id="@+id/tvPremiumTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Unlock QuestBuddy Premium"
+            android:text="Unlock QuestBuddy Premium, Travel Like a Pro"
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="#000000"
-            android:paddingBottom="4dp" />
+            android:paddingBottom="12dp" />
 
         <TextView
             android:id="@+id/tvPremiumSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Travel Like a Pro"
+            android:text=""
             android:textSize="18sp"
             android:textColor="#555555"
-            android:paddingBottom="16dp" />
+            android:paddingBottom="0dp" />
 
         <TextView
             android:id="@+id/tvPremiumFeatures"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="- Unlimited trips\n- Custom group chat names\n- AI budget planner for your trip\n- AI-generated packing lists tailored to your plans"
             android:textSize="16sp"
             android:textColor="#333333"
             android:lineSpacingExtra="4dp"
