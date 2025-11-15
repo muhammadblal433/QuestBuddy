@@ -3,53 +3,89 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF8E1"
+    android:background="@drawable/bg_travel"
+    android:fillViewport="true"
     tools:context=".payments.PremiumActivity">
 
+    <!-- Outer container to center the premium card similar to login screen -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="24dp"
+        android:gravity="center">
 
+        <!-- App / section title -->
         <TextView
-            android:id="@+id/tvPremiumTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Unlock QuestBuddy Premium, Travel Like a Pro"
-            android:textSize="24sp"
+            android:text="QuestBuddy Premium"
+            android:textSize="40sp"
             android:textStyle="bold"
-            android:textColor="#000000"
-            android:paddingBottom="12dp" />
-
-        <TextView
-            android:id="@+id/tvPremiumSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="18sp"
-            android:textColor="#555555"
-            android:paddingBottom="0dp" />
-
-        <TextView
-            android:id="@+id/tvPremiumFeatures"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="- Unlimited trips\n- Custom group chat names\n- AI budget planner for your trip\n- AI-generated packing lists tailored to your plans"
-            android:textSize="16sp"
-            android:textColor="#333333"
-            android:lineSpacingExtra="4dp"
+            android:textColor="@android:color/white"
+            android:paddingTop="30dp"
             android:paddingBottom="24dp" />
 
-        <Button
-            android:id="@+id/btnUpgradePremium"
+        <!-- Premium content card -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_button_orange"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:text="Upgrade to Premium"
-            android:textColor="@android:color/white" />
+            android:orientation="vertical"
+            android:padding="28dp"
+            android:background="#CCFFFFFF"
+            android:elevation="6dp"
+            android:layout_marginBottom="40dp">
+
+            <!-- Title line -->
+            <TextView
+                android:id="@+id/tvPremiumTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Unlock QuestBuddy Premium, Travel Like a Pro"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#222222"
+                android:paddingBottom="12dp" />
+
+            <!-- Subtitle -->
+            <TextView
+                android:id="@+id/tvPremiumSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plan smarter trips with powerful premium tools."
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#444444"
+                android:paddingBottom="24dp" />
+
+            <!-- Features / bullet list -->
+            <TextView
+                android:id="@+id/tvPremiumFeatures"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Unlimited trips\n• Custom group chat names\n• AI budget planner for your trip\n• AI-generated packing lists tailored to your plans"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#222222"
+                android:lineSpacingExtra="6dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="28dp"
+                android:paddingStart="4dp" />
+
+            <!-- Upgrade button -->
+            <Button
+                android:id="@+id/btnUpgradePremium"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Upgrade to Premium"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:background="@drawable/rounded_button_orange"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
 
     </LinearLayout>
+
 </ScrollView>
