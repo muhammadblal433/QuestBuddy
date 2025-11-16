@@ -18,15 +18,39 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
+import com.questbuddy.notification.NotificationService;
+import com.questbuddy.notification.NotificationType;
+import com.questbuddy.notification.dto.NotificationCreateDTO;
+import com.questbuddy.model.User;
+
 @Service
 public class TripEventService {
 
     private final TripEventRepository repo;
     private final TripMembershipService membership; // <-- real bean
 
-    public TripEventService(TripEventRepository repo, TripMembershipService membership) {
+    private final NotificationService notifications;
+
+
+    public TripEventService(TripEventRepository repo, TripMembershipService membership, NotificationService notifications) {
         this.repo = repo;
         this.membership = membership;
+        this.notifications = notifications;
+    }
+
+    // helper for notis
+    private void notifyTripMembers(Long actorId, Long tripId, Long eventId,
+                                   String title, String message, NotificationType type) {
+        for (User u : membership.listAccepted(actorId, tripId)) {
+            if (u.getId().equals(actorId)) continue; // don't notify yourself
+            notifications.create(new NotificationCreateDTO(
+                    u.getId(), title, message, type, eventId, tripId, null
+            ));
+        }
+    }
+
+    private static String shortIso(java.time.Instant t) {
+        return t == null ? "" : t.toString();
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +72,12 @@ public class TripEventService {
 
         TripEvent e = TripEventMapper.fromCreate(tripId, me, in);
         TripEvent saved = repo.save(e);
-        // TODO: notification ITINERARY_UPDATE (created)
+
+        notifyTripMembers(me, tripId, saved.getId(),
+                "New itinerary event",
+                saved.getName() + " • " + shortIso(saved.getStartsAt()),
+                NotificationType.EVENT_CREATED);
+
         return TripEventMapper.toDTO(saved);
     }
 
@@ -66,7 +95,11 @@ public class TripEventService {
         if (e.getStartsAt() != null && e.getEndsAt() != null) {
             validateDates(e.getStartsAt(), e.getEndsAt());
         }
-        // TODO: notification ITINERARY_UPDATE (edited)
+        notifyTripMembers(me, tripId, e.getId(),
+                "Itinerary updated",
+                e.getName() + " • " + shortIso(e.getStartsAt()),
+                NotificationType.EVENT_UPDATED);
+
         return TripEventMapper.toDTO(e);
     }
 
@@ -80,7 +113,11 @@ public class TripEventService {
         ensureOwnerOrCreator(me, tripId, e);
 
         e.setDeletedAt(Instant.now());
-        // TODO: notification ITINERARY_UPDATE (deleted)
+
+        notifyTripMembers(me, tripId, e.getId(),
+                "Itinerary removed",
+                e.getName(),
+                NotificationType.EVENT_CANCELLED);
     }
 
     private void validateDates(Instant start, Instant end) {
