@@ -230,4 +230,17 @@ public class TripMembershipService {
                 recipientUserId, title, message, type, eventId, tripId, taskId
         ));
     }
+
+
+    @Transactional(readOnly = true)
+    public void ensureMember(Long userId, Long tripId) {
+        if (!gate.isMember(tripId, userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "not_member");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isOwner(Long userId, Long tripId) {
+        return gate.isOwner(tripId, userId);
+    }
 }
