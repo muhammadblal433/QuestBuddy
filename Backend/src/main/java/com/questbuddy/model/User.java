@@ -285,5 +285,3 @@ public class User {
         }
     }
 }
-
-// Adding this comment to test if CI/CD triggers pipeline
