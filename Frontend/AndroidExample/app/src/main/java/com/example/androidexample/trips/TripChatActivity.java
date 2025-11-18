@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.messages.MessageAdapter;
 import com.example.androidexample.R;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class TripChatActivity extends ComponentActivity {
 
     // --- Replace these with your real values or pass via Intent extras ---
     private final String baseUrl = "http://coms-3090-026.class.las.iastate.edu:8080"; // REST base (no trailing slash ok)
-    private final String baseWsUrl = "";   // WS base
+    private final String baseWsUrl = "ws://coms-3090-026.class.las.iastate.edu:8080";   // WS base
     private int me;                                        // current user id
     private final int tripId = 2;                                  // trip/conversation id
 
