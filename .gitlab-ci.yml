@@ -1,5 +1,5 @@
 stages: [mavenbuild, maventest, coverage]
-
+#.
 .default_backend_job:
   tags: [springboot_tag]
   before_script:
@@ -58,3 +58,4 @@ coverage-report:
   needs: ["maven-test"]
   rules:
     - if: '$CI_COMMIT_BRANCH == "amsyed-demo4-be-cicd"'
+#.
