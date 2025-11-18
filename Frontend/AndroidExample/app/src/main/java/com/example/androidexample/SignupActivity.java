@@ -152,3 +152,5 @@ public class SignupActivity extends AppCompatActivity {
         return password.matches("^(?=.*[A-Za-z])(?=.*\\d).{6,}$");
     }
 }
+
+// test trigger for CI/CD
