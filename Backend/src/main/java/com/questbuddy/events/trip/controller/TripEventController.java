@@ -37,11 +37,11 @@ public class TripEventController {
         return service.create(me, tripId, in);
     }
 
-    @PatchMapping("/{eventId}")
+    @PutMapping("/{eventId}")
     public TripEventResponseDTO edit(@RequestHeader("X-User-Id") Long me,
-                                     @PathVariable Long tripId,
-                                     @PathVariable Long eventId,
-                                     @RequestBody @Valid TripEventEditDTO in) {
+                                        @PathVariable Long tripId,
+                                        @PathVariable Long eventId,
+                                        @RequestBody @Valid TripEventEditDTO in) {
         return service.edit(me, tripId, eventId, in);
     }
 

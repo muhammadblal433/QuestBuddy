@@ -41,11 +41,15 @@ public class TripEventService {
     // helper for notis
     private void notifyTripMembers(Long actorId, Long tripId, Long eventId,
                                    String title, String message, NotificationType type) {
-        for (User u : membership.listAccepted(actorId, tripId)) {
-            if (u.getId().equals(actorId)) continue; // don't notify yourself
-            notifications.create(new NotificationCreateDTO(
-                    u.getId(), title, message, type, eventId, tripId, null
-            ));
+        try {
+            for (User u : membership.listAccepted(actorId, tripId)) {
+                if (u.getId().equals(actorId)) continue; // don't notify self
+                notifications.create(new NotificationCreateDTO(
+                        u.getId(), title, message, type, eventId, tripId, null
+                ));
+            }
+        } catch (Exception ex) {
+            System.err.println("[TripEventService] notify failed: " + ex.getMessage());
         }
     }
 

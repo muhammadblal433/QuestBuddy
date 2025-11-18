@@ -1,0 +1,61 @@
+stages: [mavenbuild, maventest, coverage]
+#.
+.default_backend_job:
+  tags: [springboot_tag]
+  before_script:
+    - export PATH="$HOME/.sdkman/candidates/java/current/bin:$HOME/.sdkman/candidates/maven/current/bin:$PATH"
+    - cd "$CI_PROJECT_DIR/Backend"
+    - mvn -v
+
+maven-build:
+  stage: mavenbuild
+  extends: .default_backend_job
+  script:
+    - mvn -B -DskipTests package
+  artifacts:
+    paths: [Backend/target/*.jar]
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "amsyed-demo4-be-cicd"'
+
+maven-test:
+  stage: maventest
+  extends: .default_backend_job
+  script:
+    - mvn -B test
+  artifacts:
+    when: always
+    reports:
+      junit: [Backend/target/surefire-reports/*.xml]
+    paths: [Backend/target/surefire-reports/]
+  needs: ["maven-build"]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "amsyed-demo4-be-cicd"'
+
+coverage-report:
+  stage: coverage
+  extends: .default_backend_job
+  script:
+    - mvn -B test org.jacoco:jacoco-maven-plugin:0.8.12:report || true
+    - mkdir -p "$CI_PROJECT_DIR/Documents/coverage/be"
+    - |
+      if [ -d target/site/jacoco ]; then
+        cp -r target/site/jacoco/* "$CI_PROJECT_DIR/Documents/coverage/be/"
+      else
+        echo '<html><body><h3>No coverage produced (0 tests)</h3></body></html>' > "$CI_PROJECT_DIR/Documents/coverage/be/index.html"
+      fi
+    - mkdir -p Backend/target/site/jacoco
+    - test -f Backend/target/site/jacoco/jacoco.xml || echo "<report/>" > Backend/target/site/jacoco/jacoco.xml
+  artifacts:
+    paths:
+      - Documents/coverage/be
+      - Backend/target/site/jacoco/jacoco.xml
+    expire_in: 2 weeks
+    reports:
+      coverage_report:
+        coverage_format: jacoco
+        path: Backend/target/site/jacoco/jacoco.xml
+  needs: ["maven-test"]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "amsyed-demo4-be-cicd"'
+#.
