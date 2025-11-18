@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
@@ -24,10 +25,7 @@ public class TripChatActivity extends ComponentActivity {
     private final String baseUrl = "http://coms-3090-026.class.las.iastate.edu:8080"; // REST base (no trailing slash ok)
     private final String baseWsUrl = "ws://coms-3090-026.class.las.iastate.edu:8080";   // WS base
     private int me;                                        // current user id
-    private final int tripId = 2;                                  // trip/conversation id
-
-    private int userId;
-
+    private int tripId;                                // trip/conversation id
     private TripChatViewModel vm;
 
     @Override
@@ -35,19 +33,14 @@ public class TripChatActivity extends ComponentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_chat);
 
-        //userId = getIntent().getIntExtra("userId", -1);
+        me = getIntent().getIntExtra("userId", -1);
+        tripId = getIntent().getIntExtra("tripId", -1);
 
-        /*
-            if (userId == -1) {
-                Toast.makeText(this, "Invalid user session", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, LoginActivity.class));
-                finish();
-                return;
-            }
-         */
-
-
-        me = 5;
+        if (me == -1 || tripId == -1) {
+            Toast.makeText(this, "Missing userId or tripId", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         RecyclerView recycler = findViewById(R.id.recycler);
         EditText input = findViewById(R.id.input);
