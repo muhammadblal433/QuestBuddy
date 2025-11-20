@@ -9,7 +9,7 @@ import com.questbuddy.messages.direct.model.DirectMessageReaction;
 import com.questbuddy.messages.direct.repository.DirectMessageReactionRepository;
 import com.questbuddy.messages.direct.repository.DirectMessageRepository;
 import com.questbuddy.messages.guard.DirectMessagingGate;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

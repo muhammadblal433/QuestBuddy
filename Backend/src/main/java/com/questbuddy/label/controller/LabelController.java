@@ -1,9 +1,9 @@
-package com.questbuddy.controller;
+package com.questbuddy.label.controller;
 
-import com.questbuddy.model.Label;
-import com.questbuddy.model.User;
-import com.questbuddy.repository.LabelRepository;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.label.model.Label;
+import com.questbuddy.user.model.User;
+import com.questbuddy.label.repository.LabelRepository;
+import com.questbuddy.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

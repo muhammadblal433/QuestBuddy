@@ -4,7 +4,6 @@ import com.questbuddy.events.trip.dto.TripEventCreateDTO;
 import com.questbuddy.events.trip.dto.TripEventEditDTO;
 import com.questbuddy.events.trip.mapper.TripEventMapper;
 import com.questbuddy.events.trip.dto.TripEventResponseDTO;
-import com.questbuddy.events.trip.mapper.TripEventMapper;
 import com.questbuddy.events.trip.model.TripEvent;
 import com.questbuddy.events.trip.repository.TripEventRepository;
 import com.questbuddy.tripmember.service.TripMembershipService;
@@ -21,7 +20,7 @@ import java.time.Instant;
 import com.questbuddy.notification.NotificationService;
 import com.questbuddy.notification.NotificationType;
 import com.questbuddy.notification.dto.NotificationCreateDTO;
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 
 @Service
 public class TripEventService {

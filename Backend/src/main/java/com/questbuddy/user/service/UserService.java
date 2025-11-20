@@ -1,6 +1,6 @@
-package com.questbuddy.service;
+package com.questbuddy.user.service;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 
 import java.util.Optional;
 

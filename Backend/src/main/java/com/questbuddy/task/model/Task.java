@@ -1,5 +1,6 @@
-package com.questbuddy.model;
+package com.questbuddy.task.model;
 
+import com.questbuddy.user.model.User;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 

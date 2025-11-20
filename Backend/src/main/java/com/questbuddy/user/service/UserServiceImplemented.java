@@ -1,8 +1,8 @@
-package com.questbuddy.service;
+package com.questbuddy.user.service;
 
-import com.questbuddy.model.Role;
-import com.questbuddy.model.User;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.model.Role;
+import com.questbuddy.user.model.User;
+import com.questbuddy.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

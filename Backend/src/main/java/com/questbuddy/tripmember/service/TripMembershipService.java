@@ -1,13 +1,13 @@
 package com.questbuddy.tripmember.service;
 
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.repository.UserRepository;
 import com.questbuddy.tripmember.model.TripMember;
 import com.questbuddy.tripmember.model.TripMember.Role;
 import com.questbuddy.tripmember.model.TripMember.Status;
 import com.questbuddy.tripmember.repository.TripMemberRepository;
 import com.questbuddy.tripmember.security.TripMembershipGate;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import com.questbuddy.trip.Trip;
 
 import com.questbuddy.trip.TripRepository;

@@ -1,7 +1,7 @@
 package com.questbuddy.service;
 
-import com.questbuddy.model.Task;
-import com.questbuddy.repository.TaskRepository;
+import com.questbuddy.task.model.Task;
+import com.questbuddy.task.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

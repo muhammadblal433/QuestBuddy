@@ -1,8 +1,7 @@
-package com.questbuddy.controller;
+package com.questbuddy.user.controller;
 
-import com.questbuddy.model.Role;
-import com.questbuddy.model.User;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.model.User;
+import com.questbuddy.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;

@@ -3,10 +3,10 @@ package com.questbuddy.notification;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import com.questbuddy.calendar.Event;
 import com.questbuddy.trip.Trip;
-import com.questbuddy.model.Task;
+import com.questbuddy.task.model.Task;
 
 import java.time.Instant;
 

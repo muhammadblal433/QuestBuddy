@@ -1,6 +1,6 @@
-package com.questbuddy.repository;
+package com.questbuddy.user.repository;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

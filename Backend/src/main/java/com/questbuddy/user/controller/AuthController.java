@@ -1,7 +1,7 @@
-package com.questbuddy.controller;
+package com.questbuddy.user.controller;
 
-import com.questbuddy.model.User;
-import com.questbuddy.service.UserService;
+import com.questbuddy.user.model.User;
+import com.questbuddy.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

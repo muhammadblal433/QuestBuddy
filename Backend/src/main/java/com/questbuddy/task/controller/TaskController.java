@@ -1,17 +1,13 @@
-package com.questbuddy.controller;
+package com.questbuddy.task.controller;
 
-import com.questbuddy.model.Task;
-import com.questbuddy.model.User;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.task.model.Task;
+import com.questbuddy.user.model.User;
+import com.questbuddy.user.repository.UserRepository;
 import com.questbuddy.service.TaskService;
-import jakarta.persistence.Converts;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.Map;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -37,7 +33,7 @@ public class TaskController {
     public record TaskRes(Long taskId, UserLite user, String title, String description, String status, java.time.LocalDate dueDate) {}
 
     // Maps a Task entity to its response DTO (User goes to UserLite)
-    private TaskRes toRes(com.questbuddy.model.Task t) {
+    private TaskRes toRes(Task t) {
         var u = t.getUser();
         var owner = (u == null) ? null : new UserLite(u.getId(), u.getEmail(), u.getUsername(), u.getFirstName(), u.getLastName());
         return new TaskRes(t.getTaskId(), owner, t.getTitle(), t.getDescription(), t.getStatus(), t.getDueDate());
@@ -59,7 +55,7 @@ public class TaskController {
         var user = userRepo.findById(body.userId())
                 .orElseThrow(() -> new java.util.NoSuchElementException("User not found"));
 
-        var task = new com.questbuddy.model.Task(
+        var task = new Task(
                 user,
                 body.title(),
                 body.description(),
@@ -96,7 +92,7 @@ public class TaskController {
     // UPDATE (full PUT, null-safe via service)
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody TaskReq body) {
-        var patch = new com.questbuddy.model.Task();
+        var patch = new Task();
         patch.setTitle(body.title());
         patch.setDescription(body.description());
         patch.setStatus(body.status());

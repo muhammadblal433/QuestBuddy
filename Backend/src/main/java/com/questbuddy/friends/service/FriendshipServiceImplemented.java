@@ -5,8 +5,8 @@ import com.questbuddy.friends.dto.FriendSuggestionDTO;
 import com.questbuddy.friends.model.Friendship;
 import com.questbuddy.friends.model.FriendshipStatus;
 import com.questbuddy.friends.repository.FriendshipRepository;
-import com.questbuddy.model.User;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.model.User;
+import com.questbuddy.user.repository.UserRepository;
 
 import com.questbuddy.notification.NotificationService;
 import com.questbuddy.notification.NotificationType;

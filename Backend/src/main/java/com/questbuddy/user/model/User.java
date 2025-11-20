@@ -1,6 +1,7 @@
-package com.questbuddy.model;
+package com.questbuddy.user.model;
 
 import java.time.Instant;
+
 import jakarta.persistence.*;
 
 

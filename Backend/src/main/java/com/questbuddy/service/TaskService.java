@@ -1,6 +1,6 @@
 package com.questbuddy.service;
 
-import com.questbuddy.model.Task;
+import com.questbuddy.task.model.Task;
 import java.util.List;
 import java.util.Optional;
 
