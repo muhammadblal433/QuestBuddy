@@ -39,37 +39,6 @@ public class EventController {
         eventService = service;
     }
 
-    // POST - create event
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    @Operation(
-            summary = "Create a new event",
-            description = "Creates a new calendar event for the user identified by the X-User-Id header."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Event created successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = EventResponseDTO.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request body (validation error or bad data)",
-                    content = @Content
-            )
-    })
-    public ResponseEntity<EventResponseDTO> create(
-            @Parameter(
-                    description = "ID of the user creating the event",
-                    example = "5"
-            )
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestBody @Valid EventCreateDTO body
-    ) {
-        var out = eventService.create(userId, body);
-        return ResponseEntity.status(HttpStatus.CREATED).body(out);
-    }
-
     // PUT - update event by id
     @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     @Operation(
@@ -108,6 +77,37 @@ public class EventController {
             @RequestBody @Valid EventUpdateDTO body
     ) {
         return eventService.update(userId, id, body);
+    }
+
+    // POST - create event
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "Create a new event",
+            description = "Creates a new calendar event for the user identified by the X-User-Id header."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Event created successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = EventResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body (validation error or bad data)",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<EventResponseDTO> create(
+            @Parameter(
+                    description = "ID of the user creating the event",
+                    example = "5"
+            )
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody @Valid EventCreateDTO body
+    ) {
+        var out = eventService.create(userId, body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(out);
     }
 
     // GET - list of all events so far by userId
