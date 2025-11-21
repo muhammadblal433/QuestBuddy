@@ -36,42 +36,6 @@ public class BudgetController {
         this.service = service;
         this.users = users;
     }
-
-    // Create budget for a user (username-based)
-    @PostMapping("/users/{ownerUsername}/budgets")
-    @Operation(
-            summary = "Create a budget",
-            description = "Creates a new budget for the given owner username. The owner is identified by the path variable."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Budget created successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = BudgetResponseDTO.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request body (validation failure)",
-                    content = @Content
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Owner user not found",
-                    content = @Content
-            )
-    })
-    public BudgetResponseDTO create(
-            @Parameter(
-                    description = "Username of the budget owner",
-                    example = "ayaan"
-            )
-            @PathVariable String ownerUsername,
-            @RequestBody @Valid BudgetCreateDTO body) {
-        return service.create(idOf(ownerUsername), body);
-    }
-
-
     // Update a budget (optional name; optional full replace of splits)
     // NOTE: owner can update all fields; a participant (X-Username != owner) can only update their own split amounts
     @PutMapping("/users/{ownerUsername}/budgets/{budgetId}")
@@ -131,6 +95,43 @@ public class BudgetController {
         // participant path: only modify own split
         return service.update(ownerId, budgetId, body, requesterUsername);
     }
+
+    // Create budget for a user (username-based)
+    @PostMapping("/users/{ownerUsername}/budgets")
+    @Operation(
+            summary = "Create a budget",
+            description = "Creates a new budget for the given owner username. The owner is identified by the path variable."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Budget created successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = BudgetResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body (validation failure)",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Owner user not found",
+                    content = @Content
+            )
+    })
+    public BudgetResponseDTO create(
+            @Parameter(
+                    description = "Username of the budget owner",
+                    example = "ayaan"
+            )
+            @PathVariable String ownerUsername,
+            @RequestBody @Valid BudgetCreateDTO body) {
+        return service.create(idOf(ownerUsername), body);
+    }
+
+
+
 
     // Health/test check
     @GetMapping("/budgets/ping")
