@@ -1,4 +1,5 @@
 package com.example.androidexample.trips;
+import com.example.androidexample.R;
 
 import android.view.LayoutInflater;
 import android.view.View;

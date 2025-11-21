@@ -1,4 +1,5 @@
 package com.example.androidexample.friends;
+import com.example.androidexample.R;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +13,6 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.messages.DirectChatActivity;
-import com.example.androidexample.R;
 
 import java.util.List;
 

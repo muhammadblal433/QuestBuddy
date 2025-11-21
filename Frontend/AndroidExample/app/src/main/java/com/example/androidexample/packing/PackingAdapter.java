@@ -1,4 +1,5 @@
 package com.example.androidexample.packing;
+import com.example.androidexample.R;
 
 import android.content.Context;
 import android.view.LayoutInflater;

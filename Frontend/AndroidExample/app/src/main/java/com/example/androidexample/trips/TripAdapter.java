@@ -1,4 +1,5 @@
 package com.example.androidexample.trips;
+import com.example.androidexample.R;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,7 +8,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.androidexample.R;
 
 import java.util.ArrayList;
 import java.util.List;
