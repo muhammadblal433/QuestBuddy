@@ -26,6 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 // shows details for one budget
+
+/**
+ * Activity that shows the details of a single budget, including its owner,
+ * totals, creation time, and per-user splits. It loads data from the backend,
+ * displays the list of splits, and allows the owner to edit or delete the budget.
+ */
 public class BudgetDetailActivity extends AppCompatActivity {
 
     private TextView tvBudgetName, tvOwner, tvTotals, tvCreatedAt;
@@ -39,6 +45,14 @@ public class BudgetDetailActivity extends AppCompatActivity {
     private boolean isOwner = false;
     private static final String BASE_URL = "http://coms-3090-026.class.las.iastate.edu:8080/api/v11";
 
+    /**
+     * Initializes the activity, binds view references, sets up the RecyclerView,
+     * retrieves the active budget id and current username, and triggers the initial load
+     * of budget details. Also wires up click listeners for update and delete buttons.
+     *
+     * @param savedInstanceState previously saved instance state, or {@code null}
+     *                           if the activity is being created for the first time
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +87,11 @@ public class BudgetDetailActivity extends AppCompatActivity {
         btnDelete.setOnClickListener(v -> deleteBudget());
     }
 
+    /**
+     * Fetches the latest details of this budget from the server, including
+     * owner, totals, creation date, and the list of splits. The UI is updated
+     * with the response, and the {@link SplitAdapter} is notified of data changes.
+     */
     // loads budgets details from the server
     private void loadBudget() {
         String url = BASE_URL + "/users/" + username + "/budgets/" + budgetId;
@@ -120,6 +139,12 @@ public class BudgetDetailActivity extends AppCompatActivity {
         queue.add(request);
     }
 
+    /**
+     * Switches the splits list into editable mode for the budget owner and
+     * shows a confirmation dialog asking whether to save or discard the changes.
+     * If the user chooses "Save", {@link #updateBudget()} is called; otherwise,
+     * the original budget data is reloaded from the server.
+     */
     // enables edit mode for budget splits and prompts user to save or cancel changes
     private void showEditableSplits() {
         if (!isOwner) {
@@ -138,6 +163,11 @@ public class BudgetDetailActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Builds a JSON payload from the updated split list and sends a PUT request
+     * to the backend to update the budget. On success, a success message is shown
+     * and the latest data is reloaded; on failure, an error toast is displayed.
+     */
     // sends a put request to update the budget with edited split data
     private void updateBudget() {
         List<Split> updatedSplits = editAdapter.getUpdatedSplits();
@@ -183,6 +213,11 @@ public class BudgetDetailActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * Sends a DELETE request to the backend to remove the current budget.
+     * If the deletion succeeds, the activity finishes and returns to the previous
+     * screen; otherwise, an error toast is shown.
+     */
     // sends a delete request to remove the current budget from the server
     private void deleteBudget() {
         String url = BASE_URL + "/users/" + ownerUsername + "/budgets/" + budgetId;
@@ -205,4 +240,3 @@ public class BudgetDetailActivity extends AppCompatActivity {
         queue.add(request);
     }
 }
-
