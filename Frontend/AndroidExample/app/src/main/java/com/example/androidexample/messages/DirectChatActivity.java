@@ -20,6 +20,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.friends.FriendsListActivity;
+import com.example.androidexample.R;
 
 import org.json.JSONObject;
 
