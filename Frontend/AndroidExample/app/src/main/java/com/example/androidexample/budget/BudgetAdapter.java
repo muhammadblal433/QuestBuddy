@@ -6,10 +6,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.androidexample.R;
-
 import java.util.List;
+
 
 // adapter for showing budgets in a recycler view
 public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.ViewHolder> {
