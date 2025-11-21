@@ -13,7 +13,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.R;
-import com.example.androidexample.budget.SplitEditAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;

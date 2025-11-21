@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.TextView;
+import com.example.androidexample.R;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,7 +19,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
 import com.example.androidexample.LoginActivity;
-import com.example.androidexample.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 

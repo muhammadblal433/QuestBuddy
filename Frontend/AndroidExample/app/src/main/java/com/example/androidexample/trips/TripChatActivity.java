@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+import com.example.androidexample.R;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
@@ -15,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import java.util.List;
 
