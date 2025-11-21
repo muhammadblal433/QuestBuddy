@@ -1,4 +1,5 @@
 package com.example.androidexample.notifications;
+import com.example.androidexample.R;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,7 +17,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
-import com.example.androidexample.R;
 
 import android.content.Intent;
 import org.json.JSONArray;

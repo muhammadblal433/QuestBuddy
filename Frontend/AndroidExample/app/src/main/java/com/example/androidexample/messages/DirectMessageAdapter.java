@@ -1,4 +1,5 @@
 package com.example.androidexample.messages;
+import com.example.androidexample.R;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,7 +18,6 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;

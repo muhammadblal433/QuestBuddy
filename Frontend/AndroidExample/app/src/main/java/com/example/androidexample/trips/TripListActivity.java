@@ -1,4 +1,5 @@
 package com.example.androidexample.trips;
+import com.example.androidexample.R;
 
 import android.os.Bundle;
 import android.text.InputType;
@@ -14,8 +15,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.androidexample.R;
 
 import java.util.List;
 

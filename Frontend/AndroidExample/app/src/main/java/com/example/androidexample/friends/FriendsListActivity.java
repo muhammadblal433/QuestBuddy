@@ -1,4 +1,5 @@
 package com.example.androidexample.friends;
+import com.example.androidexample.R;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -26,7 +27,6 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
-import com.example.androidexample.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;

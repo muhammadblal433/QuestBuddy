@@ -1,4 +1,5 @@
 package com.example.androidexample.trips;
+import com.example.androidexample.R;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.androidexample.R;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

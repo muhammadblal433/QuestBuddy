@@ -1,4 +1,5 @@
 package com.example.androidexample.tasks;
+import com.example.androidexample.R;
 
 import android.content.Context;
 import android.widget.Toast;
@@ -10,8 +11,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.androidexample.R;
 
 import java.util.List;
 

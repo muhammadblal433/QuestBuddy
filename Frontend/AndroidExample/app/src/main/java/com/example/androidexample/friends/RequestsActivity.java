@@ -1,4 +1,5 @@
 package com.example.androidexample.friends;
+import com.example.androidexample.R;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -11,7 +12,6 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -1,4 +1,5 @@
 package com.example.androidexample.trips;
+import com.example.androidexample.R;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -15,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import java.util.List;
 

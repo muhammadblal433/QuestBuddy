@@ -1,4 +1,5 @@
 package com.example.androidexample.notifications;
+import com.example.androidexample.R;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,8 +9,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.androidexample.R;
 
 import java.util.List;
 

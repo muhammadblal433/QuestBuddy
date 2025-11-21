@@ -1,4 +1,5 @@
 package com.example.androidexample.budget;
+import com.example.androidexample.R;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,7 +14,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
-import com.example.androidexample.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
