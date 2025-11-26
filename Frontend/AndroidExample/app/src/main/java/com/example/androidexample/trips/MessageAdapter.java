@@ -3,6 +3,7 @@ package com.example.androidexample.trips;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import com.example.androidexample.R;
 
@@ -17,6 +18,17 @@ import java.util.Date;
 import java.util.Locale;
 
 public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageAdapter.VH> {
+
+    public interface Listener{
+        void onEdit(TripMessageResponseDTO msg);
+        void onDelete(TripMessageResponseDTO msg);
+        void onReact(TripMessageResponseDTO msg);
+        void onUnreact(TripMessageResponseDTO msg, String emoji);
+    }
+
+    private Listener listener;
+
+    public void setListener(Listener l) { this.listener = l; }
 
     //id of the current user
     private final long me;
@@ -90,9 +102,43 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
 
             h.reactions.setVisibility(View.VISIBLE);
             h.reactions.setText(r.toString().trim());
+            h.reactions.setOnClickListener(v -> {
+                if (listener != null && m.getMyReactions() != null && !m.getMyReactions().isEmpty()) {
+                    // Unreact first emoji
+                    String emoji = m.getMyReactions().iterator().next();
+                    listener.onUnreact(m, emoji);
+                }
+            });
         } else {
             h.reactions.setVisibility(View.GONE);
         }
+        h.itemView.setOnLongClickListener(v -> {
+            if (listener == null) return true;
+
+            PopupMenu menu = new PopupMenu(v.getContext(), v);
+
+            // Do not allow editing deleted messages
+            if (!m.isDeleted()) {
+                if (m.getSenderId() == me) menu.getMenu().add("Edit");
+                if (m.getSenderId() == me) menu.getMenu().add("Delete");
+            }
+
+            // Always allow react
+            menu.getMenu().add("React");
+
+            menu.setOnMenuItemClickListener(item -> {
+                String title = item.getTitle().toString();
+                switch (title) {
+                    case "Edit": listener.onEdit(m); break;
+                    case "Delete": listener.onDelete(m); break;
+                    case "React": listener.onReact(m); break;
+                }
+                return true;
+            });
+
+            menu.show();
+            return true;
+        });
     }
 
     // convert iso timestamp to hh:mm
