@@ -3,6 +3,7 @@ package com.example.androidexample.trips;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
+import android.content.Intent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -45,7 +46,11 @@ public class TripListActivity extends AppCompatActivity {
 
         adapter = new TripAdapter(new TripAdapter.Listener() {
             @Override public void onOpen(TripDTO t) {
-                Toast.makeText(TripListActivity.this, "Trip: " + (t.name != null ? t.name : "Unnamed"), Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(TripListActivity.this, TripChatActivity.class);
+                i.putExtra("tripId", t.id);
+                i.putExtra("tripName", t.name);
+                i.putExtra("userId", userId);
+                startActivity(i);
             }
             @Override public void onEdit(TripDTO t) {
                 showUpsertDialog(/*isCreate=*/false, t);
