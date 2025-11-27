@@ -14,8 +14,20 @@ import java.util.Map;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/api/v3/tasks")
+@Tag(
+        name = "Tasks",
+        description = "Endpoints for creating, reading, updating, and deleting tasks."
+)
 public class TaskController {
 
     private final TaskService taskService;
@@ -48,9 +60,77 @@ public class TaskController {
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
     }
 
+    // UPDATE (full PUT, null-safe via service)
+    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "Update an existing task",
+            description = "Performs a full update of an existing task by ID. "
+                    + "Fields that are null are handled in the service layer."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Task updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TaskRes.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid update payload",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Task not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            )
+    })
+    public ResponseEntity<?> updateTask(
+            @Parameter(
+                    description = "ID of the task to update",
+                    example = "10"
+            )
+            @PathVariable Long id,
+            @RequestBody TaskReq body) {
+        var patch = new com.questbuddy.model.Task();
+        patch.setTitle(body.title());
+        patch.setDescription(body.description());
+        patch.setStatus(body.status());
+        patch.setDueDate(body.dueDate());
+
+        var saved = taskService.updateTask(id, patch);
+        return ResponseEntity.ok(toRes(saved));
+    }
+
     // CREATE TASK for the given user. If status is missing/blank, defaults to "Pending"
     // The errors that can occur are 400 if required fields are missing (userId, title), 404 if the userId does not exist, Returns: 201 + TaskRes
     @PostMapping(consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "Create a new task",
+            description = "Creates a new task for the given user. If status is missing or blank, it defaults to 'Pending'."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Task created successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TaskRes.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Missing required fields (userId or title)",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found for the given userId",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            )
+    })
     public ResponseEntity<?> createTask(@RequestBody TaskReq body) {
         if (body == null || body.userId() == null || body.title() == null) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", "missing_fields"));
@@ -72,6 +152,18 @@ public class TaskController {
 
     // READ ALL TASKS
     @GetMapping(produces = "application/json")
+    @Operation(
+            summary = "List all tasks",
+            description = "Returns a list of all tasks in the system."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Tasks returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TaskRes.class))
+            )
+    })
     public ResponseEntity<java.util.List<TaskRes>> getAllTasks() {
         var out = taskService.getAllTasks().stream().map(this::toRes).toList();
         return ResponseEntity.ok(out);
@@ -79,7 +171,29 @@ public class TaskController {
 
     // READ BY TASK ID
     @GetMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> getTaskById(@PathVariable Long id) {
+    @Operation(
+            summary = "Get task by ID",
+            description = "Returns a single task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Task returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TaskRes.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Task not found",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<?> getTaskById(
+            @Parameter(
+                    description = "ID of the task to retrieve",
+                    example = "10"
+            )
+            @PathVariable Long id) {
         return taskService.getTaskById(id)
                 .map(this::toRes)
                 .map(ResponseEntity::ok)
@@ -88,35 +202,66 @@ public class TaskController {
 
     // READ BY USER
     @GetMapping(value = "/user/{userId}", produces = "application/json")
-    public ResponseEntity<java.util.List<TaskRes>> getTasksByUser(@PathVariable Long userId) {
+    @Operation(
+            summary = "List tasks for a specific user",
+            description = "Returns all tasks that belong to the given userId."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Tasks returned successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TaskRes.class))
+            )
+    })
+    public ResponseEntity<java.util.List<TaskRes>> getTasksByUser(
+            @Parameter(
+                    description = "ID of the user whose tasks are being listed",
+                    example = "5"
+            )
+            @PathVariable Long userId) {
         var out = taskService.getTasksByUserId(userId).stream().map(this::toRes).toList();
         return ResponseEntity.ok(out);
     }
 
-    // UPDATE (full PUT, null-safe via service)
-    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody TaskReq body) {
-        var patch = new com.questbuddy.model.Task();
-        patch.setTitle(body.title());
-        patch.setDescription(body.description());
-        patch.setStatus(body.status());
-        patch.setDueDate(body.dueDate());
-
-        var saved = taskService.updateTask(id, patch);
-        return ResponseEntity.ok(toRes(saved));
+    // HEALTH CHECK TO MAKE SURE IF THIS FILE IS EVEN BEING READ
+    @GetMapping("/ping")
+    @Operation(
+            summary = "Task service health check",
+            description = "Simple endpoint to verify that TaskController is alive and reachable."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Task controller is alive"
+            )
+    })
+    public String ping() {
+        return "TaskController DTO v3";
     }
 
     // DELETE TASK
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
+    @Operation(
+            summary = "Delete a task",
+            description = "Deletes a task by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Task deleted successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            )
+    })
+    public ResponseEntity<?> deleteTask(
+            @Parameter(
+                    description = "ID of the task to delete",
+                    example = "10"
+            )
+            @PathVariable Long id) {
         taskService.deleteTask(id);
         return ResponseEntity.ok(Map.of("message", "Task deleted successfully"));
-    }
-
-    // HEALTH CHECK TO MAKE SURE IF THIS FILE IS EVEN BEING READ
-    @GetMapping("/ping")
-    public String ping() {
-        return "TaskController DTO v3";
     }
 
     // Converts thrown NoSuchElementException into a 404 JSON body

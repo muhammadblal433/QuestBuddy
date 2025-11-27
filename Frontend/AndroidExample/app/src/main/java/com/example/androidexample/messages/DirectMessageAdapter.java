@@ -1,4 +1,5 @@
 package com.example.androidexample.messages;
+import com.example.androidexample.R;
 
 import android.app.AlertDialog;
 import android.content.Context;
