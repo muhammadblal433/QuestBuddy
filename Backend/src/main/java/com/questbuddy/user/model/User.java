@@ -289,11 +289,11 @@ public class User {
         }
     }
 
-    public boolean isPremium() {
+    public boolean isPremiumUser() {
         return isPremium;
     }
 
-    public void setPremium(boolean premium) {
+    public void setPremiumUser(boolean premium) {
         isPremium = premium;
         touch();
     }

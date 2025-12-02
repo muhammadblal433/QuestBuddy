@@ -1,8 +1,5 @@
 package com.questbuddy.billing;
 
-
-import com.questbuddy.billing.ProductRequest;
-import com.questbuddy.billing.StripeResponse;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
