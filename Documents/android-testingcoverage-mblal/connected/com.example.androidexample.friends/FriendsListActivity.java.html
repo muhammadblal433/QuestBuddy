@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FriendsListActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.friends</a> &gt; <span class="el_source">FriendsListActivity.java</span></div><h1>FriendsListActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.friends;
+import com.example.androidexample.R;
+
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.*;
+import com.example.androidexample.R;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.androidexample.HomeActivity;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
+<span class="nc" id="L41">public class FriendsListActivity extends AppCompatActivity {</span>
+
+    private static final String HOST = &quot;http://coms-3090-026.class.las.iastate.edu:8080&quot;;
+    private static final String BASE_V8 = HOST + &quot;/api/v8&quot;;
+    private static final String USER_BY_ID = HOST + &quot;/api/v2/users/&quot;;
+
+    private EditText etCurrentUsername;
+    private RecyclerView recyclerFriends;
+    private TextView tvNoFriends;
+    private Button btnRequests, btnSuggestions, btnAddFriend, btnLoad;
+
+<span class="nc" id="L52">    private final ArrayList&lt;Friend&gt; friendList = new ArrayList&lt;&gt;();</span>
+    private FriendAdapter adapter;
+    private ProgressDialog progressDialog;
+    private RequestQueue queue;
+
+    private String currentUsername;
+<span class="nc" id="L58">    private int currentUserId = -1;</span>
+<span class="nc" id="L59">    private FriendAdapter.Mode mode = FriendAdapter.Mode.FRIENDS;</span>
+
+<span class="nc" id="L61">    private static final String[] STARTER_USERNAMES =</span>
+            new String[]{&quot;alice123&quot;, &quot;ufclover1234&quot;, &quot;testuser&quot;};
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L66">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L67">        setContentView(R.layout.activity_friends_list);</span>
+
+<span class="nc" id="L69">        queue = Volley.newRequestQueue(this); // create network queue</span>
+
+        // setup ui components
+<span class="nc" id="L72">        etCurrentUsername = findViewById(R.id.etCurrentUsername);</span>
+<span class="nc" id="L73">        recyclerFriends = findViewById(R.id.recyclerFriends);</span>
+<span class="nc" id="L74">        tvNoFriends = findViewById(R.id.tvNoFriends);</span>
+<span class="nc" id="L75">        btnRequests = findViewById(R.id.btnViewRequests);</span>
+<span class="nc" id="L76">        btnSuggestions = findViewById(R.id.btnViewSuggestions);</span>
+<span class="nc" id="L77">        btnAddFriend = findViewById(R.id.btnAddFriend);</span>
+<span class="nc" id="L78">        btnLoad = findViewById(R.id.btnLoadFriends);</span>
+
+
+<span class="nc" id="L81">        recyclerFriends.setLayoutManager(new LinearLayoutManager(this)); // vertical list</span>
+<span class="nc" id="L82">        adapter = new FriendAdapter(this, friendList, null, -1L);</span>
+<span class="nc" id="L83">        adapter.setMode(FriendAdapter.Mode.FRIENDS);</span>
+<span class="nc" id="L84">        recyclerFriends.setAdapter(adapter);</span>
+
+<span class="nc" id="L86">        progressDialog = new ProgressDialog(this);</span>
+<span class="nc" id="L87">        progressDialog.setCancelable(false);</span>
+
+        // hide username input if already logged in
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (etCurrentUsername != null) etCurrentUsername.setVisibility(View.GONE);</span>
+
+        // try to get username and userId from intent or saved session
+<span class="nc" id="L93">        currentUsername = getIntent().getStringExtra(&quot;username&quot;);</span>
+<span class="nc" id="L94">        currentUserId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (TextUtils.isEmpty(currentUsername)) {</span>
+<span class="nc" id="L97">            currentUsername = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L98">                    .getString(&quot;username&quot;, null);</span>
+        }
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (currentUserId &lt;= 0) {</span>
+<span class="nc" id="L101">            currentUserId = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L102">                    .getInt(&quot;userId&quot;, -1);</span>
+        }
+
+        // Set adapter identity immediately so it's never stale
+<span class="nc" id="L106">        adapter.setCurrentUsername(currentUsername);</span>
+<span class="nc" id="L107">        adapter.setCurrentUserId(currentUserId);</span>
+
+        // load friends automatically if user known
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (!TextUtils.isEmpty(currentUsername)) {</span>
+<span class="nc" id="L111">            loadFriends(currentUsername, currentUserId);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        } else if (currentUserId &gt; 0) {</span>
+            // try to resolve username from id
+<span class="nc" id="L114">            progressDialog.setMessage(&quot;Loading your profile…&quot;);</span>
+<span class="nc" id="L115">            progressDialog.show();</span>
+<span class="nc" id="L116">            String url = USER_BY_ID + currentUserId;</span>
+<span class="nc" id="L117">            JsonObjectRequest req = new JsonObjectRequest(</span>
+                    Request.Method.GET, url, null,
+                    resp -&gt; {
+<span class="nc" id="L120">                        progressDialog.dismiss();</span>
+<span class="nc" id="L121">                        currentUsername = resp.optString(&quot;username&quot;, null);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                        if (!TextUtils.isEmpty(currentUsername)) {</span>
+<span class="nc" id="L123">                            getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L124">                                    .edit()</span>
+<span class="nc" id="L125">                                    .putString(&quot;username&quot;, currentUsername)</span>
+<span class="nc" id="L126">                                    .putLong(&quot;userId&quot;, currentUserId)</span>
+<span class="nc" id="L127">                                    .apply();</span>
+                            // keep adapter in sync
+<span class="nc" id="L129">                            adapter.setCurrentUsername(currentUsername);</span>
+<span class="nc" id="L130">                            adapter.setCurrentUserId(currentUserId);</span>
+<span class="nc" id="L131">                            loadFriends(currentUsername, currentUserId);</span>
+                        } else {
+<span class="nc" id="L133">                            tvNoFriends.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L134">                            tvNoFriends.setText(&quot;Couldn’t resolve username. Please log in again.&quot;);</span>
+                        }
+<span class="nc" id="L136">                    },</span>
+                    err -&gt; {
+<span class="nc" id="L138">                        progressDialog.dismiss();</span>
+<span class="nc" id="L139">                        tvNoFriends.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L140">                        tvNoFriends.setText(&quot;Couldn’t resolve username. Please log in again.&quot;);</span>
+<span class="nc" id="L141">                    });</span>
+<span class="nc" id="L142">            queue.add(req);</span>
+<span class="nc" id="L143">        } else {</span>
+<span class="nc" id="L144">            tvNoFriends.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L145">            tvNoFriends.setText(&quot;Please log in to load your friends.&quot;);</span>
+        }
+
+        // button click actions
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (btnLoad != null) {</span>
+<span class="nc" id="L150">            btnLoad.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L151">                mode = FriendAdapter.Mode.FRIENDS;</span>
+<span class="nc" id="L152">                adapter.setMode(FriendAdapter.Mode.FRIENDS);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                if (ensureMe()) loadFriends(currentUsername, currentUserId);</span>
+<span class="nc" id="L154">            });</span>
+        }
+
+<span class="nc" id="L157">        btnRequests.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L158">            mode = FriendAdapter.Mode.INCOMING;</span>
+<span class="nc" id="L159">            adapter.setMode(FriendAdapter.Mode.INCOMING);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            if (ensureMe()) loadIncoming(currentUsername, currentUserId);</span>
+<span class="nc" id="L161">        });</span>
+
+<span class="nc" id="L163">        btnSuggestions.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L164">            mode = FriendAdapter.Mode.SUGGESTIONS;</span>
+<span class="nc" id="L165">            adapter.setMode(FriendAdapter.Mode.SUGGESTIONS);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            if (ensureMe()) loadSuggestions(currentUsername, 50, currentUserId);</span>
+<span class="nc" id="L167">        });</span>
+
+<span class="nc" id="L169">        btnAddFriend.setOnClickListener(v -&gt; showSearchDialog());</span>
+
+        //intent to return home
+<span class="nc" id="L172">        Button btnReturnHome = findViewById(R.id.btnReturnHome);</span>
+<span class="nc" id="L173">        btnReturnHome.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L174">            Intent intent = new Intent(FriendsListActivity.this, HomeActivity.class);</span>
+<span class="nc" id="L175">            intent.putExtra(&quot;userId&quot;, currentUserId);</span>
+<span class="nc" id="L176">            intent.putExtra(&quot;username&quot;, currentUsername);</span>
+<span class="nc" id="L177">            startActivity(intent);</span>
+<span class="nc" id="L178">            finish();</span>
+<span class="nc" id="L179">        });</span>
+<span class="nc" id="L180">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="nc" id="L184">        super.onResume();</span>
+        // refresh list when coming back
+<span class="nc bnc" id="L186" title="All 4 branches missed.">        if (!TextUtils.isEmpty(currentUsername) &amp;&amp; mode == FriendAdapter.Mode.FRIENDS) {</span>
+<span class="nc" id="L187">            loadFriends(currentUsername, currentUserId);</span>
+        }
+<span class="nc" id="L189">    }</span>
+
+    // make sure username is set
+    private boolean ensureMe() {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (!TextUtils.isEmpty(currentUsername)) return true;</span>
+<span class="nc" id="L194">        Toast.makeText(this, &quot;Resolving your profile…&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L195">        return false;</span>
+    }
+
+    // load current friends
+    private void loadFriends(String me, long id) {
+<span class="nc" id="L200">        progressDialog.setMessage(&quot;Loading friends…&quot;);</span>
+<span class="nc" id="L201">        progressDialog.show();</span>
+<span class="nc" id="L202">        String url = BASE_V8 + &quot;/users/&quot; + me + &quot;/friends&quot;;</span>
+<span class="nc" id="L203">        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                arr -&gt; {
+<span class="nc" id="L205">                    progressDialog.dismiss();</span>
+<span class="nc" id="L206">                    friendList.clear();</span>
+<span class="nc" id="L207">                    parseFriendDTOList(arr, false);</span>
+<span class="nc" id="L208">                    adapter.setCurrentUsername(me);</span>
+<span class="nc" id="L209">                    adapter.setCurrentUserId(id); // keep adapter in sync in FRIENDS mode</span>
+<span class="nc" id="L210">                    refreshEmptyState();</span>
+<span class="nc" id="L211">                },</span>
+                err -&gt; {
+<span class="nc" id="L213">                    progressDialog.dismiss();</span>
+<span class="nc" id="L214">                    Toast.makeText(this, &quot;Failed to load friends: &quot; + err, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L215">                    refreshEmptyState();</span>
+<span class="nc" id="L216">                });</span>
+<span class="nc" id="L217">        queue.add(req);</span>
+<span class="nc" id="L218">    }</span>
+
+    // load incoming friend requests
+    private void loadIncoming(String me, long id) {
+<span class="nc" id="L222">        progressDialog.setMessage(&quot;Loading incoming requests…&quot;);</span>
+<span class="nc" id="L223">        progressDialog.show();</span>
+<span class="nc" id="L224">        String url = BASE_V8 + &quot;/users/&quot; + me + &quot;/friends/requests/incoming&quot;;</span>
+<span class="nc" id="L225">        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                arr -&gt; {
+<span class="nc" id="L227">                    progressDialog.dismiss();</span>
+<span class="nc" id="L228">                    friendList.clear();</span>
+<span class="nc" id="L229">                    parseFriendDTOList(arr, true);</span>
+<span class="nc" id="L230">                    adapter.setCurrentUsername(me);</span>
+<span class="nc" id="L231">                    adapter.setCurrentUserId(id); // already present previously</span>
+<span class="nc" id="L232">                    refreshEmptyState();</span>
+<span class="nc" id="L233">                },</span>
+                err -&gt; {
+<span class="nc" id="L235">                    progressDialog.dismiss();</span>
+<span class="nc" id="L236">                    Toast.makeText(this, &quot;Failed to load requests: &quot; + err, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L237">                    refreshEmptyState();</span>
+<span class="nc" id="L238">                });</span>
+<span class="nc" id="L239">        queue.add(req);</span>
+<span class="nc" id="L240">    }</span>
+
+    // load suggested friends
+    private void loadSuggestions(String me, int limit, long id) {
+<span class="nc" id="L244">        progressDialog.setMessage(&quot;Loading suggestions…&quot;);</span>
+<span class="nc" id="L245">        progressDialog.show();</span>
+<span class="nc" id="L246">        String url = BASE_V8 + &quot;/users/&quot; + me + &quot;/friends/suggestions?limit=&quot; + limit;</span>
+<span class="nc" id="L247">        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                arr -&gt; {
+<span class="nc" id="L249">                    progressDialog.dismiss();</span>
+<span class="nc" id="L250">                    friendList.clear();</span>
+<span class="nc bnc" id="L251" title="All 4 branches missed.">                    if (arr != null &amp;&amp; arr.length() &gt; 0) {</span>
+<span class="nc" id="L252">                        parseSuggestionDTOList(arr);</span>
+                    } else {
+<span class="nc" id="L254">                        populateDemoSuggestions();</span>
+<span class="nc" id="L255">                        Toast.makeText(this, &quot;Showing starter users (no mutuals yet).&quot;, Toast.LENGTH_SHORT).show();</span>
+                    }
+<span class="nc" id="L257">                    adapter.setCurrentUsername(me);</span>
+<span class="nc" id="L258">                    adapter.setCurrentUserId(id); // keep adapter in sync in SUGGESTIONS mode</span>
+<span class="nc" id="L259">                    refreshEmptyState();</span>
+<span class="nc" id="L260">                },</span>
+                err -&gt; {
+<span class="nc" id="L262">                    progressDialog.dismiss();</span>
+<span class="nc" id="L263">                    Toast.makeText(this, &quot;Failed to load suggestions: &quot; + err, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L264">                    refreshEmptyState();</span>
+<span class="nc" id="L265">                });</span>
+<span class="nc" id="L266">        queue.add(req);</span>
+<span class="nc" id="L267">    }</span>
+
+    // parse json friend data
+    private void parseFriendDTOList(JSONArray arr, boolean markIncoming) {
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        for (int i = 0; i &lt; arr.length(); i++) {</span>
+            try {
+<span class="nc" id="L273">                JSONObject o = arr.getJSONObject(i);</span>
+<span class="nc" id="L274">                Friend f = new Friend();</span>
+<span class="nc" id="L275">                f.setId(o.getLong(&quot;id&quot;));</span>
+<span class="nc" id="L276">                f.setDisplayName(o.optString(&quot;displayName&quot;, o.optString(&quot;username&quot;, &quot;&quot;)));</span>
+<span class="nc" id="L277">                f.setUsername(o.optString(&quot;username&quot;, &quot;&quot;));</span>
+<span class="nc" id="L278">                f.setStatus(o.optString(&quot;status&quot;, &quot;UNKNOWN&quot;));</span>
+<span class="nc" id="L279">                f.setIncoming(markIncoming);</span>
+<span class="nc" id="L280">                friendList.add(f);</span>
+<span class="nc" id="L281">            } catch (JSONException ignored) {}</span>
+        }
+<span class="nc" id="L283">        adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L284">    }</span>
+
+    // parse json suggestion data
+    private void parseSuggestionDTOList(JSONArray arr) {
+<span class="nc" id="L288">        Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (!TextUtils.isEmpty(currentUsername)) {</span>
+<span class="nc" id="L290">            seen.add(currentUsername.toLowerCase(Locale.US));</span>
+        }
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        for (int i = 0; i &lt; arr.length(); i++) {</span>
+            try {
+<span class="nc" id="L294">                JSONObject o = arr.getJSONObject(i);</span>
+<span class="nc" id="L295">                long id = o.optLong(&quot;id&quot;, -1);</span>
+<span class="nc" id="L296">                String uname = o.optString(&quot;username&quot;, &quot;&quot;);</span>
+<span class="nc" id="L297">                String display = o.optString(&quot;displayName&quot;, uname);</span>
+<span class="nc" id="L298">                int mutuals = o.optInt(&quot;mutualCount&quot;, 0);</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">                if (isSelf(id, uname)) continue;</span>
+<span class="nc" id="L300">                String key = uname.toLowerCase(Locale.US);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                if (seen.contains(key)) continue;</span>
+<span class="nc" id="L302">                seen.add(key);</span>
+<span class="nc" id="L303">                Friend f = new Friend();</span>
+<span class="nc" id="L304">                f.setId(id);</span>
+<span class="nc" id="L305">                f.setDisplayName(display);</span>
+<span class="nc" id="L306">                f.setUsername(uname);</span>
+<span class="nc" id="L307">                f.setStatus(&quot;SUGGESTED&quot;);</span>
+<span class="nc" id="L308">                f.setMutualCount(mutuals);</span>
+<span class="nc" id="L309">                friendList.add(f);</span>
+<span class="nc" id="L310">            } catch (JSONException ignored) {}</span>
+        }
+<span class="nc" id="L312">        adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L313">    }</span>
+
+    // check if friend object refers to current user
+    private boolean isSelf(long id, String username) {
+<span class="nc bnc" id="L317" title="All 4 branches missed.">        if (currentUserId &gt; 0 &amp;&amp; id == currentUserId) return true;</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">        return !TextUtils.isEmpty(currentUsername)</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">                &amp;&amp; !TextUtils.isEmpty(username)</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">                &amp;&amp; username.equalsIgnoreCase(currentUsername);</span>
+    }
+
+    // add default fake suggestions
+    private void populateDemoSuggestions() {
+<span class="nc" id="L325">        Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        for (Friend f : friendList) seen.add(f.getUsername().toLowerCase(Locale.US));</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (!TextUtils.isEmpty(currentUsername)) seen.add(currentUsername.toLowerCase(Locale.US));</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">        for (String u : STARTER_USERNAMES) {</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">            if (TextUtils.isEmpty(u)) continue;</span>
+<span class="nc" id="L330">            String low = u.toLowerCase(Locale.US);</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">            if (seen.contains(low)) continue;</span>
+<span class="nc bnc" id="L332" title="All 4 branches missed.">            if (!TextUtils.isEmpty(currentUsername) &amp;&amp; low.equals(currentUsername.toLowerCase(Locale.US)))</span>
+<span class="nc" id="L333">                continue;</span>
+<span class="nc" id="L334">            Friend f = new Friend();</span>
+<span class="nc" id="L335">            f.setId(-1);</span>
+<span class="nc" id="L336">            f.setDisplayName(u);</span>
+<span class="nc" id="L337">            f.setUsername(u);</span>
+<span class="nc" id="L338">            f.setStatus(&quot;SUGGESTED&quot;);</span>
+<span class="nc" id="L339">            f.setMutualCount(0);</span>
+<span class="nc" id="L340">            friendList.add(f);</span>
+        }
+<span class="nc" id="L342">        adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L343">    }</span>
+
+    // update empty state message
+    private void refreshEmptyState() {
+<span class="nc bnc" id="L347" title="All 2 branches missed.">        if (friendList.isEmpty()) {</span>
+<span class="nc" id="L348">            tvNoFriends.setVisibility(View.VISIBLE);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">            if (mode == FriendAdapter.Mode.FRIENDS) {</span>
+<span class="nc" id="L350">                tvNoFriends.setText(&quot;No friends yet — add someone!&quot;);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">            } else if (mode == FriendAdapter.Mode.INCOMING) {</span>
+<span class="nc" id="L352">                tvNoFriends.setText(&quot;No incoming requests.&quot;);</span>
+            } else {
+<span class="nc" id="L354">                tvNoFriends.setText(&quot;No suggestions right now.&quot;);</span>
+            }
+        } else {
+<span class="nc" id="L357">            tvNoFriends.setVisibility(View.GONE);</span>
+        }
+<span class="nc" id="L359">    }</span>
+
+    // popup dialog for searching and adding users
+    private void showSearchDialog() {
+<span class="nc" id="L363">        View dialog = LayoutInflater.from(this).inflate(R.layout.dialog_search_user, null);</span>
+<span class="nc" id="L364">        EditText etSearch = dialog.findViewById(R.id.etSearchUsernameAuto);</span>
+<span class="nc" id="L365">        RecyclerView rv = dialog.findViewById(R.id.rvSearchResults);</span>
+<span class="nc" id="L366">        TextView tvEmpty = dialog.findViewById(R.id.tvEmptySearch);</span>
+<span class="nc" id="L367">        ProgressBar pb = dialog.findViewById(R.id.pbSearch);</span>
+
+<span class="nc" id="L369">        rv.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L370">        SearchAdapter sAdapter = new SearchAdapter(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L371">        rv.setAdapter(sAdapter);</span>
+
+<span class="nc" id="L373">        AlertDialog d = new AlertDialog.Builder(this)</span>
+<span class="nc" id="L374">                .setTitle(&quot;Add / Search User&quot;)</span>
+<span class="nc" id="L375">                .setView(dialog)</span>
+<span class="nc" id="L376">                .setNegativeButton(&quot;CANCEL&quot;, (x, y) -&gt; {})</span>
+<span class="nc" id="L377">                .create();</span>
+<span class="nc" id="L378">        d.show();</span>
+
+<span class="nc" id="L380">        Handler handler = new Handler(Looper.getMainLooper());</span>
+<span class="nc" id="L381">        final int[] lastQueryId = {0};</span>
+
+        // handle text input for search
+<span class="nc" id="L384">        etSearch.addTextChangedListener(new TextWatcher() {</span>
+<span class="nc" id="L385">            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}</span>
+<span class="nc" id="L386">            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {}</span>
+            @Override public void afterTextChanged(Editable s) {
+<span class="nc" id="L388">                String q = s.toString().trim();</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                tvEmpty.setText(q.isEmpty() ? &quot;Start typing to search…&quot; : &quot;Searching…&quot;);</span>
+<span class="nc" id="L390">                sAdapter.clear();</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">                pb.setVisibility(q.isEmpty() ? View.GONE : View.VISIBLE);</span>
+
+<span class="nc" id="L393">                int myQueryId = ++lastQueryId[0];</span>
+<span class="nc" id="L394">                handler.removeCallbacksAndMessages(null);</span>
+<span class="nc" id="L395">                handler.postDelayed(() -&gt; {</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">                    if (myQueryId != lastQueryId[0]) return;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">                    if (q.isEmpty()) { pb.setVisibility(View.GONE); return; }</span>
+
+<span class="nc" id="L399">                    String url = HOST + &quot;/api/v2/users/by-username/&quot; + Uri.encode(q);</span>
+<span class="nc" id="L400">                    JsonObjectRequest req = new JsonObjectRequest(</span>
+                            Request.Method.GET, url, null,
+                            resp -&gt; {
+<span class="nc" id="L403">                                pb.setVisibility(View.GONE);</span>
+<span class="nc" id="L404">                                sAdapter.clear();</span>
+<span class="nc bnc" id="L405" title="All 4 branches missed.">                                if (resp != null &amp;&amp; resp.has(&quot;username&quot;)) {</span>
+<span class="nc" id="L406">                                    String uname = resp.optString(&quot;username&quot;, &quot;&quot;);</span>
+<span class="nc" id="L407">                                    long uid = resp.optLong(&quot;id&quot;, -1L);</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">                                    if (isSelf(uid, uname)) {</span>
+<span class="nc" id="L409">                                        tvEmpty.setText(&quot;That’s you.&quot;);</span>
+<span class="nc" id="L410">                                        return;</span>
+                                    }
+<span class="nc" id="L412">                                    UserRow u = new UserRow(uid, uname, resp.optString(&quot;email&quot;, &quot;&quot;));</span>
+<span class="nc" id="L413">                                    sAdapter.replaceWithSingle(u);</span>
+<span class="nc" id="L414">                                    tvEmpty.setText(&quot;&quot;);</span>
+<span class="nc" id="L415">                                } else {</span>
+<span class="nc" id="L416">                                    tvEmpty.setText(&quot;No users found.&quot;);</span>
+                                }
+<span class="nc" id="L418">                            },</span>
+                            err -&gt; {
+<span class="nc" id="L420">                                pb.setVisibility(View.GONE);</span>
+<span class="nc" id="L421">                                sAdapter.clear();</span>
+<span class="nc" id="L422">                                tvEmpty.setText(&quot;No users found.&quot;);</span>
+<span class="nc" id="L423">                            }</span>
+                    );
+<span class="nc" id="L425">                    queue.add(req);</span>
+<span class="nc" id="L426">                }, 350);</span>
+<span class="nc" id="L427">            }</span>
+        });
+
+        // send friend request when user clicked
+<span class="nc" id="L431">        sAdapter.setOnClickUser(u -&gt; {</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">            if (!ensureMe()) return;</span>
+<span class="nc" id="L433">            sendFriendRequest(currentUsername, u.username);</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">            if (mode == FriendAdapter.Mode.SUGGESTIONS) loadSuggestions(currentUsername, 50, currentUserId);</span>
+<span class="nc" id="L435">            d.dismiss();</span>
+<span class="nc" id="L436">        });</span>
+<span class="nc" id="L437">    }</span>
+
+    // send friend request to another user
+    private void sendFriendRequest(String me, String target) {
+<span class="nc" id="L441">        String url = BASE_V8 + &quot;/users/&quot; + me + &quot;/friends/requests/&quot; + target;</span>
+<span class="nc" id="L442">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST, url, null,
+<span class="nc" id="L444">                res -&gt; Toast.makeText(this, &quot;Request sent to @&quot; + target, Toast.LENGTH_SHORT).show(),</span>
+<span class="nc" id="L445">                err -&gt; Toast.makeText(this, &quot;Send failed: &quot; + err, Toast.LENGTH_SHORT).show()</span>
+        );
+<span class="nc" id="L447">        queue.add(req);</span>
+<span class="nc" id="L448">    }</span>
+
+    // simple user holder for search results
+    private static class UserRow {
+        long id; String username; String email;
+<span class="nc" id="L453">        UserRow(long id, String username, String email) {</span>
+<span class="nc" id="L454">            this.id = id; this.username = username; this.email = email;</span>
+<span class="nc" id="L455">        }</span>
+    }
+
+    // view holder for search list
+    private static class SearchVH extends RecyclerView.ViewHolder {
+        TextView tvUser, tvEmail; Button btnAdd;
+        public SearchVH(@NonNull View v) {
+<span class="nc" id="L462">            super(v);</span>
+<span class="nc" id="L463">            tvUser = v.findViewById(R.id.tvUserUsername);</span>
+<span class="nc" id="L464">            tvEmail = v.findViewById(R.id.tvUserEmail);</span>
+<span class="nc" id="L465">            btnAdd = v.findViewById(R.id.btnAdd);</span>
+<span class="nc" id="L466">        }</span>
+    }
+
+    // adapter for search results
+    private static class SearchAdapter extends RecyclerView.Adapter&lt;SearchVH&gt; {
+        interface OnClickUser { void onClick(UserRow u); }
+        private final ArrayList&lt;UserRow&gt; data;
+        private OnClickUser onClickUser;
+
+<span class="nc" id="L475">        SearchAdapter(ArrayList&lt;UserRow&gt; d) { this.data = d; } // constructor</span>
+<span class="nc" id="L476">        void setOnClickUser(OnClickUser l) { this.onClickUser = l; } // set click listener</span>
+<span class="nc" id="L477">        void clear() { data.clear(); notifyDataSetChanged(); } // clear list</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">        void replaceWithSingle(UserRow u) { data.clear(); if (u != null) data.add(u); notifyDataSetChanged(); } // show one user</span>
+
+        @NonNull @Override
+        public SearchVH onCreateViewHolder(@NonNull ViewGroup p, int vt) {
+<span class="nc" id="L482">            View v = LayoutInflater.from(p.getContext()).inflate(R.layout.row_search_user, p, false);</span>
+<span class="nc" id="L483">            return new SearchVH(v);</span>
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull SearchVH h, int i) {
+<span class="nc" id="L488">            UserRow u = data.get(i);</span>
+<span class="nc" id="L489">            h.tvUser.setText(&quot;@&quot; + u.username);</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">            h.tvEmail.setText(u.email == null ? &quot;&quot; : u.email);</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">            View.OnClickListener send = vv -&gt; { if (onClickUser != null) onClickUser.onClick(u); };</span>
+<span class="nc" id="L492">            h.itemView.setOnClickListener(send);</span>
+<span class="nc" id="L493">            h.btnAdd.setOnClickListener(send);</span>
+<span class="nc" id="L494">        }</span>
+
+<span class="nc" id="L496">        @Override public int getItemCount() { return data.size(); } // number of items</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SuggestionsActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.friends</a> &gt; <span class="el_source">SuggestionsActivity.java</span></div><h1>SuggestionsActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.friends;
+import com.example.androidexample.R;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.app.ProgressDialog;
+import android.os.Bundle;
+import android.widget.Toast;
+
+import com.example.androidexample.R;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L25">public class SuggestionsActivity extends AppCompatActivity {</span>
+    private RecyclerView recyclerSuggestions;
+    private FriendAdapter adapter;
+    private List&lt;Friend&gt; suggestions;
+    private String currentUsername;
+
+    private Long currentUserId;
+    private ProgressDialog progressDialog;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L36">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L37">        setContentView(R.layout.activity_suggestions);</span>
+
+<span class="nc" id="L39">        currentUsername = getIntent().getStringExtra(&quot;username&quot;);</span>
+<span class="nc" id="L40">        currentUserId = getIntent().getLongExtra(&quot;userID&quot;, -1);</span>
+<span class="nc bnc" id="L41" title="All 4 branches missed.">        if (currentUsername == null || currentUsername.isEmpty()) {</span>
+<span class="nc" id="L42">            Toast.makeText(this, &quot;Error: No username provided!&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L43">            finish();</span>
+<span class="nc" id="L44">            return;</span>
+        }
+
+<span class="nc" id="L47">        recyclerSuggestions = findViewById(R.id.recyclerSuggestions);</span>
+<span class="nc" id="L48">        recyclerSuggestions.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L49">        suggestions = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L50">        adapter = new FriendAdapter(this, suggestions, currentUsername, currentUserId);</span>
+<span class="nc" id="L51">        recyclerSuggestions.setAdapter(adapter);</span>
+
+<span class="nc" id="L53">        progressDialog = new ProgressDialog(this);</span>
+<span class="nc" id="L54">        progressDialog.setMessage(&quot;Loading suggestions...&quot;);</span>
+<span class="nc" id="L55">        progressDialog.setCancelable(false);</span>
+
+<span class="nc" id="L57">        loadSuggestions();</span>
+<span class="nc" id="L58">    }</span>
+
+    private void loadSuggestions() {
+<span class="nc" id="L61">        progressDialog.show();</span>
+<span class="nc" id="L62">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v8/users/&quot;</span>
+                + currentUsername + &quot;/friends/suggestions?limit=10&quot;;
+
+<span class="nc" id="L65">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L67">                    progressDialog.dismiss();</span>
+<span class="nc" id="L68">                    suggestions.clear();</span>
+<span class="nc" id="L69">                    parseSuggestions(response);</span>
+<span class="nc" id="L70">                    adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L71">                },</span>
+                error -&gt; {
+<span class="nc" id="L73">                    progressDialog.dismiss();</span>
+<span class="nc" id="L74">                    Toast.makeText(this, &quot;Failed to load suggestions: &quot; + error.toString(), Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L75">                });</span>
+
+<span class="nc" id="L77">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                10000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+<span class="nc" id="L83">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L84">    }</span>
+
+    private void parseSuggestions(JSONArray response) {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        for (int i = 0; i &lt; response.length(); i++) {</span>
+            try {
+<span class="nc" id="L89">                JSONObject obj = response.getJSONObject(i);</span>
+<span class="nc" id="L90">                Friend f = new Friend();</span>
+<span class="nc" id="L91">                f.setId(obj.getLong(&quot;id&quot;));</span>
+<span class="nc" id="L92">                f.setDisplayName(obj.getString(&quot;displayName&quot;));</span>
+<span class="nc" id="L93">                f.setUsername(obj.getString(&quot;username&quot;));</span>
+<span class="nc" id="L94">                f.setMutualCount(obj.optInt(&quot;mutualCount&quot;, 0));</span>
+<span class="nc" id="L95">                f.setStatus(&quot;SUGGESTED&quot;);</span>
+<span class="nc" id="L96">                suggestions.add(f);</span>
+<span class="nc" id="L97">            } catch (Exception e) {</span>
+<span class="nc" id="L98">                e.printStackTrace();</span>
+<span class="nc" id="L99">            }</span>
+        }
+<span class="nc" id="L101">    }</span>
+
+    // 👇 Called when you press “Add Friend”
+    public void sendFriendRequest(String targetUsername) {
+<span class="nc" id="L105">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v8/users/&quot;</span>
+                + currentUsername + &quot;/friends/requests/&quot; + targetUsername;
+
+<span class="nc" id="L108">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, null,</span>
+<span class="nc" id="L109">                response -&gt; Toast.makeText(this, &quot;Request sent to &quot; + targetUsername, Toast.LENGTH_SHORT).show(),</span>
+<span class="nc" id="L110">                error -&gt; Toast.makeText(this, &quot;Failed to send request: &quot; + error.toString(), Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L113">        request.setRetryPolicy(new DefaultRetryPolicy(</span>
+                10000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+<span class="nc" id="L119">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L120">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>
