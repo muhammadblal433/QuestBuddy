@@ -3,10 +3,10 @@ import com.example.androidexample.R;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-import com.example.androidexample.R;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
@@ -25,8 +25,8 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
     // --- Replace these with your real values or pass via Intent extras ---
     private final String baseUrl = "http://coms-3090-026.class.las.iastate.edu:8080"; // REST base (no trailing slash ok)
     private final String baseWsUrl = "ws://coms-3090-026.class.las.iastate.edu:8080";   // WS base
-    private int me;                                        // current user id
-    private int tripId;                                // trip/conversation id
+    private long me;
+    private long tripId;                              // trip/conversation id
     private TripChatViewModel vm;
 
     @Override
@@ -34,8 +34,8 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_chat);
 
-        me = getIntent().getIntExtra("userId", -1);
-        tripId = getIntent().getIntExtra("tripId", -1);
+        me = getIntent().getLongExtra("userId", -1);
+        tripId = getIntent().getLongExtra("tripId", -1);
 
         if (me == -1 || tripId == -1) {
             Toast.makeText(this, "Missing userId or tripId", Toast.LENGTH_LONG).show();
