@@ -37,14 +37,14 @@ public class UserController {
     // Make Data Transfer Object - excluding password (due to security reasons)
     public record UserDto(Long id, String email, String username,
                           String firstName, String lastName, String avatarUrl,
-                          String role, boolean active,
+                          String role, boolean active, boolean premium,
                           java.time.Instant createdAt, java.time.Instant updatedAt) {}
 
     private static UserDto toDto(User u) {
         return new UserDto(
                 u.getId(), u.getEmail(), u.getUsername(),
                 u.getFirstName(), u.getLastName(), u.getAvatarUrl(),
-                u.getRole().name(), u.isActive(),
+                u.getRole().name(), u.isActive(), u.isPremiumUser(),
                 u.getCreatedAt(), u.getUpdatedAt()
         );
     }
@@ -294,5 +294,18 @@ public class UserController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // GET – list all premium users
+    @GetMapping(value = "/users/premium", produces = "application/json")
+    public ResponseEntity<List<UserDto>> listPremiumUsers() {
+        List<User> premiumUsers = users.findPremiumUsers();
+        List<UserDto> result = new ArrayList<>();
+
+        for (User u : premiumUsers) {
+            result.add(toDto(u));
+        }
+
+        return ResponseEntity.ok(result);
     }
 }

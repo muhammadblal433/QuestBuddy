@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class UserServiceImplemented implements UserService {
@@ -106,5 +107,10 @@ public class UserServiceImplemented implements UserService {
     @Transactional
     public User save(User user) {
         return user_repo.save(user);
+    }
+
+    @Override
+    public List<User> findPremiumUsers() {
+        return user_repo.findAllByIsPremiumTrueOrderByIdAsc();
     }
 }
