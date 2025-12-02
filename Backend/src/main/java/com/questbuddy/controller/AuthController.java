@@ -5,15 +5,26 @@ import com.questbuddy.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.security.crypto.password.PasswordEncoder; // <-- add
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Map;
 import java.util.Optional;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 /**
  * Controller specifically for login - to deal with credentials and tokens
  */
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(
+        name = "Auth",
+        description = "Authentication endpoints for logging in and signing up users."
+)
 public class AuthController {
     private final UserService users;
     private final PasswordEncoder passwordEncoder;
@@ -29,6 +40,30 @@ public class AuthController {
 
     // POST /api/v1/auth/login  -> { "userId": 1 }
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "User login",
+            description = "Authenticates a user by email and password. Returns the userId on success."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Login successful; response body contains userId",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Missing email or password fields",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid credentials (email or password incorrect)",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            )
+    })
     public ResponseEntity<?> login(@RequestBody LoginRequest body) {
         if (body == null || body.email() == null || body.password() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "missing_fields"));
@@ -47,6 +82,30 @@ public class AuthController {
 
     // POST /api/v1/auth/signup  -> { "userId": 1 }
     @PostMapping(value = "/signup", consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "User signup",
+            description = "Registers a new user. Performs duplicate email/username checks and returns the new userId."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "User created successfully; response body contains userId",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Missing required signup fields",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Email or username already exists, or other constraint violation",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            )
+    })
     public ResponseEntity<?> signup(@RequestBody SignupRequest body) {
         if (body == null || body.email() == null || body.username() == null || body.password() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "missing_fields"));
@@ -76,6 +135,7 @@ public class AuthController {
         User saved = users.save(u);
         return ResponseEntity.status(201).body(Map.of("userId", saved.getId()));
     }
+
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<?> onIntegrity(org.springframework.dao.DataIntegrityViolationException e) {
         Throwable root = (e.getMostSpecificCause() != null) ? e.getMostSpecificCause() : e;

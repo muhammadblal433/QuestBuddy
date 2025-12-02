@@ -1,4 +1,5 @@
 package com.example.androidexample.budget;
+import com.example.androidexample.R;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -10,7 +11,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
