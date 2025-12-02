@@ -12,8 +12,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.net.URI;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/api/v1")
+@Tag(
+        name = "Users",
+        description = "User profile operations, including fetching and updating user information."
+)
 public class UserController {
 
     private final UserService users;
@@ -44,24 +56,51 @@ public class UserController {
                                        String firstName, String lastName,
                                        String avatarUrl, String newPassword) {}
 
-    // GET (Fetch user by id)
-    @GetMapping(value = "/users/{id}", produces = "application/json")
-    public ResponseEntity<UserDto> get(@PathVariable Long id) {
-        Optional<User> opt = users.getById(id);
-        if (opt.isPresent()) {
-            User u = opt.get();
-            UserDto dto = toDto(u);
-            return ResponseEntity.ok(dto);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
     // PUT (edit user profile (path version; forbid if header doesn’t match)
     @PutMapping(value = "/users/{id}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> update(@PathVariable Long id,
-                                    @RequestHeader(value = "X-User-Id", required = false) Long userId,
-                                    @RequestBody UpdateProfileRequest body) {
+    @Operation(
+            summary = "Update a user profile by ID",
+            description = "Updates the profile of the user identified by the path ID. "
+                    + "The X-User-Id header must match the path ID, otherwise the request is forbidden."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User profile updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing X-User-Id header",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "X-User-Id does not match the path ID",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<?> update(
+            @Parameter(
+                    description = "ID of the user whose profile is being updated",
+                    example = "5"
+            )
+            @PathVariable Long id,
+            @Parameter(
+                    description = "ID of the currently authenticated user",
+                    example = "5",
+                    required = false
+            )
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestBody UpdateProfileRequest body) {
 
         if (userId == null) {
             Map<String, String> err = new HashMap<>();
@@ -87,8 +126,67 @@ public class UserController {
         return ResponseEntity.ok(dto);
     }
 
+    // PUT - update currently logged in profile: header-based auth for mini-assignment
+    @PutMapping(value = "/users/me", consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "Update the current user's profile",
+            description = "Updates the profile of the currently authenticated user, identified by the X-User-Id header."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Current user profile updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing X-User-Id header",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            )
+    })
+    public ResponseEntity<?> updateMe(
+            @Parameter(
+                    description = "ID of the currently authenticated user",
+                    example = "5",
+                    required = false
+            )
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestBody UpdateProfileRequest body) {
+
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error","missing_user"));
+        }
+
+        User updated = users.updateProfile(
+                userId,
+                body.email(),
+                body.username(),
+                body.firstName(),
+                body.lastName(),
+                body.avatarUrl()
+        );
+
+        UserDto dto = toDto(updated);
+        return ResponseEntity.ok(dto);
+    }
+
     // POST - for testing purposes - add users in batches
     @PostMapping(value = "/auth/signup/batch", consumes = "application/json", produces = "application/json")
+    @Operation(
+            summary = "Batch signup users (testing)",
+            description = "Creates multiple users in a single request for testing purposes. "
+                    + "Only entries with all required fields (email, username, password) are created."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Users created successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto.class))
+            )
+    })
     public ResponseEntity<List<UserDto>> signupBatch(@RequestBody List<SignupRequest> bodies) {
 
         List<UserDto> created = new ArrayList<>();
@@ -116,9 +214,73 @@ public class UserController {
         return ResponseEntity.created(location).body(created);
     }
 
+    // GET (Fetch user by id)
+    @GetMapping(value = "/users/{id}", produces = "application/json")
+    @Operation(
+            summary = "Get user by ID",
+            description = "Fetches a user's public profile details by their ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<UserDto> get(
+            @Parameter(
+                    description = "ID of the user to fetch",
+                    example = "5"
+            )
+            @PathVariable Long id) {
+        Optional<User> opt = users.getById(id);
+        if (opt.isPresent()) {
+            User u = opt.get();
+            UserDto dto = toDto(u);
+            return ResponseEntity.ok(dto);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     // GET - current profile (that is logged in): header-based auth for mini-assignment
     @GetMapping(value = "/users/me", produces = "application/json")
-    public ResponseEntity<?> me(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
+    @Operation(
+            summary = "Get current user's profile",
+            description = "Returns the profile of the currently authenticated user, identified by the X-User-Id header."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Current user found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Missing X-User-Id header",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Map.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content
+            )
+    })
+    public ResponseEntity<?> me(
+            @Parameter(
+                    description = "ID of the currently authenticated user",
+                    example = "5",
+                    required = false
+            )
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
 
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error","missing_user"));
@@ -132,27 +294,5 @@ public class UserController {
         } else {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    // PUT - update currently logged in profile: header-based auth for mini-assignment
-    @PutMapping(value = "/users/me", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> updateMe(@RequestHeader(value = "X-User-Id", required = false) Long userId,
-                                      @RequestBody UpdateProfileRequest body) {
-
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("error","missing_user"));
-        }
-
-        User updated = users.updateProfile(
-                userId,
-                body.email(),
-                body.username(),
-                body.firstName(),
-                body.lastName(),
-                body.avatarUrl()
-        );
-
-        UserDto dto = toDto(updated);
-        return ResponseEntity.ok(dto);
     }
 }

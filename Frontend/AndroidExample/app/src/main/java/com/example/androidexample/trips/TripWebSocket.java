@@ -34,7 +34,7 @@ public class TripWebSocket {
 
     public void connect() {
         try {
-            URI uri = URI.create(baseWsUrl + "/trips/" + tripId + "?userId=" + me);
+            URI uri = URI.create(baseWsUrl + "/ws/messages/trips/" + tripId + "/" + me);
             Map<String, String> headers = new HashMap<>();
             client = new WebSocketClient(uri, new Draft_6455(), headers, 10_000) {
                 @Override public void onOpen(ServerHandshake handshakedata) { post(() -> listener.onOpen()); }

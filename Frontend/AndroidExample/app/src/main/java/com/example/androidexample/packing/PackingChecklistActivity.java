@@ -1,4 +1,5 @@
 package com.example.androidexample.packing;
+import com.example.androidexample.R;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,7 +19,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
 import com.example.androidexample.LoginActivity;
-import com.example.androidexample.R;
 
 import org.json.JSONObject;
 import java.util.ArrayList;

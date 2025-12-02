@@ -1,4 +1,5 @@
 package com.example.androidexample.friends;
+import com.example.androidexample.R;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -7,11 +8,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.widget.Toast;
+import com.example.androidexample.R;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
