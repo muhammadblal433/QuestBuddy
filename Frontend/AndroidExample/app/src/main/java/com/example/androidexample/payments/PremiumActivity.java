@@ -1,13 +1,12 @@
 package com.example.androidexample.payments;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import android.content.Intent;
-import android.net.Uri;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -44,6 +43,7 @@ public class PremiumActivity extends AppCompatActivity {
 
     private static final String HOST = "http://coms-3090-026.class.las.iastate.edu:8080";
     private static final String PAYMENTS_INTENT_URL = HOST + "/api/v14/payments/intents";
+    private static final double PREMIUM_PRICE_DOLLARS = 4.99;
 
     private RequestQueue queue;
     private int userId;
@@ -104,9 +104,9 @@ public class PremiumActivity extends AppCompatActivity {
         // Build request body to match PaymentCreateDTO
         JSONObject body = new JSONObject();
         try {
-            body.put("amount", 4.99);              // $4.99
+            body.put("amount", PREMIUM_PRICE_DOLLARS);  // $4.99
             body.put("currency", "usd");
-            body.put("tripId", JSONObject.NULL);   // Premium not tied to a specific trip
+            body.put("tripId", JSONObject.NULL);        // Premium not tied to a specific trip
             body.put("description", "QuestBuddy Premium");
         } catch (JSONException e) {
             Toast.makeText(this, "Error creating payment request.", Toast.LENGTH_SHORT).show();
@@ -124,9 +124,11 @@ public class PremiumActivity extends AppCompatActivity {
                     String clientSecret = response.optString("clientSecret", null);
 
                     if (clientSecret == null || clientSecret.isEmpty()) {
-                        Toast.makeText(this,
+                        Toast.makeText(
+                                this,
                                 "Payment intent created but no client secret returned.",
-                                Toast.LENGTH_SHORT).show();
+                                Toast.LENGTH_SHORT
+                        ).show();
                         return;
                     }
 
@@ -134,15 +136,15 @@ public class PremiumActivity extends AppCompatActivity {
                     String msg = "Payment created! id=" + paymentId;
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 
-                    // TODO (optional): navigate to a dedicated success screen
+                    // Optional: navigate somewhere after "success"
                     // startActivity(new Intent(PremiumActivity.this, HomeActivity.class));
                     // finish();
                 },
-                error -> {
-                    Toast.makeText(this,
-                            "Error contacting payment server.",
-                            Toast.LENGTH_SHORT).show();
-                }
+                error -> Toast.makeText(
+                        this,
+                        "Error contacting payment server.",
+                        Toast.LENGTH_SHORT
+                ).show()
         ) {
             // Add X-User-Id header to match PaymentController.requireUserId(...)
             @Override
