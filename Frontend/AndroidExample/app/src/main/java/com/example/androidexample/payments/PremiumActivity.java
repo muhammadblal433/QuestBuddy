@@ -15,6 +15,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.androidexample.HomeActivity;
 import com.example.androidexample.R;
 
 import org.json.JSONException;
@@ -52,6 +53,7 @@ public class PremiumActivity extends AppCompatActivity {
     private TextView tvSubtitle;
     private TextView tvFeatures;
     private Button btnUpgrade;
+    private Button btnReturnHome;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,10 +76,19 @@ public class PremiumActivity extends AppCompatActivity {
         tvSubtitle = findViewById(R.id.tvPremiumSubtitle);
         tvFeatures = findViewById(R.id.tvPremiumFeatures);
         btnUpgrade = findViewById(R.id.btnUpgradePremium);
+        btnReturnHome = findViewById(R.id.btnReturnHome);
 
         setupPremiumText();
 
         btnUpgrade.setOnClickListener(v -> startCheckout());
+
+        // return to Home screen
+        btnReturnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(PremiumActivity.this, HomeActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);
+            finish();
+        });
     }
 
     // Sets the marketing copy
@@ -132,13 +143,8 @@ public class PremiumActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // For class demo: treat this as a successful "fake payment" step
                     String msg = "Payment created! id=" + paymentId;
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-
-                    // Optional: navigate somewhere after "success"
-                    // startActivity(new Intent(PremiumActivity.this, HomeActivity.class));
-                    // finish();
                 },
                 error -> Toast.makeText(
                         this,
@@ -159,8 +165,6 @@ public class PremiumActivity extends AppCompatActivity {
         queue.add(request);
     }
 
-    // If later you switch back to browser-based Stripe Checkout, you can call this
-    // from a different endpoint that returns sessionUrl.
     @SuppressWarnings("unused")
     private void openStripeCheckout(String sessionUrl) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(sessionUrl));

@@ -84,6 +84,28 @@
                 android:background="@drawable/rounded_button_orange"
                 android:textColor="@android:color/white" />
 
+            <!-- Return to Home button -->
+            <Button
+                android:id="@+id/btnReturnHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/rounded_button_orange"
+                android:backgroundTint="@android:color/holo_red_dark"
+
+                android:paddingStart="32dp"
+                android:paddingTop="12dp"
+
+                android:paddingEnd="32dp"
+                android:paddingBottom="12dp"
+                android:text="Return Home"
+                android:textAllCaps="false"
+
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
         </LinearLayout>
 
     </LinearLayout>
