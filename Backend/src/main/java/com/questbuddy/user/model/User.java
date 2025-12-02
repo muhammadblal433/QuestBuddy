@@ -59,6 +59,9 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    @Column(name = "is_premium", nullable = false)
+    private boolean isPremium = false;
+
     /** Default constructor. */
     public User() {}
 
@@ -284,5 +287,14 @@ public class User {
         } else {
             this.updatedAt = updatedAt;
         }
+    }
+
+    public boolean isPremium() {
+        return isPremium;
+    }
+
+    public void setPremium(boolean premium) {
+        isPremium = premium;
+        touch();
     }
 }
