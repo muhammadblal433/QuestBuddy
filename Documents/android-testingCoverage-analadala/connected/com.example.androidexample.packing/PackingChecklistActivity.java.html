@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PackingChecklistActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.packing</a> &gt; <span class="el_source">PackingChecklistActivity.java</span></div><h1>PackingChecklistActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.packing;
+import com.example.androidexample.R;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.androidexample.HomeActivity;
+import com.example.androidexample.LoginActivity;
+
+import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L27">public class PackingChecklistActivity extends AppCompatActivity {</span>
+
+    private RecyclerView recyclerPacking;
+    private PackingAdapter adapter;
+<span class="nc" id="L31">    private List&lt;PackingItem&gt; itemList = new ArrayList&lt;&gt;();</span>
+    private RequestQueue queue;
+    private TextView tvAddHint;
+    private int userId;
+    //base url for api requests(mock server)
+<span class="nc" id="L36">    private final String BASE_URL = &quot;https://9d69c0d2-75cf-44b1-9f47-913ed20bc612.mock.pstmn.io/packing&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L40">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L41">        setContentView(R.layout.activity_packing_checklist);</span>
+
+<span class="nc" id="L43">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L46">            Toast.makeText(this, &quot;Invalid user session&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L47">            startActivity(new Intent(this, LoginActivity.class));</span>
+<span class="nc" id="L48">            finish();</span>
+<span class="nc" id="L49">            return;</span>
+        }
+
+        // connect the layut views
+<span class="nc" id="L53">        recyclerPacking = findViewById(R.id.recyclerPacking);</span>
+<span class="nc" id="L54">        recyclerPacking.setLayoutManager(new LinearLayoutManager(this));</span>
+
+
+<span class="nc" id="L57">        tvAddHint = findViewById(R.id.tvAddHint);</span>
+<span class="nc" id="L58">        queue = Volley.newRequestQueue(this);</span>
+
+        //setup the adapter for recycler view
+<span class="nc" id="L61">        adapter = new PackingAdapter(this, itemList, this);</span>
+<span class="nc" id="L62">        recyclerPacking.setAdapter(adapter);</span>
+
+        // setup the buttons
+<span class="nc" id="L65">        Button btnAddItem = findViewById(R.id.btnAddItem);</span>
+<span class="nc" id="L66">        Button btnBackHome = findViewById(R.id.btnBackHome);</span>
+
+        //open dialog to add a new item
+<span class="nc" id="L69">        btnAddItem.setOnClickListener(v -&gt; showAddItemDialog());</span>
+<span class="nc" id="L70">        btnBackHome.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L71">            Intent intent = new Intent(PackingChecklistActivity.this, HomeActivity.class);</span>
+<span class="nc" id="L72">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L73">            startActivity(intent);}); // goes back to previous screen</span>
+<span class="nc" id="L74">    }</span>
+
+    //shows the dialog for the user to edit
+    private void showAddItemDialog() {
+<span class="nc" id="L78">        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_item, null);</span>
+<span class="nc" id="L79">        EditText etItemName = dialogView.findViewById(R.id.etItemName);</span>
+
+<span class="nc" id="L81">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L82">                .setTitle(&quot;Add New Item&quot;)</span>
+<span class="nc" id="L83">                .setView(dialogView)</span>
+<span class="nc" id="L84">                .setPositiveButton(&quot;Add&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L85">                    String name = etItemName.getText().toString().trim();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                    if (name.isEmpty()) {</span>
+<span class="nc" id="L87">                        Toast.makeText(this, &quot;Please enter an item name&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L88">                        return;</span>
+                    }
+<span class="nc" id="L90">                    addItem(name);</span>
+<span class="nc" id="L91">                })</span>
+<span class="nc" id="L92">                .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; dialog.dismiss())</span>
+<span class="nc" id="L93">                .show();</span>
+<span class="nc" id="L94">    }</span>
+
+    // sends post request to add new item in the mock server and it updates locally as well
+    private void addItem(String itemName) {
+<span class="nc" id="L98">        JSONObject itemJson = new JSONObject();</span>
+        try {
+<span class="nc" id="L100">            itemJson.put(&quot;name&quot;, itemName);</span>
+<span class="nc" id="L101">        } catch (Exception e) {</span>
+<span class="nc" id="L102">            e.printStackTrace();</span>
+<span class="nc" id="L103">        }</span>
+
+<span class="nc" id="L105">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                BASE_URL,
+                itemJson,
+                response -&gt; {
+<span class="nc" id="L110">                    Toast.makeText(this, &quot;Item added!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+                    // Add item locally so it appears immediately
+<span class="nc" id="L113">                    itemList.add(new PackingItem(itemList.size() + 1, itemName));</span>
+<span class="nc" id="L114">                    adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L115">                    tvAddHint.setVisibility(View.GONE);</span>
+<span class="nc" id="L116">                },</span>
+<span class="nc" id="L117">                error -&gt; Toast.makeText(this, &quot;POST Error: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L120">        queue.add(request);</span>
+<span class="nc" id="L121">    }</span>
+
+    // sends delete request to api and removes items from list
+    public void deleteItem(long itemId) {
+
+<span class="nc" id="L126">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.DELETE,
+                BASE_URL,
+                null,
+                response -&gt; {
+<span class="nc" id="L131">                    Toast.makeText(this, &quot;Item deleted!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                    for (int i = 0; i &lt; itemList.size(); i++) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                        if (itemList.get(i).getId() == itemId) {</span>
+<span class="nc" id="L135">                            itemList.remove(i);</span>
+<span class="nc" id="L136">                            break;</span>
+                        }
+                    }
+
+<span class="nc" id="L140">                    adapter.notifyDataSetChanged();</span>
+
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                    if (itemList.isEmpty()) {</span>
+<span class="nc" id="L143">                        tvAddHint.setVisibility(View.VISIBLE);</span>
+                    }
+<span class="nc" id="L145">                },</span>
+<span class="nc" id="L146">                error -&gt; Toast.makeText(this, &quot;DELETE Error: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L149">        queue.add(request);</span>
+<span class="nc" id="L150">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

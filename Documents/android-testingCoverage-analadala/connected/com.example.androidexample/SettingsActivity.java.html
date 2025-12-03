@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SettingsActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">SettingsActivity.java</span></div><h1>SettingsActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.ImageRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+
+<span class="nc" id="L27">public class SettingsActivity extends AppCompatActivity {</span>
+
+    private TextView tvName, tvUsername, tvEmail;
+    private ImageView ivAvatar;
+    private int userId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L35">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L36">        setContentView(R.layout.activity_settings);</span>
+
+<span class="nc" id="L38">        tvName = findViewById(R.id.tvName);</span>
+<span class="nc" id="L39">        tvUsername = findViewById(R.id.tvUsername);</span>
+<span class="nc" id="L40">        tvEmail = findViewById(R.id.tvEmail);</span>
+<span class="nc" id="L41">        ivAvatar = findViewById(R.id.ivAvatar);</span>
+<span class="nc" id="L42">        Button btnHome = findViewById(R.id.btnBackHome);</span>
+<span class="nc" id="L43">        Button delete = findViewById(R.id.deleteAccount);</span>
+
+<span class="nc" id="L45">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L48">            Toast.makeText(this, &quot;Invalid session. Please log in again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L49">            finish();</span>
+<span class="nc" id="L50">            return;</span>
+        }
+
+<span class="nc" id="L53">        loadUserProfile(userId);</span>
+
+        // Click listeners to edit each field
+<span class="nc" id="L56">        tvName.setOnClickListener(v -&gt; showEditDialog(&quot;Name&quot;));</span>
+<span class="nc" id="L57">        tvUsername.setOnClickListener(v -&gt; showEditDialog(&quot;Username&quot;));</span>
+<span class="nc" id="L58">        tvEmail.setOnClickListener(v -&gt; showEditDialog(&quot;Email&quot;));</span>
+<span class="nc" id="L59">        btnHome.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L60">            Intent intent = new Intent(SettingsActivity.this, HomeActivity.class);</span>
+<span class="nc" id="L61">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L62">            startActivity(intent);</span>
+<span class="nc" id="L63">        });</span>
+<span class="nc" id="L64">        delete.setOnClickListener(v -&gt; showDeleteConfirmation());</span>
+
+<span class="nc" id="L66">    }</span>
+
+    private void loadUserProfile(int userId) {
+<span class="nc" id="L69">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/&quot; + userId;</span>
+
+<span class="nc" id="L71">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L76">                    String firstName = response.optString(&quot;firstName&quot;, &quot;None&quot;);</span>
+<span class="nc" id="L77">                    String lastName = response.optString(&quot;lastName&quot;, &quot;None&quot;);</span>
+<span class="nc" id="L78">                    String email = response.optString(&quot;email&quot;, &quot;N/A&quot;);</span>
+<span class="nc" id="L79">                    String username = response.optString(&quot;username&quot;, &quot;N/A&quot;);</span>
+<span class="nc" id="L80">                    String avatarUrl = response.optString(&quot;avatarUrl&quot;, &quot;&quot;);</span>
+
+                    String fullName;
+<span class="nc bnc" id="L83" title="All 4 branches missed.">                    if (firstName.equals(&quot;null&quot;) &amp;&amp; lastName.equals(&quot;null&quot;)){</span>
+<span class="nc" id="L84">                        fullName = &quot;None&quot;;</span>
+                    }
+
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                    else if(lastName.equals(&quot;null&quot;)){</span>
+<span class="nc" id="L88">                        fullName = firstName;</span>
+                    }
+                    else{
+<span class="nc" id="L91">                        fullName = firstName + &quot; &quot; + lastName;</span>
+                    }
+
+
+<span class="nc" id="L95">                    tvName.setText(fullName);</span>
+<span class="nc" id="L96">                    tvUsername.setText(&quot;@&quot; + username);</span>
+<span class="nc" id="L97">                    tvEmail.setText(email);</span>
+
+<span class="nc bnc" id="L99" title="All 4 branches missed.">                    if (avatarUrl != null &amp;&amp; !avatarUrl.isEmpty()) {</span>
+<span class="nc" id="L100">                        loadAvatar(avatarUrl);</span>
+                    } else {
+<span class="nc" id="L102">                        ivAvatar.setImageResource(R.drawable.default_pic_v2);</span>
+                    }
+<span class="nc" id="L104">                },</span>
+<span class="nc" id="L105">                error -&gt; Toast.makeText(this, &quot;Failed to load profile&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L108">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L109">    }</span>
+
+    private void loadAvatar(String imageUrl) {
+<span class="nc" id="L112">        ImageRequest imageRequest = new ImageRequest(</span>
+                imageUrl,
+<span class="nc" id="L114">                response -&gt; ivAvatar.setImageBitmap(response),</span>
+                0, 0,
+                ImageView.ScaleType.CENTER_CROP,
+                Bitmap.Config.RGB_565,
+<span class="nc" id="L118">                error -&gt; ivAvatar.setImageResource(R.drawable.default_pic_v2)</span>
+        );
+<span class="nc" id="L120">        Volley.newRequestQueue(this).add(imageRequest);</span>
+<span class="nc" id="L121">    }</span>
+
+    /** Dialog for editing profile fields **/
+    private void showEditDialog(String field) {
+<span class="nc" id="L125">        EditText input = new EditText(this);</span>
+<span class="nc" id="L126">        input.setHint(&quot;Enter new &quot; + field.toLowerCase());</span>
+
+<span class="nc" id="L128">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L129">                .setTitle(&quot;Edit &quot; + field)</span>
+<span class="nc" id="L130">                .setView(input)</span>
+<span class="nc" id="L131">                .setPositiveButton(&quot;Save&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L132">                    String newValue = input.getText().toString().trim();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                    if (!newValue.isEmpty()) {</span>
+<span class="nc" id="L134">                        updateUserField(field, newValue);</span>
+                    } else {
+<span class="nc" id="L136">                        Toast.makeText(this, &quot;Value cannot be empty.&quot;, Toast.LENGTH_SHORT).show();</span>
+                    }
+<span class="nc" id="L138">                })</span>
+<span class="nc" id="L139">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L140">                .show();</span>
+<span class="nc" id="L141">    }</span>
+
+    /** PUT request to update single field **/
+    private void updateUserField(String field, String value) {
+<span class="nc" id="L145">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v1/users/&quot; + userId;</span>
+
+<span class="nc" id="L147">        JSONObject updateJson = new JSONObject();</span>
+        try {
+<span class="nc bnc" id="L149" title="All 4 branches missed.">            switch (field) {</span>
+                case &quot;Name&quot;:
+                    // Split into first and last name if user enters two words
+<span class="nc" id="L152">                    String[] parts = value.split(&quot; &quot;, 2);</span>
+<span class="nc" id="L153">                    updateJson.put(&quot;firstName&quot;, parts[0]);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                    if (parts.length &gt; 1)</span>
+<span class="nc" id="L155">                        updateJson.put(&quot;lastName&quot;, parts[1]);</span>
+                    else
+<span class="nc" id="L157">                        updateJson.put(&quot;lastName&quot;, &quot;&quot;);</span>
+<span class="nc" id="L158">                    break;</span>
+                case &quot;Username&quot;:
+<span class="nc" id="L160">                    updateJson.put(&quot;username&quot;, value);</span>
+<span class="nc" id="L161">                    break;</span>
+                case &quot;Email&quot;:
+<span class="nc" id="L163">                    updateJson.put(&quot;email&quot;, value);</span>
+                    break;
+            }
+<span class="nc" id="L166">        } catch (JSONException e) {</span>
+<span class="nc" id="L167">            e.printStackTrace();</span>
+<span class="nc" id="L168">        }</span>
+
+<span class="nc" id="L170">        JsonObjectRequest putRequest = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                updateJson,
+                response -&gt; {
+<span class="nc" id="L175">                    Toast.makeText(this, field + &quot; updated successfully!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L176">                    loadUserProfile(userId);</span>
+<span class="nc" id="L177">                },</span>
+                error -&gt; {
+<span class="nc" id="L179">                    String msg = &quot;Update failed.&quot;;</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+<span class="nc" id="L181">                        msg = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L183">                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L184">                }</span>
+<span class="nc" id="L185">        ) {</span>
+            @Override
+            public java.util.Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L188">                java.util.Map&lt;String, String&gt; headers = new java.util.HashMap&lt;&gt;();</span>
+<span class="nc" id="L189">                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L190">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L191">                return headers;</span>
+            }
+        };
+
+<span class="nc" id="L195">        Volley.newRequestQueue(this).add(putRequest);</span>
+<span class="nc" id="L196">    }</span>
+
+    private void showDeleteConfirmation() {
+<span class="nc" id="L199">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L200">                .setTitle(&quot;Delete Account&quot;)</span>
+<span class="nc" id="L201">                .setMessage(&quot;Are you sure you want to permanently delete your account? This action cannot be undone.&quot;)</span>
+<span class="nc" id="L202">                .setPositiveButton(&quot;Delete&quot;, (dialog, which) -&gt; deleteUserAccount())</span>
+<span class="nc" id="L203">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L204">                .show();</span>
+<span class="nc" id="L205">    }</span>
+
+    private void deleteUserAccount() {
+<span class="nc" id="L208">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/&quot; + userId;</span>
+
+<span class="nc" id="L210">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+<span class="nc" id="L214">                    Toast.makeText(this, &quot;Account deleted successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L215">                    startActivity(new Intent(SettingsActivity.this, SignupActivity.class));</span>
+<span class="nc" id="L216">                    finish();</span>
+<span class="nc" id="L217">                },</span>
+                error -&gt; {
+<span class="nc" id="L219">                    String msg = &quot;Delete failed.&quot;;</span>
+<span class="nc bnc" id="L220" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+<span class="nc" id="L221">                        msg = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+                    }
+<span class="nc" id="L223">                    Log.e(&quot;DELETE_ERROR&quot;, msg);</span>
+<span class="nc" id="L224">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L225">                }</span>
+        );
+
+<span class="nc" id="L228">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L229">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

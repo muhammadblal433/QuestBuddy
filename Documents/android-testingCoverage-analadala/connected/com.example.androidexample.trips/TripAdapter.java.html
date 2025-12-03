@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripAdapter.java</span></div><h1>TripAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+import com.example.androidexample.R;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class TripAdapter extends RecyclerView.Adapter&lt;TripAdapter.VH&gt; {
+
+    public interface Listener {
+        void onChat(TripDTO t);
+        void onPlanner(TripDTO t);
+        void onEdit(TripDTO t);
+        void onDelete(TripDTO t);
+    }
+
+<span class="fc" id="L25">    private final List&lt;TripDTO&gt; data = new ArrayList&lt;&gt;();</span>
+    private final Listener listener;
+
+<span class="fc" id="L28">    public TripAdapter(Listener listener) { this.listener = listener; }</span>
+
+    public void submit(List&lt;TripDTO&gt; items) {
+<span class="fc" id="L31">        data.clear();</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (items != null) data.addAll(items);</span>
+<span class="fc" id="L33">        notifyDataSetChanged();</span>
+<span class="fc" id="L34">    }</span>
+
+<span class="nc" id="L36">    public TripDTO getAt(int pos) { return data.get(pos); }</span>
+
+    @NonNull @Override
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L40">        View v = LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L41">                .inflate(R.layout.item_trip, parent, false);</span>
+<span class="nc" id="L42">        return new VH(v);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull VH h, int pos) {
+<span class="nc" id="L47">        TripDTO t = data.get(pos);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        h.tvName.setText(t.name != null ? t.name : &quot;(Unnamed Trip)&quot;);</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        h.tvDestination.setText(t.destination != null ? t.destination : &quot;—&quot;);</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        String start = t.startDate != null ? t.startDate : &quot;?&quot;;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        String end   = t.endDate   != null ? t.endDate   : &quot;?&quot;;</span>
+<span class="nc" id="L52">        h.tvDateRange.setText(start + &quot; \u2192 &quot; + end);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        String startLoc = t.startLocationName != null ? t.startLocationName : &quot;Unknown&quot;;</span>
+<span class="nc" id="L54">        h.tvStartLocation.setText(&quot;Start: &quot; + startLoc);</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        h.btnChat.setOnClickListener(v -&gt; { if (listener != null) listener.onChat(t); });</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        h.btnPlanner.setOnClickListener(v -&gt; { if (listener != null) listener.onPlanner(t); });</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        h.btnEdit.setOnClickListener(v -&gt; { if (listener != null) listener.onEdit(t); });</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        h.btnDelete.setOnClickListener(v -&gt; { if (listener != null) listener.onDelete(t); });</span>
+<span class="nc" id="L60">    }</span>
+
+<span class="fc" id="L62">    @Override public int getItemCount() { return data.size(); }</span>
+
+    static class VH extends RecyclerView.ViewHolder {
+        TextView tvName, tvDestination, tvDateRange, tvStartLocation;
+        AppCompatImageButton btnEdit, btnDelete;
+
+        Button btnChat, btnPlanner;
+        VH(@NonNull View itemView) {
+<span class="nc" id="L70">            super(itemView);</span>
+<span class="nc" id="L71">            tvName = itemView.findViewById(R.id.tvName);</span>
+<span class="nc" id="L72">            tvDestination = itemView.findViewById(R.id.tvDestination);</span>
+<span class="nc" id="L73">            tvDateRange = itemView.findViewById(R.id.tvDateRange);</span>
+<span class="nc" id="L74">            tvStartLocation = itemView.findViewById(R.id.tvStartLocation);</span>
+<span class="nc" id="L75">            btnEdit = itemView.findViewById(R.id.btnEditName);</span>
+<span class="nc" id="L76">            btnDelete = itemView.findViewById(R.id.btnDelete);</span>
+<span class="nc" id="L77">            btnChat = itemView.findViewById(R.id.btnChat);</span>
+<span class="nc" id="L78">            btnPlanner = itemView.findViewById(R.id.btnPlanner);</span>
+<span class="nc" id="L79">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

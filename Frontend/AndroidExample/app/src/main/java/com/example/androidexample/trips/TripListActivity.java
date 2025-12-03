@@ -3,6 +3,7 @@ package com.example.androidexample.trips;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
+import android.content.Intent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -14,12 +15,17 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.androidexample.HomeActivity;
 import com.example.androidexample.R;
+import com.example.androidexample.tripplanner.TripEventsActivity;
 
 import java.util.List;
 
 public class TripListActivity extends AppCompatActivity {
 
+    private Button btnViewInvites;
+    private Button btnReturnHome;
     private RecyclerView recycler;
     private View tvEmpty;
     private Button btnAdd;
@@ -40,13 +46,34 @@ public class TripListActivity extends AppCompatActivity {
         recycler = findViewById(R.id.recyclerTrips);
         tvEmpty = findViewById(R.id.tvEmpty);
         btnAdd = findViewById(R.id.btnAdd);
+        btnViewInvites = findViewById(R.id.btnViewInvites);
+        btnReturnHome  = findViewById(R.id.btnReturnHome);
 
         userId = getIntent().getIntExtra("userId", -1);
 
         adapter = new TripAdapter(new TripAdapter.Listener() {
-            @Override public void onOpen(TripDTO t) {
-                Toast.makeText(TripListActivity.this, "Trip: " + (t.name != null ? t.name : "Unnamed"), Toast.LENGTH_SHORT).show();
+            @Override
+            public void onChat(TripDTO t) {
+                Intent i = new Intent(TripListActivity.this, TripChatActivity.class);
+                i.putExtra(TripEventsActivity.EXTRA_TRIP_ID, (long) t.id);
+                i.putExtra(TripEventsActivity.EXTRA_USER_ID, (long) userId);
+                i.putExtra("tripName", t.name);
+                startActivity(i);
             }
+            @Override
+            public void onPlanner(TripDTO t) {
+                Intent i = new Intent(
+                        TripListActivity.this,
+                        com.example.androidexample.tripplanner.TripEventsActivity.class
+                );
+
+                i.putExtra(TripEventsActivity.EXTRA_TRIP_ID, (long) t.id);
+                i.putExtra(TripEventsActivity.EXTRA_USER_ID, (long) userId);
+
+
+                startActivity(i);
+            }
+
             @Override public void onEdit(TripDTO t) {
                 showUpsertDialog(/*isCreate=*/false, t);
             }
@@ -60,6 +87,20 @@ public class TripListActivity extends AppCompatActivity {
         recycler.setAdapter(adapter);
 
         btnAdd.setOnClickListener(v -> showUpsertDialog(true, null));
+
+        btnViewInvites.setOnClickListener(v -> {
+            Intent i = new Intent(TripListActivity.this, TripInvitesActivity.class);
+            i.putExtra("userId", userId);
+            startActivity(i);
+        });
+
+        btnReturnHome.setOnClickListener(v -> {
+            Intent i = new Intent(TripListActivity.this, HomeActivity.class);
+            i.putExtra("userId", userId);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+            finish();
+        });
 
         loadData();
     }
@@ -125,7 +166,7 @@ public class TripListActivity extends AppCompatActivity {
                     t.endDate = etEndDate.getText().toString().trim();
 
                     if (isCreate) {
-                        TripAPI.createTrip(this, userId, t, new TripAPI.OneCallback() {
+                        TripAPI.createTrip(TripListActivity.this, userId, t, new TripAPI.OneCallback() {
                             @Override public void onSuccess(TripDTO trip) {
                                 Toast.makeText(TripListActivity.this, "Created", Toast.LENGTH_SHORT).show();
                                 loadData();
@@ -135,7 +176,8 @@ public class TripListActivity extends AppCompatActivity {
                             }
                         });
                     } else {
-                        TripAPI.updateTrip(this, userId, existing.id, t, new TripAPI.OneCallback() {
+                        TripAPI.updateTrip(TripListActivity.this, userId, existing.id, t, new TripAPI.OneCallback()
+                        {
                             @Override public void onSuccess(TripDTO trip) {
                                 Toast.makeText(TripListActivity.this, "Updated", Toast.LENGTH_SHORT).show();
                                 loadData();

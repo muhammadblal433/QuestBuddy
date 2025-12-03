@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripEventApi.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.tripplanner</a> &gt; <span class="el_source">TripEventApi.java</span></div><h1>TripEventApi.java</h1><pre class="source lang-java linenums">package com.example.androidexample.tripplanner;
+
+import android.content.Context;
+import android.net.Uri;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.example.androidexample.tripplanner.TripEvent;
+import com.example.androidexample.tripplanner.TripEventPage;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class TripEventApi {
+
+    private static final String BASE_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v13&quot;;
+
+    private final Context context;
+
+<span class="fc" id="L26">    public TripEventApi(Context context) {</span>
+<span class="fc" id="L27">        this.context = context.getApplicationContext();</span>
+<span class="fc" id="L28">    }</span>
+
+    public interface PageCallback {
+        void onSuccess(TripEventPage page);
+        void onError(String errorMessage);
+    }
+
+    public interface EventCallback {
+        void onSuccess(TripEvent event);
+        void onError(String errorMessage);
+    }
+
+    public interface SimpleCallback {
+        void onSuccess();
+        void onError(String errorMessage);
+    }
+
+    private Map&lt;String, String&gt; buildHeaders(long userId) {
+<span class="fc" id="L46">        Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L47">        headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="fc" id="L48">        headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L49">        return headers;</span>
+    }
+
+    private String parseVolleyError(VolleyError error) {
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (error.networkResponse != null) {</span>
+<span class="fc" id="L54">            int status = error.networkResponse.statusCode;</span>
+<span class="fc" id="L55">            return &quot;HTTP &quot; + status;</span>
+        }
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        return error.getMessage() != null ? error.getMessage() : &quot;Unknown error&quot;;</span>
+    }
+
+    public void listEvents(
+            long userId,
+            long tripId,
+            String fromIso,
+            String toIso,
+            int page,
+            int size,
+            PageCallback callback
+    ) {
+<span class="fc" id="L69">        String base = BASE_URL + &quot;/trips/&quot; + tripId + &quot;/events&quot;;</span>
+<span class="fc" id="L70">        Uri.Builder builder = Uri.parse(base).buildUpon();</span>
+<span class="fc" id="L71">        builder.appendQueryParameter(&quot;page&quot;, String.valueOf(page));</span>
+<span class="fc" id="L72">        builder.appendQueryParameter(&quot;size&quot;, String.valueOf(size));</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (fromIso != null) builder.appendQueryParameter(&quot;from&quot;, fromIso);</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (toIso != null) builder.appendQueryParameter(&quot;to&quot;, toIso);</span>
+
+<span class="fc" id="L76">        String url = builder.build().toString();</span>
+
+<span class="fc" id="L78">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    try {
+<span class="nc" id="L84">                        TripEventPage p = TripEventPage.fromJson(response);</span>
+<span class="nc" id="L85">                        callback.onSuccess(p);</span>
+<span class="nc" id="L86">                    } catch (JSONException e) {</span>
+<span class="nc" id="L87">                        callback.onError(&quot;Parse error: &quot; + e.getMessage());</span>
+<span class="nc" id="L88">                    }</span>
+<span class="nc" id="L89">                },</span>
+<span class="fc" id="L90">                error -&gt; callback.onError(parseVolleyError(error))</span>
+<span class="fc" id="L91">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="fc" id="L94">                return buildHeaders(userId);</span>
+            }
+        };
+
+<span class="fc" id="L98">        ApiClient.getInstance(context).addToRequestQueue(req);</span>
+<span class="fc" id="L99">    }</span>
+
+    public void createEvent(
+            long userId,
+            long tripId,
+            String name,
+            String startsAtIso,
+            String endsAtIso,
+            String location,
+            String notes,
+            Integer position,
+            EventCallback callback
+    ) {
+<span class="nc" id="L112">        String url = BASE_URL + &quot;/trips/&quot; + tripId + &quot;/events&quot;;</span>
+
+<span class="nc" id="L114">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L116">            body.put(&quot;name&quot;, name);</span>
+<span class="nc" id="L117">            body.put(&quot;startsAt&quot;, startsAtIso);</span>
+<span class="nc" id="L118">            body.put(&quot;endsAt&quot;, endsAtIso);</span>
+
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (location != null) body.put(&quot;location&quot;, location);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (notes != null) body.put(&quot;notes&quot;, notes);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (position != null) body.put(&quot;position&quot;, position);</span>
+
+<span class="nc" id="L124">            body.put(&quot;attachmentRefs&quot;, new org.json.JSONArray());</span>
+<span class="nc" id="L125">        } catch (JSONException e) {</span>
+<span class="nc" id="L126">            callback.onError(&quot;JSON error: &quot; + e.getMessage());</span>
+<span class="nc" id="L127">            return;</span>
+<span class="nc" id="L128">        }</span>
+
+<span class="nc" id="L130">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                body,
+                response -&gt; {
+                    try {
+<span class="nc" id="L136">                        TripEvent event = TripEvent.fromJson(response);</span>
+<span class="nc" id="L137">                        callback.onSuccess(event);</span>
+<span class="nc" id="L138">                    } catch (JSONException e) {</span>
+<span class="nc" id="L139">                        callback.onError(&quot;Parse error: &quot; + e.getMessage());</span>
+<span class="nc" id="L140">                    }</span>
+<span class="nc" id="L141">                },</span>
+<span class="nc" id="L142">                error -&gt; callback.onError(parseVolleyError(error))</span>
+<span class="nc" id="L143">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="nc" id="L146">                return buildHeaders(userId);</span>
+            }
+        };
+
+<span class="nc" id="L150">        ApiClient.getInstance(context).addToRequestQueue(req);</span>
+<span class="nc" id="L151">    }</span>
+
+    public void editEvent(
+            long userId,
+            long tripId,
+            long eventId,
+            String name,
+            String startsAtIso,
+            String endsAtIso,
+            String location,
+            String notes,
+            Integer position,
+            EventCallback callback
+    ) {
+<span class="nc" id="L165">        String url = BASE_URL + &quot;/trips/&quot; + tripId + &quot;/events/&quot; + eventId;</span>
+
+<span class="nc" id="L167">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (name != null) body.put(&quot;name&quot;, name);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (startsAtIso != null) body.put(&quot;startsAt&quot;, startsAtIso);</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (endsAtIso != null) body.put(&quot;endsAt&quot;, endsAtIso);</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            if (location != null) body.put(&quot;location&quot;, location);</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">            if (notes != null) body.put(&quot;notes&quot;, notes);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (position != null) body.put(&quot;position&quot;, position);</span>
+<span class="nc" id="L175">        } catch (JSONException e) {</span>
+<span class="nc" id="L176">            callback.onError(&quot;JSON error: &quot; + e.getMessage());</span>
+<span class="nc" id="L177">            return;</span>
+<span class="nc" id="L178">        }</span>
+
+<span class="nc" id="L180">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                body,
+                response -&gt; {
+                    try {
+<span class="nc" id="L186">                        TripEvent event = TripEvent.fromJson(response);</span>
+<span class="nc" id="L187">                        callback.onSuccess(event);</span>
+<span class="nc" id="L188">                    } catch (JSONException e) {</span>
+<span class="nc" id="L189">                        callback.onError(&quot;Parse error: &quot; + e.getMessage());</span>
+<span class="nc" id="L190">                    }</span>
+<span class="nc" id="L191">                },</span>
+<span class="nc" id="L192">                error -&gt; callback.onError(parseVolleyError(error))</span>
+<span class="nc" id="L193">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="nc" id="L196">                return buildHeaders(userId);</span>
+            }
+        };
+
+<span class="nc" id="L200">        ApiClient.getInstance(context).addToRequestQueue(req);</span>
+<span class="nc" id="L201">    }</span>
+
+    public void deleteEvent(
+            long userId,
+            long tripId,
+            long eventId,
+            SimpleCallback callback
+    ) {
+<span class="nc" id="L209">        String url = BASE_URL + &quot;/trips/&quot; + tripId + &quot;/events/&quot; + eventId;</span>
+
+<span class="nc" id="L211">        StringRequest req = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+<span class="nc" id="L214">                response -&gt; callback.onSuccess(),</span>
+<span class="nc" id="L215">                error -&gt; callback.onError(parseVolleyError(error))</span>
+<span class="nc" id="L216">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="nc" id="L219">                return buildHeaders(userId);</span>
+            }
+        };
+
+<span class="nc" id="L223">        ApiClient.getInstance(context).addToRequestQueue(req);</span>
+<span class="nc" id="L224">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BudgetDetailActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.budget</a> &gt; <span class="el_source">BudgetDetailActivity.java</span></div><h1>BudgetDetailActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.budget;
+import com.example.androidexample.R;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.List;
+import androidx.appcompat.app.AlertDialog;
+import com.android.volley.toolbox.StringRequest;
+import java.util.HashMap;
+import java.util.Map;
+
+// shows details for one budget
+
+/**
+ * Activity that shows the details of a single budget, including its owner,
+ * totals, creation time, and per-user splits. It loads data from the backend,
+ * displays the list of splits, and allows the owner to edit or delete the budget.
+ */
+<span class="nc" id="L34">public class BudgetDetailActivity extends AppCompatActivity {</span>
+
+    private TextView tvBudgetName, tvOwner, tvTotals, tvCreatedAt;
+    private RecyclerView recyclerSplits;
+    private RequestQueue queue;
+    private SplitAdapter splitAdapter;
+<span class="nc" id="L40">    private List&lt;Split&gt; splits = new ArrayList&lt;&gt;();</span>
+    private long budgetId;
+    private SplitEditAdapter editAdapter;
+    private String username, ownerUsername;
+<span class="nc" id="L44">    private boolean isOwner = false;</span>
+    private static final String BASE_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v11&quot;;
+
+    /**
+     * Initializes the activity, binds view references, sets up the RecyclerView,
+     * retrieves the active budget id and current username, and triggers the initial load
+     * of budget details. Also wires up click listeners for update and delete buttons.
+     *
+     * @param savedInstanceState previously saved instance state, or {@code null}
+     *                           if the activity is being created for the first time
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L57">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L58">        setContentView(R.layout.activity_budget_detail);</span>
+
+<span class="nc" id="L60">        tvBudgetName = findViewById(R.id.tvBudgetName);</span>
+<span class="nc" id="L61">        tvOwner = findViewById(R.id.tvOwner);</span>
+<span class="nc" id="L62">        tvTotals = findViewById(R.id.tvTotals);</span>
+<span class="nc" id="L63">        tvCreatedAt = findViewById(R.id.tvCreatedAt);</span>
+<span class="nc" id="L64">        recyclerSplits = findViewById(R.id.recyclerSplits);</span>
+<span class="nc" id="L65">        Button btnUpdate = findViewById(R.id.btnUpdateBudget);</span>
+<span class="nc" id="L66">        Button btnDelete = findViewById(R.id.btnDeleteBudget);</span>
+
+<span class="nc" id="L68">        queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L69">        recyclerSplits.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L70">        splitAdapter = new SplitAdapter(splits);</span>
+<span class="nc" id="L71">        recyclerSplits.setAdapter(splitAdapter);</span>
+
+<span class="nc" id="L73">        budgetId = getIntent().getLongExtra(&quot;budgetId&quot;, -1);</span>
+<span class="nc" id="L74">        SharedPreferences prefs = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L75">        username = prefs.getString(&quot;username&quot;, null);</span>
+
+<span class="nc bnc" id="L77" title="All 4 branches missed.">        if (budgetId == -1 || username == null) {</span>
+<span class="nc" id="L78">            Toast.makeText(this, &quot;Invalid budget&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L79">            finish();</span>
+<span class="nc" id="L80">            return;</span>
+        }
+
+<span class="nc" id="L83">        loadBudget(); // loads the budget</span>
+
+<span class="nc" id="L85">        btnUpdate.setOnClickListener(v -&gt; showEditableSplits());</span>
+<span class="nc" id="L86">        btnDelete.setOnClickListener(v -&gt; deleteBudget());</span>
+<span class="nc" id="L87">    }</span>
+
+    /**
+     * Fetches the latest details of this budget from the server, including
+     * owner, totals, creation date, and the list of splits. The UI is updated
+     * with the response, and the {@link SplitAdapter} is notified of data changes.
+     */
+    // loads budgets details from the server
+    private void loadBudget() {
+<span class="nc" id="L96">        String url = BASE_URL + &quot;/users/&quot; + username + &quot;/budgets/&quot; + budgetId;</span>
+
+<span class="nc" id="L98">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+                    try {
+<span class="nc" id="L101">                        String name = response.getString(&quot;name&quot;);</span>
+<span class="nc" id="L102">                        ownerUsername = response.getString(&quot;ownerUsername&quot;);</span>
+<span class="nc" id="L103">                        isOwner = ownerUsername.equalsIgnoreCase(username);</span>
+<span class="nc" id="L104">                        double totalShare = response.getDouble(&quot;totalShare&quot;);</span>
+<span class="nc" id="L105">                        double totalPaid = response.getDouble(&quot;totalPaid&quot;);</span>
+<span class="nc" id="L106">                        String createdAt = response.getString(&quot;createdAt&quot;);</span>
+<span class="nc" id="L107">                        tvBudgetName.setText(name);</span>
+<span class="nc" id="L108">                        tvOwner.setText(&quot;Owner: &quot; + ownerUsername);</span>
+<span class="nc" id="L109">                        tvTotals.setText(&quot;Total Paid: $&quot; + totalPaid + &quot; | Total Share: $&quot; + totalShare);</span>
+<span class="nc" id="L110">                        tvCreatedAt.setText(&quot;Created: &quot; + createdAt);</span>
+
+<span class="nc" id="L112">                        JSONArray splitsArr = response.getJSONArray(&quot;splits&quot;);</span>
+<span class="nc" id="L113">                        splits.clear();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                        for (int i = 0; i &lt; splitsArr.length(); i++) {</span>
+<span class="nc" id="L115">                            JSONObject s = splitsArr.getJSONObject(i);</span>
+<span class="nc" id="L116">                            splits.add(new Split(</span>
+<span class="nc" id="L117">                                    s.getString(&quot;username&quot;),</span>
+<span class="nc" id="L118">                                    s.getDouble(&quot;shareAmount&quot;),</span>
+<span class="nc" id="L119">                                    s.getDouble(&quot;paidAmount&quot;),</span>
+<span class="nc" id="L120">                                    s.getDouble(&quot;balance&quot;)</span>
+                            ));
+                        }
+<span class="nc" id="L123">                        splitAdapter.notifyDataSetChanged();</span>
+
+<span class="nc" id="L125">                    } catch (JSONException e) {</span>
+<span class="nc" id="L126">                        e.printStackTrace();</span>
+<span class="nc" id="L127">                    }</span>
+<span class="nc" id="L128">                },</span>
+<span class="nc" id="L129">                error -&gt; Toast.makeText(this, &quot;Failed to load budget details&quot;, Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L130">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L133">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L134">                headers.put(&quot;X-Username&quot;, username);</span>
+<span class="nc" id="L135">                return headers;</span>
+            }
+        };
+<span class="nc" id="L138">        queue.add(request);</span>
+<span class="nc" id="L139">    }</span>
+
+    /**
+     * Switches the splits list into editable mode for the budget owner and
+     * shows a confirmation dialog asking whether to save or discard the changes.
+     * If the user chooses &quot;Save&quot;, {@link #updateBudget()} is called; otherwise,
+     * the original budget data is reloaded from the server.
+     */
+    // enables edit mode for budget splits and prompts user to save or cancel changes
+    private void showEditableSplits() {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (!isOwner) {</span>
+<span class="nc" id="L150">            Toast.makeText(this, &quot;Only the owner can edit this budget&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L151">            return;</span>
+        }
+
+<span class="nc" id="L154">        editAdapter = new SplitEditAdapter(splits, username, isOwner);</span>
+<span class="nc" id="L155">        recyclerSplits.setAdapter(editAdapter);</span>
+
+<span class="nc" id="L157">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L158">                .setTitle(&quot;Save Changes?&quot;)</span>
+<span class="nc" id="L159">                .setMessage(&quot;Would you like to save the updates to this budget?&quot;)</span>
+<span class="nc" id="L160">                .setPositiveButton(&quot;Save&quot;, (dialog, which) -&gt; updateBudget())</span>
+<span class="nc" id="L161">                .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; loadBudget())</span>
+<span class="nc" id="L162">                .show();</span>
+<span class="nc" id="L163">    }</span>
+
+    /**
+     * Builds a JSON payload from the updated split list and sends a PUT request
+     * to the backend to update the budget. On success, a success message is shown
+     * and the latest data is reloaded; on failure, an error toast is displayed.
+     */
+    // sends a put request to update the budget with edited split data
+    private void updateBudget() {
+<span class="nc" id="L172">        List&lt;Split&gt; updatedSplits = editAdapter.getUpdatedSplits();</span>
+<span class="nc" id="L173">        JSONArray arr = new JSONArray();</span>
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        for (Split s : updatedSplits) {</span>
+            try {
+<span class="nc" id="L177">                JSONObject o = new JSONObject();</span>
+<span class="nc" id="L178">                o.put(&quot;username&quot;, s.getUsername());</span>
+<span class="nc" id="L179">                o.put(&quot;shareAmount&quot;, s.getShareAmount());</span>
+<span class="nc" id="L180">                o.put(&quot;paidAmount&quot;, s.getPaidAmount());</span>
+<span class="nc" id="L181">                arr.put(o);</span>
+<span class="nc" id="L182">            } catch (JSONException e) {</span>
+<span class="nc" id="L183">                e.printStackTrace();</span>
+<span class="nc" id="L184">            }</span>
+<span class="nc" id="L185">        }</span>
+
+<span class="nc" id="L187">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L189">            body.put(&quot;splits&quot;, arr);</span>
+<span class="nc" id="L190">            body.put(&quot;name&quot;, tvBudgetName.getText().toString());</span>
+<span class="nc" id="L191">        } catch (JSONException e) {</span>
+<span class="nc" id="L192">            e.printStackTrace();</span>
+<span class="nc" id="L193">        }</span>
+
+<span class="nc" id="L195">        String url = BASE_URL + &quot;/users/&quot; + ownerUsername + &quot;/budgets/&quot; + budgetId;</span>
+
+<span class="nc" id="L197">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.PUT, url, body,</span>
+                response -&gt; {
+<span class="nc" id="L199">                    Toast.makeText(this, &quot;Budget updated successfully!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L200">                    loadBudget();</span>
+<span class="nc" id="L201">                },</span>
+<span class="nc" id="L202">                error -&gt; Toast.makeText(this, &quot;Failed to update budget&quot;, Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L203">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L206">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L207">                headers.put(&quot;X-Username&quot;, username);</span>
+<span class="nc" id="L208">                return headers;</span>
+            }
+        };
+<span class="nc" id="L211">        queue.add(req);</span>
+<span class="nc" id="L212">    }</span>
+
+
+    /**
+     * Sends a DELETE request to the backend to remove the current budget.
+     * If the deletion succeeds, the activity finishes and returns to the previous
+     * screen; otherwise, an error toast is shown.
+     */
+    // sends a delete request to remove the current budget from the server
+    private void deleteBudget() {
+<span class="nc" id="L222">        String url = BASE_URL + &quot;/users/&quot; + ownerUsername + &quot;/budgets/&quot; + budgetId;</span>
+
+<span class="nc" id="L224">        StringRequest request = new StringRequest(Request.Method.DELETE, url,</span>
+                response -&gt; {
+<span class="nc" id="L226">                    Toast.makeText(this, &quot;Budget deleted successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L227">                    finish();</span>
+<span class="nc" id="L228">                },</span>
+<span class="nc" id="L229">                error -&gt; Toast.makeText(this, &quot;Failed to delete budget&quot;, Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L230">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L233">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L234">                headers.put(&quot;X-Username&quot;, username);</span>
+<span class="nc" id="L235">                return headers;</span>
+            }
+        };
+
+<span class="nc" id="L239">        queue.add(request);</span>
+<span class="nc" id="L240">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

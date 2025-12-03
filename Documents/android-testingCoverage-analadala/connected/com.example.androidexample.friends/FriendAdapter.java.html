@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FriendAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.friends</a> &gt; <span class="el_source">FriendAdapter.java</span></div><h1>FriendAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample.friends;
+import com.example.androidexample.R;
+
+import android.content.Context;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.*;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.androidexample.messages.DirectChatActivity;
+
+import java.util.List;
+
+public class FriendAdapter extends RecyclerView.Adapter&lt;FriendAdapter.VH&gt; {
+
+<span class="nc" id="L21">    public enum Mode { FRIENDS, INCOMING, SUGGESTIONS, SEARCH }</span>
+
+    private final Context ctx;
+    private final List&lt;Friend&gt; items;
+    private String currentUsername;
+    private long currentUserId;
+<span class="nc" id="L27">    private Mode mode = Mode.FRIENDS;</span>
+    private static final String BASE = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v8&quot;;
+
+
+<span class="nc" id="L31">    public FriendAdapter(Context ctx, List&lt;Friend&gt; items, String currentUsername, long currentUserId) {</span>
+<span class="nc" id="L32">        this.ctx = ctx;</span>
+<span class="nc" id="L33">        this.items = items;</span>
+<span class="nc" id="L34">        this.currentUsername = currentUsername;</span>
+<span class="nc" id="L35">        this.currentUserId = currentUserId;</span>
+<span class="nc" id="L36">    }</span>
+
+    // sets the current user's username
+<span class="nc" id="L39">    public void setCurrentUsername(String me) { this.currentUsername = me;  }</span>
+
+    // sets the current user's id (primitive to avoid null unboxing)
+<span class="nc" id="L42">    public void setCurrentUserId(long id){ this.currentUserId = id; }</span>
+
+    // changes the adapter mode and refreshes the view
+<span class="nc" id="L45">    public void setMode(Mode m) { this.mode = m; notifyDataSetChanged(); }</span>
+
+    // inflates each friend list item layout
+    @NonNull
+    @Override
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L51">        View v = LayoutInflater.from(ctx).inflate(R.layout.item_friend, parent, false);</span>
+<span class="nc" id="L52">        return new VH(v);</span>
+    }
+
+    // binds friend data to each view depending on mode
+    @Override
+    public void onBindViewHolder(@NonNull VH h, int pos) {
+<span class="nc" id="L58">        Friend f = items.get(pos);</span>
+<span class="nc" id="L59">        h.tvName.setText(f.getDisplayName());</span>
+<span class="nc" id="L60">        h.tvUsername.setText(&quot;@&quot; + f.getUsername());</span>
+
+
+<span class="nc" id="L63">        h.btnProfile.setVisibility(View.GONE);</span>
+<span class="nc" id="L64">        h.btnAddFriend.setVisibility(View.GONE);</span>
+<span class="nc" id="L65">        h.llRequestActions.setVisibility(View.GONE);</span>
+<span class="nc" id="L66">        h.imgBtn.setVisibility(View.GONE);</span>
+
+
+<span class="nc bnc" id="L69" title="All 4 branches missed.">        switch (mode) {</span>
+            // show profile button for friends
+            case FRIENDS:
+<span class="nc" id="L72">                h.imgBtn.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L73">                h.imgBtn.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L74">                    Intent i = new Intent(ctx, DirectChatActivity.class);</span>
+<span class="nc" id="L75">                    i.putExtra(&quot;friendUsername&quot;, f.getUsername());</span>
+<span class="nc" id="L76">                    i.putExtra(&quot;friendId&quot;, f.getId());</span>
+<span class="nc" id="L77">                    i.putExtra(&quot;displayName&quot;, f.getDisplayName());</span>
+<span class="nc" id="L78">                    i.putExtra(&quot;currentUsername&quot;, currentUsername);</span>
+<span class="nc" id="L79">                    i.putExtra(&quot;currentUserId&quot;, currentUserId);</span>
+<span class="nc" id="L80">                    ctx.startActivity(i);</span>
+<span class="nc" id="L81">                });</span>
+
+<span class="nc" id="L83">                h.btnProfile.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L84">                h.btnProfile.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L85">                    Intent i = new Intent(ctx, FriendProfileActivity.class);</span>
+<span class="nc" id="L86">                    i.putExtra(&quot;username&quot;, f.getUsername());</span>
+<span class="nc" id="L87">                    i.putExtra(&quot;id&quot;, f.getId());</span>
+<span class="nc" id="L88">                    i.putExtra(&quot;displayName&quot;, f.getDisplayName());</span>
+<span class="nc" id="L89">                    i.putExtra(&quot;currentUser&quot;, currentUsername);</span>
+<span class="nc" id="L90">                    i.putExtra(&quot;userId&quot;, currentUserId);</span>
+<span class="nc" id="L91">                    ctx.startActivity(i);</span>
+<span class="nc" id="L92">                });</span>
+<span class="nc" id="L93">                break;</span>
+
+            case INCOMING:
+                // show accept, reject, and block buttons for incoming requests
+<span class="nc" id="L97">                h.llRequestActions.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L98">                h.btnAccept.setOnClickListener(v -&gt; accept(f.getUsername()));</span>
+<span class="nc" id="L99">                h.btnReject.setOnClickListener(v -&gt; reject(f.getUsername()));</span>
+<span class="nc" id="L100">                h.btnBlock.setOnClickListener(v -&gt; block(f.getUsername()));</span>
+<span class="nc" id="L101">                break;</span>
+
+            case SUGGESTIONS:
+                // show add friend button for suggestions
+<span class="nc" id="L105">                h.btnAddFriend.setVisibility(View.VISIBLE);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                String label = f.getMutualCount() &gt; 0</span>
+<span class="nc" id="L107">                        ? &quot;Add (&quot; + f.getMutualCount() + &quot;)&quot;</span>
+<span class="nc" id="L108">                        : &quot;Add Friend&quot;;</span>
+<span class="nc" id="L109">                h.btnAddFriend.setText(label);</span>
+<span class="nc" id="L110">                h.btnAddFriend.setOnClickListener(v -&gt; sendRequest(f.getUsername()));</span>
+<span class="nc" id="L111">                break;</span>
+
+            case SEARCH:
+                break;
+        }
+<span class="nc" id="L116">    }</span>
+
+    // returns total number of items in the list
+    @Override
+<span class="nc" id="L120">    public int getItemCount() { return items.size(); }</span>
+
+    // sends api request to accept a friend request
+    private void accept(String username) {
+<span class="nc" id="L124">        String url = BASE + &quot;/users/&quot; + currentUsername + &quot;/friends/requests/&quot; + username + &quot;/accept&quot;;</span>
+<span class="nc" id="L125">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, null,</span>
+<span class="nc" id="L126">                r -&gt; Toast.makeText(ctx, &quot;Accepted &quot; + username, Toast.LENGTH_SHORT).show(),</span>
+<span class="nc" id="L127">                e -&gt; Toast.makeText(ctx, &quot;Accept failed&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L128">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L129">    }</span>
+
+    // sends api request to reject a friend request
+    private void reject(String username) {
+<span class="nc" id="L133">        String url = BASE + &quot;/users/&quot; + currentUsername + &quot;/friends/requests/&quot; + username + &quot;/reject&quot;;</span>
+<span class="nc" id="L134">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, null,</span>
+<span class="nc" id="L135">                r -&gt; Toast.makeText(ctx, &quot;Rejected &quot; + username, Toast.LENGTH_SHORT).show(),</span>
+<span class="nc" id="L136">                e -&gt; Toast.makeText(ctx, &quot;Reject failed&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L137">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L138">    }</span>
+
+    // sends api request to block a user
+    private void block(String username) {
+<span class="nc" id="L142">        String url = BASE + &quot;/users/&quot; + currentUsername + &quot;/friends/&quot; + username + &quot;/block&quot;;</span>
+<span class="nc" id="L143">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, null,</span>
+<span class="nc" id="L144">                r -&gt; Toast.makeText(ctx, &quot;Blocked &quot; + username, Toast.LENGTH_SHORT).show(),</span>
+<span class="nc" id="L145">                e -&gt; Toast.makeText(ctx, &quot;Block failed&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L146">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L147">    }</span>
+
+    // sends api request to add a new friend
+    private void sendRequest(String username) {
+<span class="nc" id="L151">        String url = BASE + &quot;/users/&quot; + currentUsername + &quot;/friends/requests/&quot; + username;</span>
+<span class="nc" id="L152">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, null,</span>
+<span class="nc" id="L153">                r -&gt; Toast.makeText(ctx, &quot;Request sent to &quot; + username, Toast.LENGTH_SHORT).show(),</span>
+<span class="nc" id="L154">                e -&gt; Toast.makeText(ctx, &quot;Request failed&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L155">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L156">    }</span>
+
+    // viewholder class that holds references to all ui elements in an item
+    static class VH extends RecyclerView.ViewHolder {
+        TextView tvName, tvUsername;
+        Button btnAddFriend, btnAccept, btnReject, btnBlock, btnProfile;
+        LinearLayout llRequestActions;
+
+        ImageButton imgBtn;
+
+        // initializes all view references
+        VH(@NonNull View v) {
+<span class="nc" id="L168">            super(v);</span>
+<span class="nc" id="L169">            tvName = v.findViewById(R.id.tvFriendName);</span>
+<span class="nc" id="L170">            tvUsername = v.findViewById(R.id.tvFriendUsername);</span>
+<span class="nc" id="L171">            btnProfile = v.findViewById(R.id.btnProfile);</span>
+<span class="nc" id="L172">            imgBtn = v.findViewById(R.id.btnChat);</span>
+<span class="nc" id="L173">            btnAddFriend = v.findViewById(R.id.btnAddFriend);</span>
+<span class="nc" id="L174">            btnAccept = v.findViewById(R.id.btnAccept);</span>
+<span class="nc" id="L175">            btnReject = v.findViewById(R.id.btnReject);</span>
+<span class="nc" id="L176">            btnBlock = v.findViewById(R.id.btnBlock);</span>
+<span class="nc" id="L177">            llRequestActions = v.findViewById(R.id.llRequestActions);</span>
+<span class="nc" id="L178">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>
