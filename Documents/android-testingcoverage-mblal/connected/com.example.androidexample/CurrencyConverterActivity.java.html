@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CurrencyConverterActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CurrencyConverterActivity.java</span></div><h1>CurrencyConverterActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
+import com.android.volley.*;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import org.json.JSONObject;
+
+<span class="nc" id="L13">public class CurrencyConverterActivity extends AppCompatActivity {</span>
+
+    private EditText etBaseCurrency, etTargetCurrency, etNewRate;
+    private TextView tvRateResult;
+    private Button btnFetchRate, btnAddRate;
+    private RequestQueue queue;
+    private int userId;
+
+    // Mock server URL
+<span class="nc" id="L22">    private final String BASE_URL = &quot;https://49b6c56b-2abb-40b2-94cb-f501f3d6d562.mock.pstmn.io/api/v1/converter&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L26">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L27">        setContentView(R.layout.activity_currency_converter);</span>
+
+<span class="nc" id="L29">        etBaseCurrency = findViewById(R.id.etBaseCurrency);</span>
+<span class="nc" id="L30">        etTargetCurrency = findViewById(R.id.etTargetCurrency);</span>
+<span class="nc" id="L31">        etNewRate = findViewById(R.id.etNewRate);</span>
+<span class="nc" id="L32">        tvRateResult = findViewById(R.id.tvRateResult);</span>
+<span class="nc" id="L33">        btnFetchRate = findViewById(R.id.btnFetchRate);</span>
+<span class="nc" id="L34">        btnAddRate = findViewById(R.id.btnUpdateRate);</span>
+<span class="nc" id="L35">        Button btnBackHome = findViewById(R.id.btnBackHome);</span>
+<span class="nc" id="L36">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L39">            Toast.makeText(this, &quot;Invalid user session&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L40">            startActivity(new Intent(this, LoginActivity.class));</span>
+<span class="nc" id="L41">            finish();</span>
+<span class="nc" id="L42">            return;</span>
+        }
+
+<span class="nc" id="L45">        queue = Volley.newRequestQueue(this);</span>
+
+<span class="nc" id="L47">        btnFetchRate.setOnClickListener(v -&gt; fetchExchangeRate());</span>
+<span class="nc" id="L48">        btnAddRate.setOnClickListener(v -&gt; postExchangeRate());</span>
+<span class="nc" id="L49">        btnBackHome.setOnClickListener(v -&gt;</span>
+        {
+<span class="nc" id="L51">            Intent intent = new Intent(CurrencyConverterActivity.this, HomeActivity.class);</span>
+<span class="nc" id="L52">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L53">            startActivity(intent);</span>
+<span class="nc" id="L54">        });</span>
+<span class="nc" id="L55">    }</span>
+
+    private void fetchExchangeRate() {
+<span class="nc" id="L58">        String base = etBaseCurrency.getText().toString().trim();</span>
+<span class="nc" id="L59">        String target = etTargetCurrency.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L61" title="All 4 branches missed.">        if (base.isEmpty() || target.isEmpty()) {</span>
+<span class="nc" id="L62">            Toast.makeText(this, &quot;Enter both currencies!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L63">            return;</span>
+        }
+
+<span class="nc" id="L66">        String url = BASE_URL + &quot;?base=&quot; + base + &quot;&amp;target=&quot; + target;</span>
+
+<span class="nc" id="L68">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET, url, null,
+                response -&gt; {
+<span class="nc" id="L71">                    double rate = response.optDouble(&quot;exchangeRate&quot;, 0);</span>
+<span class="nc" id="L72">                    tvRateResult.setText(&quot;1 &quot; + base + &quot; = &quot; + rate + &quot; &quot; + target);</span>
+<span class="nc" id="L73">                },</span>
+                error -&gt; {
+<span class="nc" id="L75">                    Log.e(&quot;API_ERROR&quot;, &quot;GET failed: &quot; + error.toString());</span>
+<span class="nc" id="L76">                    Toast.makeText(this, &quot;Failed to fetch rate&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L77">                }</span>
+        );
+
+<span class="nc" id="L80">        queue.add(request);</span>
+<span class="nc" id="L81">    }</span>
+
+    private void postExchangeRate() {
+<span class="nc" id="L84">        String base = etBaseCurrency.getText().toString().trim();</span>
+<span class="nc" id="L85">        String target = etTargetCurrency.getText().toString().trim();</span>
+<span class="nc" id="L86">        String rateStr = etNewRate.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L88" title="All 6 branches missed.">        if (base.isEmpty() || target.isEmpty() || rateStr.isEmpty()) {</span>
+<span class="nc" id="L89">            Toast.makeText(this, &quot;Fill all fields!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L90">            return;</span>
+        }
+
+<span class="nc" id="L93">        double rate = Double.parseDouble(rateStr);</span>
+
+        try {
+<span class="nc" id="L96">            JSONObject body = new JSONObject();</span>
+<span class="nc" id="L97">            body.put(&quot;baseCurrency&quot;, base);</span>
+<span class="nc" id="L98">            body.put(&quot;targetCurrency&quot;, target);</span>
+<span class="nc" id="L99">            body.put(&quot;exchangeRate&quot;, rate);</span>
+
+<span class="nc" id="L101">            JsonObjectRequest request = new JsonObjectRequest(</span>
+                    Request.Method.POST,
+                    BASE_URL,
+                    body,
+<span class="nc" id="L105">                    response -&gt; Toast.makeText(this,</span>
+<span class="nc" id="L106">                            &quot;Rate added: &quot; + response.optDouble(&quot;exchangeRate&quot;, 0),</span>
+<span class="nc" id="L107">                            Toast.LENGTH_SHORT).show(),</span>
+                    error -&gt; {
+<span class="nc" id="L109">                        Log.e(&quot;API_ERROR&quot;, &quot;POST failed: &quot; + error.toString());</span>
+<span class="nc" id="L110">                        Toast.makeText(this, &quot;Failed to add rate&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L111">                    }</span>
+            );
+
+<span class="nc" id="L114">            queue.add(request);</span>
+
+<span class="nc" id="L116">        } catch (Exception e) {</span>
+<span class="nc" id="L117">            e.printStackTrace();</span>
+<span class="nc" id="L118">        }</span>
+<span class="nc" id="L119">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>
