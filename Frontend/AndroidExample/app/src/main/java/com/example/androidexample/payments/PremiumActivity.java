@@ -28,7 +28,7 @@ import org.json.JSONObject;
  *
  *   POST /api/v15/payments/checkout/premium/{userId}
  *
- * The backend returns a StripeResponse with a sessionUrl that we open
+ * The backend returns a StripeResponse with a session URL that we open
  * in the browser so the user can pay for QuestBuddy Premium.
  */
 public class PremiumActivity extends AppCompatActivity {
@@ -36,11 +36,13 @@ public class PremiumActivity extends AppCompatActivity {
     private static final String HOST =
             "http://coms-3090-026.class.las.iastate.edu:8080";
 
-    // New billing endpoint (note the /api/v15 + /checkout/premium/{userId})
+    // New Stripe Checkout endpoint (matches Postman)
     private static final String CHECKOUT_URL =
             HOST + "/api/v15/payments/checkout/premium/";
 
-    private static final long PREMIUM_PRICE_CENTS = 399L; // $3.99 (matches backend default)
+    // Amount is in *cents* because Stripe expects the smallest currency unit
+    // 399 = $3.99
+    private static final long PREMIUM_PRICE_CENTS = 399L;
 
     private RequestQueue queue;
     private int userId;
@@ -61,7 +63,9 @@ public class PremiumActivity extends AppCompatActivity {
         userId = prefs.getInt("userId", -1);
 
         if (userId == -1) {
-            Toast.makeText(this, "No user session found. Please log in again.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "No user session found. Please log in again.",
+                    Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -76,10 +80,10 @@ public class PremiumActivity extends AppCompatActivity {
 
         setupPremiumText();
 
-        // Upgrade = start Stripe Checkout session
+        // Start Stripe checkout when user taps Upgrade
         btnUpgrade.setOnClickListener(v -> startCheckout());
 
-        // Return Home button
+        // Return Home button: go back to HomeActivity and pass userId
         btnReturnHome.setOnClickListener(v -> {
             Intent intent = new Intent(PremiumActivity.this, HomeActivity.class);
             intent.putExtra("userId", userId);
@@ -103,29 +107,24 @@ public class PremiumActivity extends AppCompatActivity {
     }
 
     /**
-     * Calls backend to create a Stripe Checkout Session for QuestBuddy Premium.
-     * Backend endpoint:
-     *   POST /api/v15/payments/checkout/premium/{userId}
-     *
-     * Body (ProductRequest):
-     *   { "amount": 399, "quantity": 1, "productName": "QuestBuddy Premium", "currency": "usd" }
-     *
-     * Response (StripeResponse):
-     *   { "status": "success", "message": "...", "sessionId": "...", "sessionUrl": "https://checkout.stripe.com/..." }
+     * Calls backend to create a Stripe Checkout session for QuestBuddy Premium.
+     * On success, opens the returned session URL in the browser.
      */
     private void startCheckout() {
-        // Build URL with userId path variable
+        // URL: /api/v15/payments/checkout/premium/{userId}
         String url = CHECKOUT_URL + userId;
 
-        // Build request body to match ProductRequest
+        // Body matches ProductRequest on the backend
         JSONObject body = new JSONObject();
         try {
-            body.put("amount", PREMIUM_PRICE_CENTS);       // 399 cents = $3.99
-            body.put("quantity", 1L);
             body.put("productName", "QuestBuddy Premium");
+            body.put("amount", PREMIUM_PRICE_CENTS);  // cents, so 399 = $3.99
             body.put("currency", "usd");
+            body.put("quantity", 1L);
         } catch (JSONException e) {
-            Toast.makeText(this, "Error creating payment request.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Error creating payment request.",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -134,27 +133,31 @@ public class PremiumActivity extends AppCompatActivity {
                 url,
                 body,
                 response -> {
-                    // StripeResponse: { status, message, sessionId, sessionUrl }
-                    String status = response.optString("status", "error");
-                    String sessionUrl = response.optString("sessionUrl", null);
+                    // StripeResponse: { status, message, sessionId, sessionUrl } OR { ..., url }
+                    String checkoutUrl = response.optString("sessionUrl", null);
 
-                    if (!"success".equalsIgnoreCase(status) || sessionUrl == null || sessionUrl.isEmpty()) {
+                    // In case backend uses "url" instead of "sessionUrl"
+                    if (checkoutUrl == null || checkoutUrl.isEmpty()) {
+                        checkoutUrl = response.optString("url", null);
+                    }
+
+                    if (checkoutUrl == null || checkoutUrl.isEmpty()) {
                         Toast.makeText(
                                 this,
-                                "Failed to start checkout. Please try again.",
+                                "Checkout created but no URL returned.",
                                 Toast.LENGTH_SHORT
                         ).show();
                         return;
                     }
 
-                    openStripeCheckout(sessionUrl);
+                    openStripeCheckout(checkoutUrl);
                 },
                 error -> {
-                    Toast.makeText(
-                            this,
-                            "Error contacting payment server.",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    String msg = "Error contacting payment server.";
+                    if (error.networkResponse != null) {
+                        msg += " (HTTP " + error.networkResponse.statusCode + ")";
+                    }
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                 }
         );
 
