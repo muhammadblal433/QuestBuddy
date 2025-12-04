@@ -53,17 +53,48 @@
         android:scrollbars="vertical"
         tools:listitem="@layout/item_budget" />
 
-    <Button
-        android:id="@+id/btnReturnHome"
-        android:layout_width="wrap_content"
+    <!-- Bottom buttons row: Upgrade Premium (left) + Return Home (right) -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Return to Home"
-        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:gravity="center"
         android:layout_marginBottom="20dp"
-        android:backgroundTint="#FF9800"
-        android:textColor="#FFFFFF"
-        android:background="@drawable/rounded_edittext"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp" />
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <Button
+            android:id="@+id/btnUpgradePremium"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="QuestBuddy Premium"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/rounded_edittext"
+            android:backgroundTint="#E65100"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnReturnHome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Return to Home"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/rounded_edittext"
+            android:backgroundTint="#FF9800"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
 
 </LinearLayout>
