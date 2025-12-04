@@ -2,8 +2,8 @@ package com.questbuddy.budget.controller;
 
 import com.questbuddy.budget.dto.*;
 import com.questbuddy.budget.service.BudgetService;
-import com.questbuddy.model.User;
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.model.User;
+import com.questbuddy.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

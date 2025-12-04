@@ -1,13 +1,14 @@
 package com.questbuddy.tripmember.service;
 
-import com.questbuddy.repository.UserRepository;
+import com.questbuddy.user.repository.UserRepository;
 import com.questbuddy.tripmember.model.TripMember;
 import com.questbuddy.tripmember.model.TripMember.Role;
 import com.questbuddy.tripmember.model.TripMember.Status;
 import com.questbuddy.tripmember.repository.TripMemberRepository;
 import com.questbuddy.tripmember.security.TripMembershipGate;
 
-import com.questbuddy.model.User;
+
+import com.questbuddy.user.model.User;
 import com.questbuddy.trip.Trip;
 
 import com.questbuddy.trip.TripRepository;
@@ -180,6 +181,21 @@ public class TripMembershipService {
         tm.setStatus(Status.ACCEPTED);
         tm.setInvitedBy(owner);
         members.save(tm);
+    }
+
+    /** List all pending invites for a user (only the user themself can view). */
+    @Transactional(readOnly = true)
+    public List<TripMember> listPendingInvitesForUser(Long requesterId, Long targetUserId) {
+        // Only allow the user themself to see their invites
+        if (requesterId == null || !requesterId.equals(targetUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
+        }
+
+        // Make sure the target user exists (nice error for 404)
+        users.findById(targetUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "user_not_found"));
+
+        return members.findAllByUser_IdAndStatusOrderByTrip_IdAsc(targetUserId, Status.PENDING);
     }
 
     // helpers

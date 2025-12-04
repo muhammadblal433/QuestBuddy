@@ -1,8 +1,9 @@
-package com.questbuddy.service;
+package com.questbuddy.user.service;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Service boundary for user-related operations.
@@ -23,4 +24,6 @@ public interface UserService {
     Optional<User> findByUsername(String username);
 
     User save(User user);
+
+    List<User> findPremiumUsers();
 }

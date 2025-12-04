@@ -1,9 +1,10 @@
-package com.questbuddy.repository;
+package com.questbuddy.user.repository;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Repository for User entities providing CRUD operations and common lookups.
@@ -16,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsernameIgnoreCase(String username);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
+
+    List<User> findAllByIsPremiumTrueOrderByIdAsc();
 }

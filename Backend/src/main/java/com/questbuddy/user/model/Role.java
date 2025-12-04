@@ -1,4 +1,4 @@
-package com.questbuddy.model;
+package com.questbuddy.user.model;
 
 /**
  * Roles a user can have on the app.

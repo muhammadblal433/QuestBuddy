@@ -1,6 +1,6 @@
-package com.questbuddy.repository;
+package com.questbuddy.label.repository;
 
-import com.questbuddy.model.Label;
+import com.questbuddy.label.model.Label;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

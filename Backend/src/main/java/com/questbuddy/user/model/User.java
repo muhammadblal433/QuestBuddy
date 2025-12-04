@@ -1,6 +1,7 @@
-package com.questbuddy.model;
+package com.questbuddy.user.model;
 
 import java.time.Instant;
+
 import jakarta.persistence.*;
 
 
@@ -57,6 +58,9 @@ public class User {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
+
+    @Column(name = "is_premium", nullable = false)
+    private boolean isPremium = false;
 
     /** Default constructor. */
     public User() {}
@@ -283,5 +287,14 @@ public class User {
         } else {
             this.updatedAt = updatedAt;
         }
+    }
+
+    public boolean isPremiumUser() {
+        return isPremium;
+    }
+
+    public void setPremiumUser(boolean premium) {
+        isPremium = premium;
+        touch();
     }
 }

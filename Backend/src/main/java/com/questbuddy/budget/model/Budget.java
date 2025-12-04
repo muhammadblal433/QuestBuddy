@@ -1,6 +1,6 @@
 package com.questbuddy.budget.model;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;

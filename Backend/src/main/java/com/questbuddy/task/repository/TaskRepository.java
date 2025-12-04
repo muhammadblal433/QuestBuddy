@@ -1,6 +1,6 @@
-package com.questbuddy.repository;
+package com.questbuddy.task.repository;
 
-import com.questbuddy.model.Task;
+import com.questbuddy.task.model.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
