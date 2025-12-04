@@ -1,0 +1,452 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AyaanSystemTest</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.testing</a>
+</div>
+
+<h1>Coverage Summary for Class: AyaanSystemTest (com.questbuddy.testing)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AyaanSystemTest</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (190/190)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.testing;
+&nbsp;
+&nbsp;import io.restassured.RestAssured;
+&nbsp;import io.restassured.response.Response;
+&nbsp;import org.json.JSONArray;
+&nbsp;import org.json.JSONException;
+&nbsp;import org.json.JSONObject;
+&nbsp;import org.junit.BeforeClass;
+&nbsp;import org.junit.Test;
+&nbsp;
+&nbsp;import static org.junit.Assert.assertEquals;
+&nbsp;import static org.junit.Assert.assertTrue;
+&nbsp;
+&nbsp;/**
+&nbsp; * System / end-to-end tests hitting the deployed QuestBuddy backend.
+&nbsp; */
+<b class="fc">&nbsp;public class AyaanSystemTest {</b>
+&nbsp;
+&nbsp;    @BeforeClass
+&nbsp;    public static void setup() {
+<b class="fc">&nbsp;        RestAssured.baseURI = &quot;http://coms-3090-026.class.las.iastate.edu&quot;;</b>
+<b class="fc">&nbsp;        RestAssured.port = 8080;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * TEST 1 (non-trivial):
+&nbsp;     * - Call /api/v1/auth/signup/batch with 3 entries (2 valid, 1 invalid).
+&nbsp;     * - Assert only the 2 valid users are created (length == 2).
+&nbsp;     * - Then call /api/v2/users and verify those usernames appear in the admin list.
+&nbsp;     */
+&nbsp;    @Test
+&nbsp;    public void signupBatch_createsOnlyValidUsers_andVisibleInAdminList() throws JSONException {
+<b class="fc">&nbsp;        long now = System.currentTimeMillis();</b>
+&nbsp;
+<b class="fc">&nbsp;        JSONArray signupArray = new JSONArray();</b>
+&nbsp;
+&nbsp;        // Valid user 1
+<b class="fc">&nbsp;        JSONObject u1 = new JSONObject();</b>
+<b class="fc">&nbsp;        String u1Username = &quot;ayaan_sys1_&quot; + now;</b>
+<b class="fc">&nbsp;        u1.put(&quot;email&quot;, u1Username + &quot;@example.com&quot;);</b>
+<b class="fc">&nbsp;        u1.put(&quot;username&quot;, u1Username);</b>
+<b class="fc">&nbsp;        u1.put(&quot;password&quot;, &quot;Password123!&quot;);</b>
+<b class="fc">&nbsp;        u1.put(&quot;firstName&quot;, &quot;Ayaan&quot;);</b>
+<b class="fc">&nbsp;        u1.put(&quot;lastName&quot;, &quot;One&quot;);</b>
+<b class="fc">&nbsp;        signupArray.put(u1);</b>
+&nbsp;
+&nbsp;        // Valid user 2
+<b class="fc">&nbsp;        JSONObject u2 = new JSONObject();</b>
+<b class="fc">&nbsp;        String u2Username = &quot;ayaan_sys2_&quot; + now;</b>
+<b class="fc">&nbsp;        u2.put(&quot;email&quot;, u2Username + &quot;@example.com&quot;);</b>
+<b class="fc">&nbsp;        u2.put(&quot;username&quot;, u2Username);</b>
+<b class="fc">&nbsp;        u2.put(&quot;password&quot;, &quot;Password123!&quot;);</b>
+<b class="fc">&nbsp;        u2.put(&quot;firstName&quot;, &quot;Ayaan&quot;);</b>
+<b class="fc">&nbsp;        u2.put(&quot;lastName&quot;, &quot;Two&quot;);</b>
+<b class="fc">&nbsp;        signupArray.put(u2);</b>
+&nbsp;
+&nbsp;        // Invalid user (missing username) -&gt; should be skipped by controller
+<b class="fc">&nbsp;        JSONObject bad = new JSONObject();</b>
+<b class="fc">&nbsp;        bad.put(&quot;email&quot;, &quot;bad_&quot; + now + &quot;@example.com&quot;);</b>
+<b class="fc">&nbsp;        bad.put(&quot;password&quot;, &quot;Password123!&quot;);</b>
+<b class="fc">&nbsp;        bad.put(&quot;firstName&quot;, &quot;Bad&quot;);</b>
+<b class="fc">&nbsp;        bad.put(&quot;lastName&quot;, &quot;User&quot;);</b>
+<b class="fc">&nbsp;        signupArray.put(bad);</b>
+&nbsp;
+&nbsp;        // Call batch signup
+&nbsp;        Response batchResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .body(signupArray.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .post(&quot;/api/v1/auth/signup/batch&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(201, batchResp.getStatusCode());</b>
+&nbsp;
+<b class="fc">&nbsp;        JSONArray created = new JSONArray(batchResp.asString());</b>
+&nbsp;        // Only the two valid entries should be created
+<b class="fc">&nbsp;        assertEquals(2, created.length());</b>
+&nbsp;
+<b class="fc">&nbsp;        String createdU1 = created.getJSONObject(0).getString(&quot;username&quot;);</b>
+<b class="fc">&nbsp;        String createdU2 = created.getJSONObject(1).getString(&quot;username&quot;);</b>
+<b class="fc">&nbsp;        assertTrue(createdU1.contains(&quot;ayaan_sys1_&quot;));</b>
+<b class="fc">&nbsp;        assertTrue(createdU2.contains(&quot;ayaan_sys2_&quot;));</b>
+&nbsp;
+&nbsp;        // Now verify these users appear in admin list /api/v2/users
+&nbsp;        Response adminListResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .get(&quot;/api/v2/users&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(200, adminListResp.getStatusCode());</b>
+&nbsp;
+<b class="fc">&nbsp;        JSONArray allUsers = new JSONArray(adminListResp.asString());</b>
+<b class="fc">&nbsp;        boolean found1 = false;</b>
+<b class="fc">&nbsp;        boolean found2 = false;</b>
+&nbsp;
+<b class="fc">&nbsp;        for (int i = 0; i &lt; allUsers.length(); i++) {</b>
+<b class="fc">&nbsp;            JSONObject row = allUsers.getJSONObject(i);</b>
+<b class="fc">&nbsp;            String username = row.getString(&quot;username&quot;);</b>
+<b class="fc">&nbsp;            if (username.equals(createdU1)) {</b>
+<b class="fc">&nbsp;                found1 = true;</b>
+<b class="fc">&nbsp;            } else if (username.equals(createdU2)) {</b>
+<b class="fc">&nbsp;                found2 = true;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        assertTrue(&quot;First signed-up user should be in admin list&quot;, found1);</b>
+<b class="fc">&nbsp;        assertTrue(&quot;Second signed-up user should be in admin list&quot;, found2);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * TEST 2 (non-trivial):
+&nbsp;     * - Create a user with signupBatch.
+&nbsp;     * - Try PUT /api/v1/users/{id} with:
+&nbsp;     *   * no X-User-Id header -&gt; expect 401
+&nbsp;     *   * wrong X-User-Id -&gt; expect 403
+&nbsp;     *   * correct X-User-Id -&gt; expect 200 and fields updated
+&nbsp;     */
+&nbsp;    @Test
+&nbsp;    public void updateProfile_pathVersion_enforcesAuthAndUpdates() throws JSONException {
+<b class="fc">&nbsp;        long now = System.currentTimeMillis();</b>
+&nbsp;
+&nbsp;        // Create one user via batch signup (array of 1 object)
+<b class="fc">&nbsp;        JSONArray signupArray = new JSONArray();</b>
+<b class="fc">&nbsp;        JSONObject u = new JSONObject();</b>
+<b class="fc">&nbsp;        String baseUsername = &quot;ayaan_update_&quot; + now;</b>
+<b class="fc">&nbsp;        u.put(&quot;email&quot;, baseUsername + &quot;@example.com&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;username&quot;, baseUsername);</b>
+<b class="fc">&nbsp;        u.put(&quot;password&quot;, &quot;Password123!&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;firstName&quot;, &quot;OldFirst&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;lastName&quot;, &quot;OldLast&quot;);</b>
+<b class="fc">&nbsp;        signupArray.put(u);</b>
+&nbsp;
+&nbsp;        Response batchResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .body(signupArray.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .post(&quot;/api/v1/auth/signup/batch&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(201, batchResp.getStatusCode());</b>
+<b class="fc">&nbsp;        JSONArray created = new JSONArray(batchResp.asString());</b>
+<b class="fc">&nbsp;        long userId = created.getJSONObject(0).getLong(&quot;id&quot;);</b>
+&nbsp;
+&nbsp;        // Prepare update body
+<b class="fc">&nbsp;        JSONObject update = new JSONObject();</b>
+<b class="fc">&nbsp;        String newEmail = baseUsername + &quot;+updated@example.com&quot;;</b>
+<b class="fc">&nbsp;        String newUsername = baseUsername + &quot;_new&quot;;</b>
+<b class="fc">&nbsp;        update.put(&quot;email&quot;, newEmail);</b>
+<b class="fc">&nbsp;        update.put(&quot;username&quot;, newUsername);</b>
+<b class="fc">&nbsp;        update.put(&quot;firstName&quot;, &quot;NewFirst&quot;);</b>
+<b class="fc">&nbsp;        update.put(&quot;lastName&quot;, &quot;NewLast&quot;);</b>
+<b class="fc">&nbsp;        update.put(&quot;avatarUrl&quot;, &quot;http://example.com/avatar.png&quot;);</b>
+<b class="fc">&nbsp;        update.put(&quot;newPassword&quot;, &quot;NewPassword123!&quot;); // controller ignores but record has this field</b>
+&nbsp;
+&nbsp;        // 1) No header -&gt; 401 missing_user
+&nbsp;        Response noHeaderResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .body(update.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .put(&quot;/api/v1/users/&quot; + userId);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(401, noHeaderResp.getStatusCode());</b>
+&nbsp;
+&nbsp;        // 2) Wrong header -&gt; 403 forbidden
+&nbsp;        Response wrongHeaderResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .header(&quot;X-User-Id&quot;, userId + 1) // wrong user</b>
+<b class="fc">&nbsp;                .body(update.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .put(&quot;/api/v1/users/&quot; + userId);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(403, wrongHeaderResp.getStatusCode());</b>
+&nbsp;
+&nbsp;        // 3) Correct header -&gt; 200 and updated profile
+&nbsp;        Response okResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .header(&quot;X-User-Id&quot;, userId)</b>
+<b class="fc">&nbsp;                .body(update.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .put(&quot;/api/v1/users/&quot; + userId);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(200, okResp.getStatusCode());</b>
+&nbsp;
+<b class="fc">&nbsp;        JSONObject updatedJson = new JSONObject(okResp.asString());</b>
+<b class="fc">&nbsp;        assertEquals(userId, updatedJson.getLong(&quot;id&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(newEmail, updatedJson.getString(&quot;email&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(newUsername, updatedJson.getString(&quot;username&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(&quot;NewFirst&quot;, updatedJson.getString(&quot;firstName&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(&quot;NewLast&quot;, updatedJson.getString(&quot;lastName&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * TEST 3 (non-trivial):
+&nbsp;     * - Create a user.
+&nbsp;     * - PUT /api/v1/users/me with X-User-Id to update profile.
+&nbsp;     * - Then GET /api/v1/users/me with same header and verify fields match.
+&nbsp;     * - Also check that GET /api/v1/users/me without header gives 401.
+&nbsp;     */
+&nbsp;    @Test
+&nbsp;    public void updateMe_andMeRoundTrip() throws JSONException {
+<b class="fc">&nbsp;        long now = System.currentTimeMillis();</b>
+&nbsp;
+&nbsp;        // Create a user
+<b class="fc">&nbsp;        JSONArray signupArray = new JSONArray();</b>
+<b class="fc">&nbsp;        JSONObject u = new JSONObject();</b>
+<b class="fc">&nbsp;        String baseUsername = &quot;ayaan_me_&quot; + now;</b>
+<b class="fc">&nbsp;        u.put(&quot;email&quot;, baseUsername + &quot;@example.com&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;username&quot;, baseUsername);</b>
+<b class="fc">&nbsp;        u.put(&quot;password&quot;, &quot;Password123!&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;firstName&quot;, &quot;OrigFirst&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;lastName&quot;, &quot;OrigLast&quot;);</b>
+<b class="fc">&nbsp;        signupArray.put(u);</b>
+&nbsp;
+&nbsp;        Response batchResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .body(signupArray.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .post(&quot;/api/v1/auth/signup/batch&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(201, batchResp.getStatusCode());</b>
+<b class="fc">&nbsp;        JSONArray created = new JSONArray(batchResp.asString());</b>
+<b class="fc">&nbsp;        long userId = created.getJSONObject(0).getLong(&quot;id&quot;);</b>
+&nbsp;
+&nbsp;        // New profile data
+<b class="fc">&nbsp;        JSONObject update = new JSONObject();</b>
+<b class="fc">&nbsp;        String newEmail = baseUsername + &quot;+me@example.com&quot;;</b>
+<b class="fc">&nbsp;        String newUsername = baseUsername + &quot;_me&quot;;</b>
+<b class="fc">&nbsp;        update.put(&quot;email&quot;, newEmail);</b>
+<b class="fc">&nbsp;        update.put(&quot;username&quot;, newUsername);</b>
+<b class="fc">&nbsp;        update.put(&quot;firstName&quot;, &quot;MeFirst&quot;);</b>
+<b class="fc">&nbsp;        update.put(&quot;lastName&quot;, &quot;MeLast&quot;);</b>
+<b class="fc">&nbsp;        update.put(&quot;avatarUrl&quot;, &quot;http://example.com/me.png&quot;);</b>
+<b class="fc">&nbsp;        update.put(&quot;newPassword&quot;, &quot;DoesNotMatter&quot;);</b>
+&nbsp;
+&nbsp;        // PUT /users/me with correct header
+&nbsp;        Response updateResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .header(&quot;X-User-Id&quot;, userId)</b>
+<b class="fc">&nbsp;                .body(update.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .put(&quot;/api/v1/users/me&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(200, updateResp.getStatusCode());</b>
+<b class="fc">&nbsp;        JSONObject updatedJson = new JSONObject(updateResp.asString());</b>
+<b class="fc">&nbsp;        assertEquals(newEmail, updatedJson.getString(&quot;email&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(newUsername, updatedJson.getString(&quot;username&quot;));</b>
+&nbsp;
+&nbsp;        // GET /users/me without header -&gt; 401 missing_user
+&nbsp;        Response noHeaderMe = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .get(&quot;/api/v1/users/me&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(401, noHeaderMe.getStatusCode());</b>
+&nbsp;
+&nbsp;        // GET /users/me with header -&gt; data matches what we just updated
+&nbsp;        Response meResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .header(&quot;X-User-Id&quot;, userId)</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .get(&quot;/api/v1/users/me&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(200, meResp.getStatusCode());</b>
+<b class="fc">&nbsp;        JSONObject meJson = new JSONObject(meResp.asString());</b>
+<b class="fc">&nbsp;        assertEquals(newEmail, meJson.getString(&quot;email&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(newUsername, meJson.getString(&quot;username&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(&quot;MeFirst&quot;, meJson.getString(&quot;firstName&quot;));</b>
+<b class="fc">&nbsp;        assertEquals(&quot;MeLast&quot;, meJson.getString(&quot;lastName&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * TEST 4 (non-trivial):
+&nbsp;     * - Create a user.
+&nbsp;     * - Confirm GET /api/v1/users/{id} returns 200.
+&nbsp;     * - DELETE /api/v2/users/{id} via admin controller.
+&nbsp;     * - Then call GET /api/v1/users/me with header X-User-Id = id and expect 404.
+&nbsp;     *   (User no longer exists, so profile endpoint should report not found.)
+&nbsp;     */
+&nbsp;    @Test
+&nbsp;    public void deleteUser_thenCurrentProfileReturns404() throws JSONException {
+<b class="fc">&nbsp;        long now = System.currentTimeMillis();</b>
+&nbsp;
+&nbsp;        // Create the user
+<b class="fc">&nbsp;        JSONArray signupArray = new JSONArray();</b>
+<b class="fc">&nbsp;        JSONObject u = new JSONObject();</b>
+<b class="fc">&nbsp;        String baseUsername = &quot;ayaan_delete_&quot; + now;</b>
+<b class="fc">&nbsp;        u.put(&quot;email&quot;, baseUsername + &quot;@example.com&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;username&quot;, baseUsername);</b>
+<b class="fc">&nbsp;        u.put(&quot;password&quot;, &quot;Password123!&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;firstName&quot;, &quot;DeleteFirst&quot;);</b>
+<b class="fc">&nbsp;        u.put(&quot;lastName&quot;, &quot;DeleteLast&quot;);</b>
+<b class="fc">&nbsp;        signupArray.put(u);</b>
+&nbsp;
+&nbsp;        Response batchResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .contentType(&quot;application/json&quot;)</b>
+<b class="fc">&nbsp;                .body(signupArray.toString())</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .post(&quot;/api/v1/auth/signup/batch&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(201, batchResp.getStatusCode());</b>
+<b class="fc">&nbsp;        JSONArray created = new JSONArray(batchResp.asString());</b>
+<b class="fc">&nbsp;        long userId = created.getJSONObject(0).getLong(&quot;id&quot;);</b>
+&nbsp;
+&nbsp;        // Sanity check: GET /api/v1/users/{id} returns 200 now
+&nbsp;        Response getBeforeDelete = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .get(&quot;/api/v1/users/&quot; + userId);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(200, getBeforeDelete.getStatusCode());</b>
+&nbsp;
+&nbsp;        // DELETE via admin controller
+&nbsp;        Response deleteResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .delete(&quot;/api/v2/users/&quot; + userId);</b>
+&nbsp;
+&nbsp;        // Controller returns 200 on successful delete
+<b class="fc">&nbsp;        assertEquals(200, deleteResp.getStatusCode());</b>
+&nbsp;
+&nbsp;        // Now current profile endpoint should not find this user anymore
+&nbsp;        Response meResp = RestAssured
+<b class="fc">&nbsp;                .given()</b>
+<b class="fc">&nbsp;                .header(&quot;X-User-Id&quot;, userId)</b>
+<b class="fc">&nbsp;                .when()</b>
+<b class="fc">&nbsp;                .get(&quot;/api/v1/users/me&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        assertEquals(404, meResp.getStatusCode());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-02 17:56</div>
+</div>
+</body>
+</html>

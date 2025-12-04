@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CalendarActivity.java</span></div><h1>CalendarActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+
+<span class="nc" id="L29">public class CalendarActivity extends AppCompatActivity implements CalendarAdapter.OnItemListener {</span>
+
+    private TextView monthYearText;
+    private RecyclerView calendarRecyclerView;
+    private LocalDate selectedDate;
+    private Button backBtn, forwardBtn;
+    private int userId;
+
+    private static final String TASKS_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v4/calendar/events&quot;;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L41">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L42">        setContentView(R.layout.calendar_interface);</span>
+<span class="nc" id="L43">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L46">            Toast.makeText(this, &quot;Invalid user session&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L47">            startActivity(new Intent(this, LoginActivity.class));</span>
+<span class="nc" id="L48">            finish();</span>
+<span class="nc" id="L49">            return;</span>
+        }
+<span class="nc" id="L51">        TextView navHome = findViewById(R.id.nav_home);</span>
+
+
+<span class="nc" id="L54">        navHome.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L55">            Intent intent = new Intent(CalendarActivity.this, HomeActivity.class);</span>
+<span class="nc" id="L56">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L57">            startActivity(intent);</span>
+<span class="nc" id="L58">            finish();</span>
+<span class="nc" id="L59">        });</span>
+
+
+<span class="nc" id="L62">        initWidgets();</span>
+        // initializes to the current month
+<span class="nc" id="L64">        selectedDate = LocalDate.now();</span>
+<span class="nc" id="L65">        fetchTasksFromServer();</span>
+<span class="nc" id="L66">    }</span>
+
+    // initializes the views for calendarRecycler, the monthYear Text, the back and forward buttons
+    // Also changes the month based on if the forward or backward button is pressed
+    private void initWidgets() {
+<span class="nc" id="L71">        calendarRecyclerView = findViewById(R.id.calendarRecyclerView);</span>
+<span class="nc" id="L72">        monthYearText = findViewById(R.id.monthYearTV);</span>
+<span class="nc" id="L73">        backBtn = findViewById(R.id.back_btn);</span>
+<span class="nc" id="L74">        forwardBtn = findViewById(R.id.forward_btn);</span>
+
+<span class="nc" id="L76">        backBtn.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L77">            selectedDate = selectedDate.minusMonths(1);</span>
+<span class="nc" id="L78">            fetchTasksFromServer();</span>
+<span class="nc" id="L79">        });</span>
+
+<span class="nc" id="L81">        forwardBtn.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L82">            selectedDate = selectedDate.plusMonths(1);</span>
+<span class="nc" id="L83">            fetchTasksFromServer();</span>
+<span class="nc" id="L84">        });</span>
+<span class="nc" id="L85">    }</span>
+
+    private void fetchTasksFromServer() {
+<span class="nc" id="L88">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+
+<span class="nc" id="L90">        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, TASKS_URL, null,</span>
+                response -&gt; {
+<span class="nc" id="L92">                    ArrayList&lt;String&gt; taskDates = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L96">                            JSONObject taskObject = response.getJSONObject(i);</span>
+<span class="nc" id="L97">                            String startAt = taskObject.optString(&quot;startAt&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                            if (startAt.length() &gt;= 10) {</span>
+                                // Extract just the date part, e.g., 2025-10-06
+<span class="nc" id="L101">                                String datePart = startAt.substring(0, 10);</span>
+<span class="nc" id="L102">                                taskDates.add(datePart);</span>
+                            }
+<span class="nc" id="L104">                        } catch (JSONException e) {</span>
+<span class="nc" id="L105">                            e.printStackTrace();</span>
+<span class="nc" id="L106">                        }</span>
+                    }
+
+<span class="nc" id="L109">                    setMonthView(taskDates);</span>
+<span class="nc" id="L110">                },</span>
+<span class="nc" id="L111">                error -&gt; Toast.makeText(this, &quot;Failed to fetch tasks: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L112">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L115">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L116">                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L117">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L118">                return headers;</span>
+            }
+        };
+
+<span class="nc" id="L122">        queue.add(jsonArrayRequest);</span>
+<span class="nc" id="L123">    }</span>
+
+    // Sets the header text and sets up the grid of cells using CalendarAdapter and also sets up the RecyclerView grid
+    private void setMonthView(ArrayList&lt;String&gt; taskDates) {
+<span class="nc" id="L127">        monthYearText.setText(monthYearFromDate(selectedDate));</span>
+<span class="nc" id="L128">        ArrayList&lt;String&gt; daysInMonth = daysInMonthArray(selectedDate);</span>
+<span class="nc" id="L129">        String monthYear = monthYearFromDate(selectedDate);</span>
+
+<span class="nc" id="L131">        CalendarAdapter calendarAdapter = new CalendarAdapter(daysInMonth, this, selectedDate, taskDates);</span>
+<span class="nc" id="L132">        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getApplicationContext(), 7);</span>
+<span class="nc" id="L133">        calendarRecyclerView.setLayoutManager(layoutManager);</span>
+<span class="nc" id="L134">        calendarRecyclerView.setAdapter(calendarAdapter);</span>
+<span class="nc" id="L135">    }</span>
+
+    // This basically decides how many blanks there are each month and also where they occur in each month
+    private ArrayList&lt;String&gt; daysInMonthArray(LocalDate date) {
+<span class="nc" id="L139">        ArrayList&lt;String&gt; daysInMonthArray = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L140">        YearMonth yearMonth = YearMonth.from(date);</span>
+
+<span class="nc" id="L142">        int daysInMonth = yearMonth.lengthOfMonth();</span>
+<span class="nc" id="L143">        LocalDate firstOfMonth = selectedDate.withDayOfMonth(1);</span>
+<span class="nc" id="L144">        int dayOfWeek = firstOfMonth.getDayOfWeek().getValue();</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        for (int i = 1; i &lt;= 42; i++) {</span>
+<span class="nc bnc" id="L147" title="All 4 branches missed.">            if (i &lt;= dayOfWeek || i &gt; daysInMonth + dayOfWeek) {</span>
+<span class="nc" id="L148">                daysInMonthArray.add(&quot;&quot;);</span>
+            } else {
+<span class="nc" id="L150">                daysInMonthArray.add(String.valueOf(i - dayOfWeek));</span>
+            }
+        }
+<span class="nc" id="L153">        return daysInMonthArray;</span>
+    }
+
+    // formats how the heading should look like
+    private String monthYearFromDate(LocalDate date) {
+<span class="nc" id="L158">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;MMMM yyyy&quot;);</span>
+<span class="nc" id="L159">        return date.format(formatter);</span>
+    }
+
+
+    // when a cell is clicked, it displays a message saying which date is selected
+    @Override
+    public void onItemClick(int position, String dayText) {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (!dayText.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L167">            String selectedFullDate = dayText + &quot; &quot; + monthYearFromDate(selectedDate);</span>
+<span class="nc" id="L168">            Intent intent = new Intent(this, DayViewActivity.class);</span>
+<span class="nc" id="L169">            intent.putExtra(&quot;selectedDate&quot;, selectedFullDate);</span>
+<span class="nc" id="L170">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L171">            startActivity(intent);</span>
+        }
+<span class="nc" id="L173">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirectMessageAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.messages</a> &gt; <span class="el_source">DirectMessageAdapter.java</span></div><h1>DirectMessageAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample.messages;
+import com.example.androidexample.R;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.example.androidexample.R;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * RecyclerView adapter for a 1:1 chat using simple bubble layouts:
+ *  - res/layout/message_in.xml  (incoming)
+ *  - res/layout/message_out.xml (outgoing)
+ *
+ * Uses DirectMessageDTO for data binding.
+ * Network actions (edit/delete/react/read) are called directly from the adapter
+ * and include X-User-Id via getHeaders override (no global Volley singleton).
+ */
+public class DirectMessageAdapter extends RecyclerView.Adapter&lt;DirectMessageAdapter.VH&gt; {
+
+    public interface Callbacks {
+        long me();             // current user id (long)
+        long peerId();         // friend id (long)
+        void onNeedMore(long beforeId);
+        void onError(String msg);
+        void onMarkedRead(long messageId);
+<span class="nc" id="L47">        default void onWantsLatestRefresh() {}</span>
+    }
+
+    private static final int SELF  = 1;
+    private static final int OTHER = 2;
+
+    private final Context ctx;
+    private final Callbacks cb;
+<span class="nc" id="L55">    private final List&lt;DirectMessageDTO&gt; data = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L57">    public DirectMessageAdapter(Context ctx, Callbacks cb) {</span>
+<span class="nc" id="L58">        this.ctx = ctx;</span>
+<span class="nc" id="L59">        this.cb = cb;</span>
+<span class="nc" id="L60">        setHasStableIds(true);</span>
+<span class="nc" id="L61">    }</span>
+
+    @Override public long getItemId(int position) {
+<span class="nc" id="L64">        return data.get(position).id; // &lt;-- unique DB id</span>
+    }
+
+    // ---------------- dataset ops ----------------
+    public void prepend(List&lt;DirectMessageDTO&gt; older) {
+<span class="nc bnc" id="L69" title="All 4 branches missed.">        if (older == null || older.isEmpty()) return;</span>
+<span class="nc" id="L70">        data.addAll(0, older);</span>
+<span class="nc" id="L71">        notifyItemRangeInserted(0, older.size());</span>
+<span class="nc" id="L72">    }</span>
+
+    public void append(DirectMessageDTO m) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (m == null) return;</span>
+<span class="nc" id="L76">        data.add(m);</span>
+<span class="nc" id="L77">        notifyItemInserted(data.size() - 1);</span>
+<span class="nc" id="L78">    }</span>
+
+    public long smallestId() {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (data.isEmpty()) return Long.MAX_VALUE;</span>
+<span class="nc" id="L82">        long min = Long.MAX_VALUE;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        for (DirectMessageDTO m : data) min = Math.min(min, m.id);</span>
+<span class="nc" id="L84">        return min;</span>
+    }
+
+    // ---------------- RecyclerView ----------------
+    @Override public int getItemViewType(int position) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        return data.get(position).senderId == cb.me() ? SELF : OTHER;</span>
+    }
+
+    @NonNull
+    @Override
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        int layout = (viewType == SELF) ? R.layout.item_message_out : R.layout.item_message_in;</span>
+<span class="nc" id="L96">        View v = LayoutInflater.from(parent.getContext()).inflate(layout, parent, false);</span>
+<span class="nc" id="L97">        return new VH(v);</span>
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull VH h, int pos) {
+<span class="nc" id="L102">        DirectMessageDTO m = data.get(pos);</span>
+
+        // Text
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (m.deleted) {</span>
+<span class="nc" id="L106">            h.text.setText(&quot;(message deleted)&quot;);</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">        } else if (m.text == null || m.text.isEmpty()) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            h.text.setText(m.edited ? &quot;(message edited)&quot; : &quot;(no content)&quot;);</span>
+        } else {
+<span class="nc" id="L110">            h.text.setText(m.text);</span>
+        }
+
+        // Meta
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        String time = (m.createdAtEpochMs &gt; 0)</span>
+<span class="nc" id="L115">                ? java.time.format.DateTimeFormatter.ofPattern(&quot;h:mm a&quot;)</span>
+<span class="nc" id="L116">                .withZone(java.time.ZoneId.systemDefault())</span>
+<span class="nc" id="L117">                .format(java.time.Instant.ofEpochMilli(m.createdAtEpochMs))</span>
+<span class="nc" id="L118">                : &quot;&quot;;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        h.meta.setText(m.deleted ? time + &quot;  (deleted)&quot;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                : (m.edited ? time + &quot;  (edited)&quot; : time));</span>
+
+        // Reactions (unchanged for non-deleted)
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (m.deleted) {</span>
+<span class="nc" id="L124">            h.reactions.setVisibility(View.GONE);</span>
+<span class="nc" id="L125">            h.reactions.setText(&quot;&quot;);</span>
+        } else {
+<span class="nc" id="L127">            String rx = m.reactionsDisplay();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            h.reactions.setVisibility(rx.isEmpty() ? View.GONE : View.VISIBLE);</span>
+<span class="nc" id="L129">            h.reactions.setText(rx);</span>
+        }
+
+        // Long-press
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        h.itemView.setOnLongClickListener(m.deleted ? null : v -&gt; { showMessageActions(m); return true; });</span>
+
+        // Mark read for newest incoming
+<span class="nc bnc" id="L136" title="All 4 branches missed.">        if (pos == getItemCount() - 1 &amp;&amp; m.senderId == cb.peerId()) {</span>
+<span class="nc" id="L137">            markRead(m.id);</span>
+        }
+<span class="nc" id="L139">    }</span>
+
+<span class="nc" id="L141">    @Override public int getItemCount() { return data.size(); }</span>
+
+    static class VH extends RecyclerView.ViewHolder {
+        TextView text;
+        TextView meta;
+        TextView reactions;
+        VH(@NonNull View item) {
+<span class="nc" id="L148">            super(item);</span>
+<span class="nc" id="L149">            text = item.findViewById(R.id.text);</span>
+<span class="nc" id="L150">            meta = item.findViewById(R.id.meta);</span>
+<span class="nc" id="L151">            reactions = item.findViewById(R.id.reactions);</span>
+<span class="nc" id="L152">        }</span>
+    }
+
+    // ---------------- UI dialogs ----------------
+    private void showMessageActions(DirectMessageDTO m) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        boolean isSelf = m.senderId == cb.me();</span>
+<span class="nc" id="L158">        List&lt;String&gt; actions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (isSelf) actions.add(&quot;Edit&quot;);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (isSelf) actions.add(&quot;Delete&quot;);</span>
+<span class="nc" id="L161">        actions.add(&quot;React&quot;);</span>
+
+<span class="nc" id="L163">        new AlertDialog.Builder(ctx)</span>
+<span class="nc" id="L164">                .setItems(actions.toArray(new String[0]), (d, which) -&gt; {</span>
+<span class="nc" id="L165">                    String choice = actions.get(which);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                    if (&quot;Edit&quot;.equals(choice))      editMessageDialog(m);</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                    else if (&quot;Delete&quot;.equals(choice)) deleteMessage(m.id);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                    else if (&quot;React&quot;.equals(choice))  reactDialog(m.id);</span>
+<span class="nc" id="L169">                })</span>
+<span class="nc" id="L170">                .show();</span>
+<span class="nc" id="L171">    }</span>
+
+    private void editMessageDialog(DirectMessageDTO m) {
+<span class="nc" id="L174">        final EditText input = new EditText(ctx);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        input.setText(m.text != null ? m.text : &quot;&quot;);</span>
+<span class="nc" id="L176">        new AlertDialog.Builder(ctx)</span>
+<span class="nc" id="L177">                .setTitle(&quot;Edit message&quot;)</span>
+<span class="nc" id="L178">                .setView(input)</span>
+<span class="nc" id="L179">                .setPositiveButton(&quot;Save&quot;, (dd, w) -&gt; {</span>
+<span class="nc" id="L180">                    String newText = input.getText().toString().trim();</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">                    if (TextUtils.isEmpty(newText)) {</span>
+<span class="nc" id="L182">                        Toast.makeText(ctx, &quot;Message cannot be empty&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L183">                        return;</span>
+                    }
+<span class="nc" id="L185">                    editMessage(m.id, newText);</span>
+<span class="nc" id="L186">                })</span>
+<span class="nc" id="L187">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L188">                .show();</span>
+<span class="nc" id="L189">    }</span>
+
+    private void reactDialog(long messageId) {
+<span class="nc" id="L192">        final EditText input = new EditText(ctx);</span>
+<span class="nc" id="L193">        input.setHint(&quot;Emoji, e.g. 😀 👍 ❤️&quot;);</span>
+<span class="nc" id="L194">        new AlertDialog.Builder(ctx)</span>
+<span class="nc" id="L195">                .setTitle(&quot;React with emoji&quot;)</span>
+<span class="nc" id="L196">                .setView(input)</span>
+<span class="nc" id="L197">                .setPositiveButton(&quot;React&quot;, (dd, w) -&gt; {</span>
+<span class="nc" id="L198">                    String emoji = input.getText().toString().trim();</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                    if (!emoji.isEmpty()) toggleReaction(messageId, emoji);</span>
+<span class="nc" id="L200">                })</span>
+<span class="nc" id="L201">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L202">                .show();</span>
+<span class="nc" id="L203">    }</span>
+
+    // ---------------- Networking helpers ----------------
+    private Map&lt;String,String&gt; authHeader() {
+<span class="nc" id="L207">        return new java.util.HashMap&lt;String,String&gt;() {{</span>
+<span class="nc" id="L208">            put(&quot;X-User-Id&quot;, String.valueOf(cb.me()));</span>
+<span class="nc" id="L209">        }};</span>
+    }
+
+    private String baseV10() {
+        // http://.../api/v10/direct/{peerId}
+<span class="nc" id="L214">        return &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v10/direct/&quot; + cb.peerId();</span>
+    }
+
+    /**
+     * PUT /{peerId}/messages/{messageId}
+     */
+    private void editMessage(long messageId, String newContent) {
+<span class="nc" id="L221">        int idx = indexOf(messageId);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if (idx &lt; 0) { cb.onError(&quot;Message not found&quot;); return; }</span>
+
+<span class="nc" id="L224">        DirectMessageDTO row = data.get(idx);</span>
+<span class="nc" id="L225">        String oldText = row.text;</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        Integer currentVersion = row.version != null ? row.version : 0;</span>
+
+        // locally updates text only
+<span class="nc" id="L229">        applyLocalEdit(messageId, newContent);</span>
+
+<span class="nc" id="L231">        String url = baseV10() + &quot;/messages/&quot; + messageId;</span>
+<span class="nc" id="L232">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L234">            body.put(&quot;content&quot;, newContent.trim());</span>
+<span class="nc" id="L235">            body.put(&quot;version&quot;, currentVersion);</span>
+<span class="nc" id="L236">        } catch (JSONException ignored) {}</span>
+
+<span class="nc" id="L238">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.PUT, url, body,
+                res -&gt; {
+<span class="nc" id="L241">                    DirectMessageDTO updated = DirectMessageDTO.fromJson(res);</span>
+<span class="nc" id="L242">                    data.set(idx, updated);</span>
+<span class="nc" id="L243">                    notifyItemChanged(idx);</span>
+<span class="nc" id="L244">                },</span>
+                err -&gt; {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">                    int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;</span>
+                    // revert optimistic text
+<span class="nc" id="L248">                    row.text = oldText;</span>
+<span class="nc" id="L249">                    notifyItemChanged(idx);</span>
+
+<span class="nc bnc" id="L251" title="All 4 branches missed.">                    if (code == 409 || code == 412) {</span>
+<span class="nc" id="L252">                        cb.onError(&quot;Someone edited this message. Reloaded latest.&quot;);</span>
+                        // Optional: refetch page or single row here
+                        // fetchMessages(null, 50, false);
+                    } else {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">                        cb.onError(&quot;Edit failed&quot; + (code&gt;0?&quot; (&quot;+code+&quot;)&quot;:&quot;&quot;));</span>
+                    }
+<span class="nc" id="L258">                }</span>
+<span class="nc" id="L259">        ) {</span>
+<span class="nc" id="L260">            @Override public Map&lt;String, String&gt; getHeaders() { return authHeader(); }</span>
+        };
+<span class="nc" id="L262">        req.setShouldCache(false);</span>
+<span class="nc" id="L263">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L264">    }</span>
+
+    /**
+     * DELETE /{peerId}/messages/{messageId}
+     */
+    private void deleteMessage(long messageId) {
+<span class="nc" id="L270">        String url = baseV10() + &quot;/messages/&quot; + messageId;</span>
+
+<span class="nc" id="L272">        int beforeIndex = indexOf(messageId);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        DirectMessageDTO backup = (beforeIndex &gt;= 0) ? data.get(beforeIndex) : null;</span>
+<span class="nc" id="L274">        markDeleted(messageId);</span>
+
+<span class="nc" id="L276">        StringRequest req = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                res -&gt; {
+<span class="nc" id="L280">                    Toast.makeText(ctx, &quot;Message Deleted!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L281">                },</span>
+                err -&gt; {
+<span class="nc" id="L283">                    cb.onError(&quot;Delete failed&quot;);</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">                    if (backup != null) {</span>
+<span class="nc" id="L285">                        data.add(beforeIndex, backup);</span>
+<span class="nc" id="L286">                        notifyItemInserted(beforeIndex);</span>
+                    }
+<span class="nc" id="L288">                }</span>
+<span class="nc" id="L289">        ) {</span>
+<span class="nc" id="L290">            @Override public Map&lt;String, String&gt; getHeaders() { return authHeader(); }</span>
+        };
+
+<span class="nc" id="L293">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L294">    }</span>
+
+    /**
+     * POST /{peerId}/messages/{messageId}/reactions?emoji=...
+     */
+    private void toggleReaction(long messageId, String key) {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">        int idx = indexOf(messageId); if (idx &lt; 0) return;</span>
+<span class="nc" id="L301">        DirectMessageDTO row = data.get(idx);</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        if (row.deleted) { cb.onError(&quot;Can't react to a deleted message&quot;); return; }</span>
+
+<span class="nc" id="L304">        String url = baseV10() + &quot;/messages/&quot; + messageId</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">                + &quot;/reactions?emoji=&quot; + android.net.Uri.encode(key == null ? &quot;&quot; : key);</span>
+
+        // optimistic +1 using the EXACT key you sent to the server
+<span class="nc" id="L308">        applyLocalReaction(messageId, key, /*add*/ true);</span>
+
+<span class="nc" id="L310">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST, url, null,
+                res -&gt; {
+                    // Trust server's reaction object (keys as stored in DB)
+<span class="nc" id="L314">                    DirectMessageDTO m = data.get(idx);</span>
+<span class="nc" id="L315">                    m.reactions = res;</span>
+<span class="nc" id="L316">                    notifyItemChanged(idx);</span>
+<span class="nc" id="L317">                    cb.onWantsLatestRefresh();</span>
+<span class="nc" id="L318">                },</span>
+                err -&gt; {
+                    // revert optimistic change
+<span class="nc" id="L321">                    applyLocalReaction(messageId, key, /*add*/ false);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">                    int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;</span>
+<span class="nc bnc" id="L323" title="All 4 branches missed.">                    String body = (err.networkResponse != null &amp;&amp; err.networkResponse.data != null)</span>
+<span class="nc" id="L324">                            ? new String(err.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8) : null;</span>
+<span class="nc" id="L325">                    android.util.Log.e(&quot;REACTION&quot;, &quot;POST failed code=&quot; + code + &quot; body=&quot; + body);</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">                    cb.onError(&quot;Reaction failed&quot; + (code &gt; 0 ? &quot; (&quot; + code + &quot;)&quot; : &quot;&quot;));</span>
+<span class="nc" id="L327">                }</span>
+<span class="nc" id="L328">        ) {</span>
+            @Override public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L330">                Map&lt;String,String&gt; h = authHeader();</span>
+<span class="nc" id="L331">                h.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L332">                return h;</span>
+            }
+            @Override
+            protected com.android.volley.Response&lt;org.json.JSONObject&gt; parseNetworkResponse(
+                    com.android.volley.NetworkResponse response) {
+<span class="nc bnc" id="L337" title="All 6 branches missed.">                if (response == null || response.data == null || response.data.length == 0) {</span>
+<span class="nc" id="L338">                    return com.android.volley.Response.success(</span>
+                            new org.json.JSONObject(),
+<span class="nc" id="L340">                            com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));</span>
+                }
+<span class="nc" id="L342">                return super.parseNetworkResponse(response);</span>
+            }
+        };
+
+<span class="nc" id="L346">        req.setShouldCache(false);</span>
+<span class="nc" id="L347">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L348">    }</span>
+
+    private void unreact(long messageId, String emoji) {
+<span class="nc" id="L351">        int idx = indexOf(messageId);</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        if (idx &lt; 0) return;</span>
+<span class="nc" id="L353">        DirectMessageDTO row = data.get(idx);</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">        if (row.deleted) { cb.onError(&quot;Can't react to a deleted message&quot;); return; }</span>
+
+<span class="nc" id="L356">        String url = baseV10() + &quot;/messages/&quot; + messageId</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">                + &quot;/reactions/&quot; + android.net.Uri.encode(emoji == null ? &quot;&quot; : emoji);</span>
+
+        // optimistic -1
+<span class="nc" id="L360">        applyLocalReaction(messageId, emoji, /*add*/ false);</span>
+
+<span class="nc" id="L362">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.DELETE, url, /*body*/ null,
+                res -&gt; {
+<span class="nc" id="L365">                    DirectMessageDTO m = data.get(idx);</span>
+<span class="nc" id="L366">                    m.reactions = res;  // authoritative counts</span>
+<span class="nc" id="L367">                    notifyItemChanged(idx);</span>
+<span class="nc" id="L368">                },</span>
+                err -&gt; {
+                    // revert optimistic change
+<span class="nc" id="L371">                    applyLocalReaction(messageId, emoji, /*add*/ true);</span>
+
+<span class="nc bnc" id="L373" title="All 2 branches missed.">                    int code = err.networkResponse != null ? err.networkResponse.statusCode : -1;</span>
+<span class="nc bnc" id="L374" title="All 4 branches missed.">                    String body = (err.networkResponse != null &amp;&amp; err.networkResponse.data != null)</span>
+<span class="nc" id="L375">                            ? new String(err.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8) : null;</span>
+<span class="nc" id="L376">                    android.util.Log.e(&quot;REACTION&quot;, &quot;DELETE failed code=&quot; + code + &quot; body=&quot; + body);</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">                    cb.onError(&quot;Unreact failed&quot; + (code &gt; 0 ? &quot; (&quot; + code + &quot;)&quot; : &quot;&quot;));</span>
+<span class="nc" id="L378">                }</span>
+<span class="nc" id="L379">        ) {</span>
+            @Override public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L381">                Map&lt;String,String&gt; h = authHeader();</span>
+<span class="nc" id="L382">                h.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L383">                return h;</span>
+            }
+            @Override
+            protected com.android.volley.Response&lt;org.json.JSONObject&gt; parseNetworkResponse(
+                    com.android.volley.NetworkResponse response) {
+<span class="nc bnc" id="L388" title="All 6 branches missed.">                if (response == null || response.data == null || response.data.length == 0) {</span>
+<span class="nc" id="L389">                    return com.android.volley.Response.success(</span>
+                            new org.json.JSONObject(),
+<span class="nc" id="L391">                            com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));</span>
+                }
+<span class="nc" id="L393">                return super.parseNetworkResponse(response);</span>
+            }
+        };
+
+<span class="nc" id="L397">        req.setShouldCache(false);</span>
+<span class="nc" id="L398">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L399">    }</span>
+
+    /**
+     * POST /{peerId}/messages/{messageId}/read
+     */
+    private void markRead(long messageId) {
+<span class="nc" id="L405">        String url = baseV10() + &quot;/messages/&quot; + messageId + &quot;/read&quot;;</span>
+<span class="nc" id="L406">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST, url, null,
+<span class="nc" id="L408">                res -&gt; cb.onMarkedRead(messageId),</span>
+<span class="nc" id="L409">                err -&gt; { /* ignore read errors silently */ }</span>
+<span class="nc" id="L410">        ) {</span>
+<span class="nc" id="L411">            @Override public Map&lt;String, String&gt; getHeaders() { return authHeader(); }</span>
+        };
+<span class="nc" id="L413">        Volley.newRequestQueue(ctx).add(req);</span>
+<span class="nc" id="L414">    }</span>
+
+    /** Find adapter index by message id */
+    private int indexOf(long messageId) {
+<span class="nc bnc" id="L418" title="All 4 branches missed.">        for (int i = 0; i &lt; data.size(); i++) if (data.get(i).id == messageId) return i;</span>
+<span class="nc" id="L419">        return -1;</span>
+    }
+
+    private void applyLocalEdit(long messageId, String newText) {
+<span class="nc" id="L423">        int i = indexOf(messageId);</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">        if (i &lt; 0) return;</span>
+<span class="nc" id="L425">        DirectMessageDTO m = data.get(i);</span>
+<span class="nc" id="L426">        m.text = newText;</span>
+<span class="nc" id="L427">        m.edited = true;</span>
+<span class="nc" id="L428">        notifyItemChanged(i);</span>
+<span class="nc" id="L429">    }</span>
+
+    private void removeById(long messageId) {
+<span class="nc" id="L432">        int i = indexOf(messageId);</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">        if (i &lt; 0) {</span>
+<span class="nc" id="L434">            android.util.Log.w(&quot;DM&quot;, &quot;removeById: not found id=&quot; + messageId);</span>
+<span class="nc" id="L435">            return;</span>
+        }
+<span class="nc" id="L437">        data.remove(i);</span>
+<span class="nc" id="L438">        notifyItemRemoved(i);</span>
+<span class="nc" id="L439">    }</span>
+
+    private void applyLocalReaction(long messageId, String emoji, boolean add) {
+<span class="nc bnc" id="L442" title="All 2 branches missed.">        int i = indexOf(messageId); if (i &lt; 0) return;</span>
+<span class="nc" id="L443">        DirectMessageDTO m = data.get(i);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">        if (m.reactions == null) m.reactions = new org.json.JSONObject();</span>
+<span class="nc" id="L445">        int prev = m.reactions.optInt(emoji, 0);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">        int next = Math.max(prev + (add ? 1 : -1), 0);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">        try { if (next == 0) m.reactions.remove(emoji); else m.reactions.put(emoji, next); } catch (Exception ignored) {}</span>
+<span class="nc" id="L448">        notifyItemChanged(i);</span>
+<span class="nc" id="L449">    }</span>
+
+    public boolean containsId(long id) {
+<span class="nc bnc" id="L452" title="All 2 branches missed.">        for (int i = 0; i &lt; data.size(); i++) {</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">            if (data.get(i).id == id) return true;</span>
+        }
+<span class="nc" id="L455">        return false;</span>
+    }
+
+    // Add near other dataset ops
+<span class="nc" id="L459">    public int indexOfId(long messageId) { return indexOf(messageId); }</span>
+
+    public void replaceAt(int index, DirectMessageDTO m) {
+<span class="nc" id="L462">        data.set(index, m);</span>
+<span class="nc" id="L463">        notifyItemChanged(index);</span>
+<span class="nc" id="L464">    }</span>
+
+    public void upsert(DirectMessageDTO m) {
+<span class="nc bnc" id="L467" title="All 2 branches missed.">        if (m == null) return;</span>
+<span class="nc" id="L468">        int i = indexOf(m.id);</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">        if (i &gt;= 0) { data.set(i, m); notifyItemChanged(i); }</span>
+<span class="nc" id="L470">        else { append(m); }</span>
+<span class="nc" id="L471">    }</span>
+
+    // make this one public so activity can call it on remote deletes
+<span class="nc" id="L474">    public void removeByIdPublic(long messageId) { removeById(messageId); }</span>
+
+    public void markDeleted(long messageId) {
+<span class="nc" id="L477">        int i = indexOf(messageId);</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">        if (i &lt; 0) return;</span>
+<span class="nc" id="L479">        DirectMessageDTO m = data.get(i);</span>
+<span class="nc" id="L480">        m.deleted = true;</span>
+<span class="nc" id="L481">        m.text = &quot;(message deleted)&quot;;</span>
+<span class="nc" id="L482">        m.reactions = null;</span>
+<span class="nc" id="L483">        notifyItemChanged(i);</span>
+<span class="nc" id="L484">    }</span>
+
+    public void setReactions(long messageId, org.json.JSONObject reactions) {
+<span class="nc" id="L487">        int i = indexOf(messageId);</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">        if (i &lt; 0) return;</span>
+<span class="nc" id="L489">        DirectMessageDTO m = data.get(i);</span>
+<span class="nc" id="L490">        m.reactions = reactions;</span>
+<span class="nc" id="L491">        notifyItemChanged(i);</span>
+<span class="nc" id="L492">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="?attr/colorPrimary"
+    tools:context=".tripplanner.AddEditTripEventActivity">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <!-- Screen header section -->
+        <TextView
+            android:id="@+id/tvHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trip event"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:textSize="24sp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Plan your itinerary details"
+            android:textColor="@android:color/black"
+            android:alpha="0.85"
+            android:layout_marginBottom="16dp" />
+
+        <!-- White card that contains all the input fields -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@android:color/white"
+            android:elevation="4dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/edtName"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:hint="Event name"
+                android:padding="8dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD" />
+
+            <EditText
+                android:id="@+id/edtStartsAt"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:hint="Starts at (ISO-8601)"
+                android:padding="8dp"
+                android:inputType="text" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD" />
+
+            <EditText
+                android:id="@+id/edtEndsAt"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:hint="Ends at (ISO-8601)"
+                android:padding="8dp"
+                android:inputType="text" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD" />
+
+            <EditText
+                android:id="@+id/edtLocation"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:hint="Location (optional)"
+                android:padding="8dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD" />
+
+            <EditText
+                android:id="@+id/edtNotes"
+                android:layout_width="match_parent"
+                android:layout_height="96dp"
+                android:gravity="top"
+                android:background="@android:color/transparent"
+                android:hint="Notes (optional)"
+                android:padding="8dp"
+                android:inputType="textMultiLine" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD" />
+
+            <EditText
+                android:id="@+id/edtPosition"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:hint="Position (for ordering)"
+                android:padding="8dp"
+                android:inputType="number" />
+
+        </LinearLayout>
+
+        <!-- Big orange save button -->
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/rounded_button_orange"
+            android:text="Save"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</ScrollView>

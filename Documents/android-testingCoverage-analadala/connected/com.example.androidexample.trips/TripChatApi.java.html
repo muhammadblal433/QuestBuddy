@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripChatApi.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripChatApi.java</span></div><h1>TripChatApi.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+import android.net.Uri;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.util.*;
+
+
+public class TripChatApi {
+
+    // Takes any generic response typing
+    public interface Callback&lt;T&gt; { void onSuccess(T value); void onError(Throwable t); }
+
+    private final String baseUrl;
+    private final RequestQueue queue;
+
+
+<span class="fc" id="L23">    public TripChatApi(String baseUrl, RequestQueue queue) {</span>
+<span class="fc" id="L24">        this.baseUrl = baseUrl; this.queue = queue;</span>
+<span class="fc" id="L25">    }</span>
+
+
+    private Map&lt;String, String&gt; headers(long me) {
+<span class="fc" id="L29">        Map&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L30">        h.put(&quot;X-User-Id&quot;, String.valueOf(me));</span>
+<span class="fc" id="L31">        h.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L32">        h.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L33">        return h;</span>
+    }
+
+    // GET /api/v9/trips/{tripId}/messages?beforeId=&amp;limit=
+    public void listMessages(long me, long tripId, Long beforeId, Integer limit,
+                             Callback&lt;List&lt;TripMessageResponseDTO&gt;&gt; cb) {
+<span class="fc" id="L39">        Uri.Builder b = Uri.parse(baseUrl + &quot;/api/v9/trips/&quot; + tripId + &quot;/messages&quot;).buildUpon();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (beforeId != null) b.appendQueryParameter(&quot;beforeId&quot;, String.valueOf(beforeId));</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (limit != null) b.appendQueryParameter(&quot;limit&quot;, String.valueOf(limit));</span>
+<span class="fc" id="L42">        String url = b.build().toString();</span>
+
+
+<span class="fc" id="L45">        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+                    try {
+<span class="fc" id="L48">                        List&lt;TripMessageResponseDTO&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L50">                            out.add(parseMessage(response.getJSONObject(i)));</span>
+                        }
+<span class="fc" id="L52">                        cb.onSuccess(out);</span>
+<span class="pc" id="L53">                    } catch (JSONException e) { cb.onError(e); }</span>
+<span class="fc" id="L54">                },</span>
+<span class="pc" id="L55">                error -&gt; cb.onError(error)) {</span>
+<span class="fc" id="L56">            @Override public Map&lt;String, String&gt; getHeaders() { return headers(me); }</span>
+        };
+<span class="fc" id="L58">        queue.add(req);</span>
+<span class="fc" id="L59">    }</span>
+
+
+    // POST /api/v9/trips/{tripId}/messages
+    public void post(long me, long tripId, TripMessageCreateDTO in,
+                     Callback&lt;TripMessageResponseDTO&gt; cb) {
+<span class="fc" id="L65">        String url = baseUrl + &quot;/api/v9/trips/&quot; + tripId + &quot;/messages&quot;;</span>
+<span class="fc" id="L66">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="fc" id="L68">            body.put(&quot;content&quot;, in.getContent());</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">            if (in.getParentMessageId() != null) body.put(&quot;parentMessageId&quot;, in.getParentMessageId());</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (in.getForwardFromMessageId() != null) body.put(&quot;forwardFromMessageId&quot;, in.getForwardFromMessageId());</span>
+<span class="fc" id="L71">            body.put(&quot;clientMessageId&quot;, in.getClientMessageId());</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">            if (in.getSentAt() != null) body.put(&quot;sentAt&quot;, in.getSentAt());</span>
+<span class="pc" id="L73">        } catch (JSONException ignored) {}</span>
+
+
+<span class="fc" id="L76">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body,</span>
+<span class="fc" id="L77">                response -&gt; cb.onSuccess(parseMessage(response)),</span>
+<span class="pc" id="L78">                error -&gt; cb.onError(error)) {</span>
+<span class="fc" id="L79">            @Override public Map&lt;String, String&gt; getHeaders() { return headers(me); }</span>
+        };
+<span class="fc" id="L81">        queue.add(req);</span>
+<span class="fc" id="L82">    }</span>
+
+    // PUT /api/v9/trips/{tripId}/messages/{messageId}
+    public void edit(long me, long tripId, long messageId, TripMessageEditDTO in,
+                     Callback&lt;TripMessageResponseDTO&gt; cb) {
+<span class="nc" id="L87">        String url = baseUrl + &quot;/api/v9/trips/&quot; + tripId + &quot;/messages/&quot; + messageId;</span>
+<span class="nc" id="L88">        JSONObject body = new JSONObject();</span>
+<span class="nc" id="L89">        try { body.put(&quot;content&quot;, in.getContent()); body.put(&quot;version&quot;, in.getVersion()); } catch (JSONException ignored) {}</span>
+
+
+<span class="nc" id="L92">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.PUT, url, body,</span>
+<span class="nc" id="L93">                response -&gt; cb.onSuccess(parseMessage(response)),</span>
+<span class="nc" id="L94">                error -&gt; cb.onError(error)) {</span>
+<span class="nc" id="L95">            @Override public Map&lt;String, String&gt; getHeaders() { return headers(me); }</span>
+        };
+<span class="nc" id="L97">        queue.add(req);</span>
+<span class="nc" id="L98">    }</span>
+
+    // DELETE /api/v9/trips/{tripId}/messages/{messageId}?version=
+    public void delete(long me, long tripId, long messageId, long version,
+                       Callback&lt;TripMessageResponseDTO&gt; cb) {
+<span class="nc" id="L103">        Uri url = Uri.parse(baseUrl + &quot;/api/v9/trips/&quot; + tripId + &quot;/messages/&quot; + messageId)</span>
+<span class="nc" id="L104">                .buildUpon().appendQueryParameter(&quot;version&quot;, String.valueOf(version)).build();</span>
+
+
+<span class="nc" id="L107">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.DELETE, url.toString(), null,</span>
+<span class="nc" id="L108">                response -&gt; cb.onSuccess(parseMessage(response)),</span>
+<span class="nc" id="L109">                error -&gt; cb.onError(error)) {</span>
+<span class="nc" id="L110">            @Override public Map&lt;String, String&gt; getHeaders() { return headers(me); }</span>
+        };
+<span class="nc" id="L112">        queue.add(req);</span>
+<span class="nc" id="L113">    }</span>
+
+    // POST /api/v9/trips/{messageId}/reactions body: (for emoji's)
+    public void react(long me, long tripId, long messageId, String emoji,
+                      Callback&lt;Map&lt;String, Integer&gt;&gt; cb) {
+<span class="nc" id="L118">        String url = baseUrl + &quot;/api/v9/trips/&quot; + tripId + &quot;/messages/&quot; + messageId + &quot;/reactions&quot;;</span>
+<span class="nc" id="L119">        JSONObject body = new JSONObject();</span>
+<span class="nc" id="L120">        try { body.put(&quot;emoji&quot;, emoji); } catch (JSONException ignored) {}</span>
+
+
+<span class="nc" id="L123">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body,</span>
+<span class="nc" id="L124">                response -&gt; cb.onSuccess(jsonObjectToMap(response)),</span>
+<span class="nc" id="L125">                error -&gt; cb.onError(error)) {</span>
+<span class="nc" id="L126">            @Override public Map&lt;String, String&gt; getHeaders() { return headers(me); }</span>
+        };
+<span class="nc" id="L128">        queue.add(req);</span>
+<span class="nc" id="L129">    }</span>
+
+
+    // DELETE /api/v9/trips/{messageId}/reactions/{emoji}
+    public void unreact(long me, long tripId, long messageId, String emoji,
+                        Callback&lt;Map&lt;String, Integer&gt;&gt; cb) {
+<span class="nc" id="L135">        String url = baseUrl + &quot;/api/v9/trips/&quot; + tripId + &quot;/messages/&quot; + messageId + &quot;/reactions/&quot; + emoji;</span>
+<span class="nc" id="L136">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.DELETE, url, null,</span>
+<span class="nc" id="L137">                response -&gt; cb.onSuccess(jsonObjectToMap(response)),</span>
+<span class="nc" id="L138">                error -&gt; cb.onError(error)) {</span>
+<span class="nc" id="L139">            @Override public Map&lt;String, String&gt; getHeaders() { return headers(me); }</span>
+        };
+<span class="nc" id="L141">        queue.add(req);</span>
+<span class="nc" id="L142">    }</span>
+
+    // ---- helpers ----
+    private TripMessageResponseDTO parseMessage(JSONObject o) {
+<span class="fc" id="L146">        long id = o.optLong(&quot;id&quot;);</span>
+<span class="fc" id="L147">        long tripId = o.optLong(&quot;tripId&quot;);</span>
+<span class="fc" id="L148">        long senderId = o.optLong(&quot;senderId&quot;);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        String content = o.isNull(&quot;content&quot;) ? null : o.optString(&quot;content&quot;, null);</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        Long parentMessageId = o.isNull(&quot;parentMessageId&quot;) ? null : o.optLong(&quot;parentMessageId&quot;);</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        Long forwardFromMessageId = o.isNull(&quot;forwardFromMessageId&quot;) ? null : o.optLong(&quot;forwardFromMessageId&quot;);</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        String sentAt = o.isNull(&quot;sentAt&quot;) ? null : o.optString(&quot;sentAt&quot;, null);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        String savedAt = o.isNull(&quot;savedAt&quot;) ? null : o.optString(&quot;savedAt&quot;, null);</span>
+<span class="fc" id="L154">        boolean edited = o.optBoolean(&quot;edited&quot;, false);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">        Long version = o.isNull(&quot;version&quot;) ? null : o.optLong(&quot;version&quot;);</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        String editedAt = o.isNull(&quot;editedAt&quot;) ? null : o.optString(&quot;editedAt&quot;, null);</span>
+<span class="fc" id="L157">        boolean deleted = o.optBoolean(&quot;deleted&quot;, false);</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        String deletedAt = o.isNull(&quot;deletedAt&quot;) ? null : o.optString(&quot;deletedAt&quot;, null);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        Long deletedBy = o.isNull(&quot;deletedBy&quot;) ? null : o.optLong(&quot;deletedBy&quot;);</span>
+
+
+<span class="fc" id="L162">        Map&lt;String, Integer&gt; reactions = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L163">        JSONObject rx = o.optJSONObject(&quot;reactions&quot;);</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (rx != null) {</span>
+<span class="fc" id="L165">            Iterator&lt;String&gt; it = rx.keys();</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">            while (it.hasNext()) { String k = it.next(); reactions.put(k, rx.optInt(k, 0)); }</span>
+        }
+<span class="fc" id="L168">        Set&lt;String&gt; myReactions = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L169">        JSONArray my = o.optJSONArray(&quot;myReactions&quot;);</span>
+<span class="pc bpc" id="L170" title="2 of 4 branches missed.">        if (my != null) for (int i = 0; i &lt; my.length(); i++) myReactions.add(my.optString(i));</span>
+
+
+<span class="fc" id="L173">        return new TripMessageResponseDTO(id, tripId, senderId, content,</span>
+                parentMessageId, forwardFromMessageId, sentAt, savedAt, edited, version,
+                reactions, myReactions, editedAt, deleted, deletedAt, deletedBy);
+    }
+
+
+    private Map&lt;String, Integer&gt; jsonObjectToMap(JSONObject o) {
+<span class="nc" id="L180">        Map&lt;String, Integer&gt; out = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L181">        Iterator&lt;String&gt; it = o.keys();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        while (it.hasNext()) { String k = it.next(); out.put(k, o.optInt(k, 0)); }</span>
+<span class="nc" id="L183">        return out;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskManagerActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.tasks</a> &gt; <span class="el_source">TaskManagerActivity.java</span></div><h1>TaskManagerActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.tasks;
+import com.example.androidexample.R;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.widget.TextView;
+import com.example.androidexample.R;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.androidexample.HomeActivity;
+import com.example.androidexample.LoginActivity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+
+import android.app.AlertDialog;
+import android.view.LayoutInflater;
+import android.view.View;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L36">public class TaskManagerActivity extends AppCompatActivity {</span>
+
+    private RecyclerView recyclerTasks;  //displays the list of tasks
+    private TaskAdapter adapter; //connects data to the RecyclerView
+<span class="nc" id="L40">    private List&lt;Task&gt; taskList = new ArrayList&lt;&gt;();  //stores alll the tasks</span>
+    private EditText etTitle, etDescription;  // inputs field for new task
+    private RequestQueue queue; // handles the network requests(Volley)
+
+    private TextView tvAddHint;
+
+    private int userId;
+
+
+
+<span class="nc" id="L50">    private final String BASE_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v3/tasks&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L54">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L55">        setContentView(R.layout.activity_task_manager);</span>
+
+<span class="nc" id="L57">        Button btnAdd = findViewById(R.id.btnAddTask);</span>
+<span class="nc" id="L58">        Button btnHome = findViewById(R.id.btnHome);</span>
+
+<span class="nc" id="L60">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L63">            Toast.makeText(this, &quot;Invalid user session&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L64">            startActivity(new Intent(this, LoginActivity.class));</span>
+<span class="nc" id="L65">            finish();</span>
+<span class="nc" id="L66">            return;</span>
+        }
+
+<span class="nc" id="L69">        recyclerTasks = findViewById(R.id.recyclerTasks);</span>
+<span class="nc" id="L70">        recyclerTasks.setLayoutManager(new LinearLayoutManager(this));</span>
+
+<span class="nc" id="L72">        queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L73">        adapter = new TaskAdapter(this, taskList, this);</span>
+<span class="nc" id="L74">        recyclerTasks.setAdapter(adapter);</span>
+
+<span class="nc" id="L76">        FloatingActionButton btnScrollDown = findViewById(R.id.btnScrollDown);</span>
+<span class="nc" id="L77">        btnScrollDown.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (adapter.getItemCount() &gt; 0) {</span>
+<span class="nc" id="L79">                recyclerTasks.smoothScrollToPosition(adapter.getItemCount() - 1);</span>
+            }
+<span class="nc" id="L81">        });</span>
+
+<span class="nc" id="L83">        btnHome.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L84">            Intent intent = new Intent(TaskManagerActivity.this, HomeActivity.class);</span>
+<span class="nc" id="L85">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L86">            startActivity(intent);});</span>
+
+<span class="nc" id="L88">        btnAdd.setOnClickListener(v -&gt; showAddTaskDialog());</span>
+<span class="nc" id="L89">        getTasks();</span>
+
+
+
+<span class="nc" id="L93">        tvAddHint = findViewById(R.id.tvAddHint);</span>
+<span class="nc" id="L94">    }</span>
+
+    // GET all tasks
+    public void getTasks() {
+<span class="nc" id="L98">        String url = BASE_URL + &quot;/user/&quot; + userId;</span>
+<span class="nc" id="L99">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L101">                    taskList.clear();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L104">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="nc" id="L105">                            JSONObject userObj = obj.getJSONObject(&quot;user&quot;);</span>
+
+<span class="nc" id="L107">                            taskList.add(new Task(</span>
+<span class="nc" id="L108">                                    obj.getLong(&quot;taskId&quot;),</span>
+<span class="nc" id="L109">                                    obj.getString(&quot;title&quot;),</span>
+<span class="nc" id="L110">                                    obj.optString(&quot;description&quot;, &quot;No Description&quot;),</span>
+<span class="nc" id="L111">                                    obj.getString(&quot;status&quot;),</span>
+<span class="nc" id="L112">                                    obj.optString(&quot;dueDate&quot;, &quot;N/A&quot;)</span>
+                            ));
+<span class="nc" id="L114">                        } catch (JSONException e) {</span>
+<span class="nc" id="L115">                            e.printStackTrace();</span>
+<span class="nc" id="L116">                        }</span>
+                    }
+<span class="nc" id="L118">                    adapter.notifyDataSetChanged();</span>
+
+<span class="nc" id="L120">                },</span>
+<span class="nc" id="L121">                error -&gt; Toast.makeText(this, &quot;GET Error: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L122">        queue.add(request);</span>
+<span class="nc" id="L123">    }</span>
+
+    // POST - Add new task
+     private void addTask(String title, String description) {
+<span class="nc" id="L127">        JSONObject taskJson = new JSONObject();</span>
+        try {
+<span class="nc" id="L129">            taskJson.put(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L130">            taskJson.put(&quot;title&quot;, title);</span>
+<span class="nc" id="L131">            taskJson.put(&quot;description&quot;, description);</span>
+<span class="nc" id="L132">            taskJson.put(&quot;status&quot;, &quot;Pending&quot;);</span>
+<span class="nc" id="L133">            taskJson.put(&quot;dueDate&quot;, &quot;2025-10-15&quot;);</span>
+<span class="nc" id="L134">        } catch (JSONException e) {</span>
+<span class="nc" id="L135">            e.printStackTrace();</span>
+<span class="nc" id="L136">        }</span>
+
+<span class="nc" id="L138">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                BASE_URL,
+                taskJson,
+                response -&gt; {
+<span class="nc" id="L143">                    Toast.makeText(this, &quot;Task added!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L144">                    getTasks(); // refresh after adding</span>
+<span class="nc" id="L145">                    tvAddHint.setVisibility(View.GONE); // hide hint text</span>
+<span class="nc" id="L146">                },</span>
+<span class="nc" id="L147">                error -&gt; Toast.makeText(this, &quot;POST Error: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show()</span>
+        );
+<span class="nc" id="L149">        queue.add(request);</span>
+<span class="nc" id="L150">    }</span>
+
+
+    // PUT - Update task status
+    public void updateTask(long taskId, String title, String status, String dueDate) {
+<span class="nc" id="L155">        String url = BASE_URL + &quot;/&quot; + taskId;</span>
+
+<span class="nc" id="L157">        JSONObject updateJson = new JSONObject();</span>
+        try {
+<span class="nc" id="L159">            updateJson.put(&quot;title&quot;, title);</span>
+<span class="nc" id="L160">            updateJson.put(&quot;status&quot;, status);</span>
+<span class="nc" id="L161">            updateJson.put(&quot;dueDate&quot;, dueDate);</span>
+<span class="nc" id="L162">        } catch (JSONException e) {</span>
+<span class="nc" id="L163">            e.printStackTrace();</span>
+<span class="nc" id="L164">        }</span>
+
+<span class="nc" id="L166">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PUT, url, updateJson,
+                response -&gt; {
+<span class="nc" id="L169">                    Toast.makeText(this, &quot;Task updated successfully!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L170">                    getTasks(); // Refresh the list after updating</span>
+<span class="nc" id="L171">                },</span>
+                error -&gt; {
+<span class="nc" id="L173">                    error.printStackTrace();</span>
+<span class="nc" id="L174">                    Toast.makeText(this, &quot;Error updating task: &quot; + error.toString(), Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L175">                }</span>
+        );
+
+<span class="nc" id="L178">        queue.add(request);</span>
+<span class="nc" id="L179">    }</span>
+
+
+    // DELETE - Remove task
+    public void deleteTask(long taskId) {
+<span class="nc" id="L184">        String url = BASE_URL + &quot;/&quot; + taskId;</span>
+<span class="nc" id="L185">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.DELETE,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L190">                    Toast.makeText(this, &quot;Task deleted!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L191">                    getTasks();</span>
+<span class="nc" id="L192">                    recyclerTasks.postDelayed(() -&gt; {</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                        if (taskList.isEmpty()) {</span>
+<span class="nc" id="L194">                            tvAddHint.setVisibility(View.VISIBLE);</span>
+                        }
+<span class="nc" id="L196">                    }, 500);</span>
+<span class="nc" id="L197">                },</span>
+<span class="nc" id="L198">                error -&gt; Toast.makeText(this, &quot;DELETE Error: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show()</span>
+        );
+<span class="nc" id="L200">        queue.add(request);</span>
+<span class="nc" id="L201">    }</span>
+
+    public void showEditDialog(Task task) {
+        // Inflate the custom layout
+<span class="nc" id="L205">        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_task, null);</span>
+
+<span class="nc" id="L207">        EditText etTitle = dialogView.findViewById(R.id.etEditTitle);</span>
+<span class="nc" id="L208">        EditText etStatus = dialogView.findViewById(R.id.etEditStatus);</span>
+<span class="nc" id="L209">        EditText etDueDate = dialogView.findViewById(R.id.etEditDueDate);</span>
+
+        // Pre-fill with current values
+<span class="nc" id="L212">        etTitle.setText(task.getTitle());</span>
+<span class="nc" id="L213">        etStatus.setText(task.getStatus());</span>
+<span class="nc" id="L214">        etDueDate.setText(task.getDueDate());</span>
+
+        // Build the dialog
+<span class="nc" id="L217">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L218">                .setTitle(&quot;Edit Task&quot;)</span>
+<span class="nc" id="L219">                .setView(dialogView)</span>
+<span class="nc" id="L220">                .setPositiveButton(&quot;Save&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L221">                    String newTitle = etTitle.getText().toString().trim();</span>
+<span class="nc" id="L222">                    String newStatus = etStatus.getText().toString().trim();</span>
+<span class="nc" id="L223">                    String newDueDate = etDueDate.getText().toString().trim();</span>
+
+<span class="nc" id="L225">                    updateTask(task.getTaskId(), newTitle, newStatus, newDueDate);</span>
+<span class="nc" id="L226">                })</span>
+<span class="nc" id="L227">                .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; dialog.dismiss())</span>
+<span class="nc" id="L228">                .create()</span>
+<span class="nc" id="L229">                .show();</span>
+<span class="nc" id="L230">    }</span>
+
+    private void showAddTaskDialog() {
+<span class="nc" id="L233">        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_task, null);</span>
+<span class="nc" id="L234">        EditText etTitle = dialogView.findViewById(R.id.etTaskTitle);</span>
+<span class="nc" id="L235">        EditText etDesc = dialogView.findViewById(R.id.etTaskDescription);</span>
+
+<span class="nc" id="L237">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L238">                .setTitle(&quot;Add New Task&quot;)</span>
+<span class="nc" id="L239">                .setView(dialogView)</span>
+<span class="nc" id="L240">                .setPositiveButton(&quot;Add&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L241">                    String title = etTitle.getText().toString().trim();</span>
+<span class="nc" id="L242">                    String desc = etDesc.getText().toString().trim();</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">                    if (title.isEmpty() || desc.isEmpty()) {</span>
+<span class="nc" id="L244">                        Toast.makeText(this, &quot;Please fill out all fields&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L245">                        return;</span>
+                    }
+<span class="nc" id="L247">                    addTask(title,desc);</span>
+<span class="nc" id="L248">                })</span>
+<span class="nc" id="L249">                .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; dialog.dismiss())</span>
+<span class="nc" id="L250">                .show();</span>
+<span class="nc" id="L251">    }</span>
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

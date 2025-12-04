@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripChatActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripChatActivity.java</span></div><h1>TripChatActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+import com.example.androidexample.R;
+
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.activity.ComponentActivity;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+
+import java.util.List;
+
+<span class="fc" id="L23">public class TripChatActivity extends ComponentActivity implements MessageAdapter.Listener {</span>
+
+    // --- Replace these with your real values or pass via Intent extras ---
+<span class="fc" id="L26">    private final String baseUrl = &quot;http://coms-3090-026.class.las.iastate.edu:8080&quot;; // REST base (no trailing slash ok)</span>
+<span class="fc" id="L27">    private final String baseWsUrl = &quot;ws://coms-3090-026.class.las.iastate.edu:8080&quot;;   // WS base</span>
+    private long me;
+    private long tripId;                              // trip/conversation id
+    private TripChatViewModel vm;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L34">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L35">        setContentView(R.layout.activity_trip_chat);</span>
+
+<span class="fc" id="L37">        me = getIntent().getLongExtra(&quot;userId&quot;, -1);</span>
+<span class="fc" id="L38">        tripId = getIntent().getLongExtra(&quot;tripId&quot;, -1);</span>
+
+<span class="pc bpc" id="L40" title="2 of 4 branches missed.">        if (me == -1 || tripId == -1) {</span>
+<span class="nc" id="L41">            Toast.makeText(this, &quot;Missing userId or tripId&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L42">            finish();</span>
+<span class="nc" id="L43">            return;</span>
+        }
+
+<span class="fc" id="L46">        RecyclerView recycler = findViewById(R.id.recycler);</span>
+<span class="fc" id="L47">        EditText input = findViewById(R.id.input);</span>
+<span class="fc" id="L48">        View send = findViewById(R.id.send);</span>
+
+        // Volley queue (pass into ViewModel via factory)
+<span class="fc" id="L51">        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());</span>
+
+        // ViewModel with custom factory (provides URLs, ids, and Volley queue)
+<span class="fc" id="L54">        vm = new ViewModelProvider(this, new ViewModelProvider.Factory() {</span>
+            @NonNull @Override
+            @SuppressWarnings(&quot;unchecked&quot;)
+            public &lt;T extends ViewModel&gt; T create(@NonNull Class&lt;T&gt; modelClass) {
+<span class="fc" id="L58">                return (T) new TripChatViewModel(baseUrl, baseWsUrl, me, tripId, queue);</span>
+            }
+<span class="fc" id="L60">        }).get(TripChatViewModel.class);</span>
+
+        // RecyclerView setup
+<span class="fc" id="L63">        MessageAdapter adapter = new MessageAdapter(me);</span>
+<span class="fc" id="L64">        adapter.setListener(this);</span>
+<span class="fc" id="L65">        LinearLayoutManager lm = new LinearLayoutManager(this);</span>
+<span class="fc" id="L66">        lm.setStackFromEnd(true);                // start list at the bottom like chat apps</span>
+<span class="fc" id="L67">        recycler.setLayoutManager(lm);</span>
+<span class="fc" id="L68">        recycler.setAdapter(adapter);</span>
+
+        // Observe messages and keep scrolled to the latest
+<span class="fc" id="L71">        vm.getMessages().observe(this, (List&lt;TripMessageResponseDTO&gt; list) -&gt; {</span>
+<span class="fc" id="L72">            adapter.submitList(list, () -&gt; {</span>
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">                if (list != null &amp;&amp; !list.isEmpty()) {</span>
+<span class="fc" id="L74">                    recycler.scrollToPosition(Math.max(0, list.size() - 1));</span>
+                }
+<span class="fc" id="L76">            });</span>
+<span class="fc" id="L77">        });</span>
+
+        // Send button
+<span class="fc" id="L80">        send.setOnClickListener(v -&gt; {</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            String text = (input.getText() == null) ? &quot;&quot; : input.getText().toString().trim();</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if (!TextUtils.isEmpty(text)) {</span>
+<span class="fc" id="L83">                vm.send(text);</span>
+<span class="fc" id="L84">                input.setText(&quot;&quot;);</span>
+            }
+<span class="fc" id="L86">        });</span>
+
+        // Infinite scroll: load more when near the top
+<span class="fc" id="L89">        recycler.addOnScrollListener(new RecyclerView.OnScrollListener() {</span>
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+<span class="fc" id="L92">                LinearLayoutManager layout = (LinearLayoutManager) rv.getLayoutManager();</span>
+<span class="pc bpc" id="L93" title="2 of 4 branches missed.">                if (layout != null &amp;&amp; layout.findFirstVisibleItemPosition() &lt;= 2) {</span>
+<span class="fc" id="L94">                    vm.loadMore();</span>
+                }
+<span class="fc" id="L96">            }</span>
+        });
+<span class="fc" id="L98">    }</span>
+    @Override
+    public void onEdit(TripMessageResponseDTO msg) {
+        // Simple edit popup
+<span class="nc" id="L102">        android.app.AlertDialog.Builder b = new android.app.AlertDialog.Builder(this);</span>
+<span class="nc" id="L103">        EditText edit = new EditText(this);</span>
+<span class="nc" id="L104">        edit.setText(msg.getContent());</span>
+<span class="nc" id="L105">        b.setTitle(&quot;Edit Message&quot;);</span>
+<span class="nc" id="L106">        b.setView(edit);</span>
+<span class="nc" id="L107">        b.setPositiveButton(&quot;Save&quot;, (d, w) -&gt;</span>
+<span class="nc" id="L108">                vm.edit(msg.getId(), edit.getText().toString(), msg.getVersion())</span>
+        );
+<span class="nc" id="L110">        b.setNegativeButton(&quot;Cancel&quot;, null);</span>
+<span class="nc" id="L111">        b.show();</span>
+<span class="nc" id="L112">    }</span>
+
+    @Override
+    public void onDelete(TripMessageResponseDTO msg) {
+<span class="nc" id="L116">        new android.app.AlertDialog.Builder(this)</span>
+<span class="nc" id="L117">                .setTitle(&quot;Delete Message?&quot;)</span>
+<span class="nc" id="L118">                .setPositiveButton(&quot;Delete&quot;, (d, w) -&gt;</span>
+<span class="nc" id="L119">                        vm.delete(msg.getId(), msg.getVersion()))</span>
+<span class="nc" id="L120">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L121">                .show();</span>
+<span class="nc" id="L122">    }</span>
+
+    @Override
+    public void onReact(TripMessageResponseDTO msg) {
+        // Reaction picker
+<span class="nc" id="L127">        String[] emojis = {&quot;👍&quot;,&quot;❤️&quot;,&quot;😂&quot;,&quot;🔥&quot;,&quot;🎉&quot;,&quot;😮&quot;,&quot;😢&quot;};</span>
+
+<span class="nc" id="L129">        new android.app.AlertDialog.Builder(this)</span>
+<span class="nc" id="L130">                .setTitle(&quot;React&quot;)</span>
+<span class="nc" id="L131">                .setItems(emojis, (d, which) -&gt;</span>
+<span class="nc" id="L132">                        vm.react(msg.getId(), emojis[which]))</span>
+<span class="nc" id="L133">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L134">                .show();</span>
+<span class="nc" id="L135">    }</span>
+
+    @Override
+    public void onUnreact(TripMessageResponseDTO msg, String emoji) {
+<span class="nc" id="L139">        vm.unreact(msg.getId(), emoji);</span>
+<span class="nc" id="L140">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -31,6 +31,9 @@
         <activity android:name=".LoginActivity"/>
         <activity android:name=".CalendarActivity" />
         <activity android:name=".DayViewActivity"/>
+        <activity
+            android:name=".trips.TripInvitesActivity"
+            android:exported="false" />
         <activity android:name=".friends.SuggestionsActivity" android:exported="true" />
         <activity android:name=".friends.RequestsActivity" android:exported="true" />
         <activity android:name=".tasks.TaskManagerActivity"
@@ -39,8 +42,13 @@
             android:exported="true"/>
         <activity android:name=".CurrencyConverterActivity"/>
         <activity android:name=".friends.FriendsListActivity" android:exported="true" />
+        <activity android:name=".tripplanner.TripEventsActivity" android:exported="true" />
+        <activity android:name=".tripplanner.AddEditTripEventActivity" android:exported="true" />
         <activity android:name=".friends.FriendProfileActivity" />
-        <activity android:name=".trips.TripChatActivity"/>
+        <activity
+            android:name=".trips.TripChatActivity"
+            android:exported="false">
+        </activity>
         <activity android:name=".messages.DirectChatActivity"/>
         <activity android:name=".notifications.NotificationsActivity" android:exported="true" />
         <activity android:name=".budget.BudgetListActivity" android:exported="true" />

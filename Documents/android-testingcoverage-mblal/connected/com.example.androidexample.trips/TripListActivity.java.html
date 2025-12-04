@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripListActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripListActivity.java</span></div><h1>TripListActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+
+import android.os.Bundle;
+import android.text.InputType;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.androidexample.R;
+
+import java.util.List;
+
+<span class="nc" id="L21">public class TripListActivity extends AppCompatActivity {</span>
+
+    private RecyclerView recycler;
+    private View tvEmpty;
+    private Button btnAdd;
+    private TripAdapter adapter;
+<span class="nc" id="L27">    private boolean isLoading = false;</span>
+
+    private int userId;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="nc" id="L33">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L34">        setContentView(R.layout.activity_trip_list);</span>
+
+<span class="nc" id="L36">        Toolbar toolbar = findViewById(R.id.toolbar);</span>
+<span class="nc" id="L37">        toolbar.setTitle(&quot;Trips&quot;);</span>
+<span class="nc" id="L38">        setSupportActionBar(toolbar);</span>
+
+<span class="nc" id="L40">        recycler = findViewById(R.id.recyclerTrips);</span>
+<span class="nc" id="L41">        tvEmpty = findViewById(R.id.tvEmpty);</span>
+<span class="nc" id="L42">        btnAdd = findViewById(R.id.btnAdd);</span>
+
+<span class="nc" id="L44">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc" id="L46">        adapter = new TripAdapter(new TripAdapter.Listener() {</span>
+            @Override public void onOpen(TripDTO t) {
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                Toast.makeText(TripListActivity.this, &quot;Trip: &quot; + (t.name != null ? t.name : &quot;Unnamed&quot;), Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L49">            }</span>
+            @Override public void onEdit(TripDTO t) {
+<span class="nc" id="L51">                showUpsertDialog(/*isCreate=*/false, t);</span>
+<span class="nc" id="L52">            }</span>
+            @Override public void onDelete(TripDTO t) {
+<span class="nc" id="L54">                confirmDelete(t);</span>
+<span class="nc" id="L55">            }</span>
+        });
+
+<span class="nc" id="L58">        recycler.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L59">        recycler.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));</span>
+<span class="nc" id="L60">        recycler.setAdapter(adapter);</span>
+
+<span class="nc" id="L62">        btnAdd.setOnClickListener(v -&gt; showUpsertDialog(true, null));</span>
+
+<span class="nc" id="L64">        loadData();</span>
+<span class="nc" id="L65">    }</span>
+
+    private void loadData() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (isLoading) return;</span>
+<span class="nc" id="L69">        isLoading = true;</span>
+
+<span class="nc" id="L71">        TripAPI.fetchTrips(this, userId, new TripAPI.ListCallback() {</span>
+            @Override public void onSuccess(List&lt;TripDTO&gt; trips) {
+<span class="nc" id="L73">                isLoading = false;</span>
+<span class="nc" id="L74">                adapter.submit(trips);</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">                tvEmpty.setVisibility((trips == null || trips.isEmpty()) ? View.VISIBLE : View.GONE);</span>
+<span class="nc" id="L76">            }</span>
+            @Override public void onError(String message) {
+<span class="nc" id="L78">                isLoading = false;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (adapter.getItemCount() == 0) tvEmpty.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L80">                Toast.makeText(TripListActivity.this, &quot;Failed to load trips: &quot; + message, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L81">            }</span>
+        });
+<span class="nc" id="L83">    }</span>
+
+    // --------- Create/Update dialog ----------
+    private void showUpsertDialog(boolean isCreate, @Nullable TripDTO existing) {
+        // Build a tiny form inline (no extra XML needed)
+<span class="nc" id="L88">        LinearLayout form = new LinearLayout(this);</span>
+<span class="nc" id="L89">        form.setOrientation(LinearLayout.VERTICAL);</span>
+<span class="nc" id="L90">        int pad = (int) (16 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L91">        form.setPadding(pad, pad, pad, 0);</span>
+
+<span class="nc" id="L93">        EditText etName = new EditText(this);</span>
+<span class="nc" id="L94">        etName.setHint(&quot;Name&quot;);</span>
+<span class="nc" id="L95">        etName.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);</span>
+<span class="nc" id="L96">        form.addView(etName);</span>
+
+<span class="nc" id="L98">        EditText etDestination = new EditText(this);</span>
+<span class="nc" id="L99">        etDestination.setHint(&quot;Destination&quot;);</span>
+<span class="nc" id="L100">        form.addView(etDestination);</span>
+
+<span class="nc" id="L102">        EditText etStartDate = new EditText(this);</span>
+<span class="nc" id="L103">        etStartDate.setHint(&quot;Start Date (YYYY-MM-DD)&quot;);</span>
+<span class="nc" id="L104">        form.addView(etStartDate);</span>
+
+<span class="nc" id="L106">        EditText etEndDate = new EditText(this);</span>
+<span class="nc" id="L107">        etEndDate.setHint(&quot;End Date (YYYY-MM-DD)&quot;);</span>
+<span class="nc" id="L108">        form.addView(etEndDate);</span>
+
+<span class="nc bnc" id="L110" title="All 4 branches missed.">        if (!isCreate &amp;&amp; existing != null) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (existing.name != null) etName.setText(existing.name);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (existing.destination != null) etDestination.setText(existing.destination);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (existing.startDate != null) etStartDate.setText(existing.startDate);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (existing.endDate != null) etEndDate.setText(existing.endDate);</span>
+        }
+
+<span class="nc" id="L117">        new AlertDialog.Builder(this)</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                .setTitle(isCreate ? &quot;Create Trip&quot; : &quot;Edit Trip&quot;)</span>
+<span class="nc" id="L119">                .setView(form)</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                .setPositiveButton(isCreate ? &quot;Create&quot; : &quot;Save&quot;, (d, w) -&gt; {</span>
+<span class="nc" id="L121">                    TripDTO t = new TripDTO();</span>
+<span class="nc" id="L122">                    t.name = etName.getText().toString().trim();</span>
+<span class="nc" id="L123">                    t.destination = etDestination.getText().toString().trim();</span>
+<span class="nc" id="L124">                    t.startDate = etStartDate.getText().toString().trim();</span>
+<span class="nc" id="L125">                    t.endDate = etEndDate.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                    if (isCreate) {</span>
+<span class="nc" id="L128">                        TripAPI.createTrip(this, userId, t, new TripAPI.OneCallback() {</span>
+                            @Override public void onSuccess(TripDTO trip) {
+<span class="nc" id="L130">                                Toast.makeText(TripListActivity.this, &quot;Created&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L131">                                loadData();</span>
+<span class="nc" id="L132">                            }</span>
+                            @Override public void onError(String message) {
+<span class="nc" id="L134">                                Toast.makeText(TripListActivity.this, &quot;Create failed: &quot; + message, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L135">                            }</span>
+                        });
+                    } else {
+<span class="nc" id="L138">                        TripAPI.updateTrip(this, userId, existing.id, t, new TripAPI.OneCallback() {</span>
+                            @Override public void onSuccess(TripDTO trip) {
+<span class="nc" id="L140">                                Toast.makeText(TripListActivity.this, &quot;Updated&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L141">                                loadData();</span>
+<span class="nc" id="L142">                            }</span>
+                            @Override public void onError(String message) {
+<span class="nc" id="L144">                                Toast.makeText(TripListActivity.this, &quot;Update failed: &quot; + message, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L145">                            }</span>
+                        });
+                    }
+<span class="nc" id="L148">                })</span>
+<span class="nc" id="L149">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L150">                .show();</span>
+<span class="nc" id="L151">    }</span>
+
+    // --------- Delete confirm ----------
+    private void confirmDelete(TripDTO t) {
+<span class="nc" id="L155">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L156">                .setTitle(&quot;Delete Trip?&quot;)</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                .setMessage(&quot;Are you sure you want to delete \&quot;&quot; + (t.name != null ? t.name : &quot;this trip&quot;) + &quot;\&quot;?&quot;)</span>
+<span class="nc" id="L158">                .setPositiveButton(&quot;Delete&quot;, (d, w) -&gt; {</span>
+<span class="nc" id="L159">                    TripAPI.deleteTrip(this, userId, t.id, new TripAPI.VoidCallback() {</span>
+                        @Override public void onSuccess() {
+<span class="nc" id="L161">                            Toast.makeText(TripListActivity.this, &quot;Deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L162">                            loadData();</span>
+<span class="nc" id="L163">                        }</span>
+                        @Override public void onError(String message) {
+<span class="nc" id="L165">                            Toast.makeText(TripListActivity.this, &quot;Delete failed: &quot; + message, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L166">                        }</span>
+                    });
+<span class="nc" id="L168">                })</span>
+<span class="nc" id="L169">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L170">                .show();</span>
+<span class="nc" id="L171">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>
