@@ -10,7 +10,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -21,30 +20,27 @@ import com.example.androidexample.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * PremiumActivity
  *
- * Shows the QuestBuddy Premium benefits and calls the backend payments API
- * to create a Stripe PaymentIntent for QuestBuddy Premium.
+ * Shows the QuestBuddy Premium benefits and starts a Stripe Checkout
+ * session via the backend:
  *
- * Backend endpoint:
- *   POST /api/v14/payments/intents
+ *   POST /api/v15/payments/checkout/premium/{userId}
  *
- * Request:
- *   Header: X-User-Id: <userId>
- *   Body: { "amount": 4.99, "currency": "usd", "tripId": null, "description": "QuestBuddy Premium" }
- *
- * Response (PaymentResponseDTO):
- *   { "paymentId": ..., "paymentIntentId": "...", "clientSecret": "..." }
+ * The backend returns a StripeResponse with a sessionUrl that we open
+ * in the browser so the user can pay for QuestBuddy Premium.
  */
 public class PremiumActivity extends AppCompatActivity {
 
-    private static final String HOST = "http://coms-3090-026.class.las.iastate.edu:8080";
-    private static final String PAYMENTS_INTENT_URL = HOST + "/api/v14/payments/intents";
-    private static final double PREMIUM_PRICE_DOLLARS = 4.99;
+    private static final String HOST =
+            "http://coms-3090-026.class.las.iastate.edu:8080";
+
+    // New billing endpoint (note the /api/v15 + /checkout/premium/{userId})
+    private static final String CHECKOUT_URL =
+            HOST + "/api/v15/payments/checkout/premium/";
+
+    private static final long PREMIUM_PRICE_CENTS = 399L; // $3.99 (matches backend default)
 
     private RequestQueue queue;
     private int userId;
@@ -80,9 +76,10 @@ public class PremiumActivity extends AppCompatActivity {
 
         setupPremiumText();
 
+        // Upgrade = start Stripe Checkout session
         btnUpgrade.setOnClickListener(v -> startCheckout());
 
-        // return to Home screen
+        // Return Home button
         btnReturnHome.setOnClickListener(v -> {
             Intent intent = new Intent(PremiumActivity.this, HomeActivity.class);
             intent.putExtra("userId", userId);
@@ -106,19 +103,27 @@ public class PremiumActivity extends AppCompatActivity {
     }
 
     /**
-     * Calls backend to create a Stripe PaymentIntent for QuestBuddy Premium.
-     * For demo purposes we:
-     *   - Send a fixed 4.99 USD amount
-     *   - Treat a successful response as a "fake payment success" in the UI
+     * Calls backend to create a Stripe Checkout Session for QuestBuddy Premium.
+     * Backend endpoint:
+     *   POST /api/v15/payments/checkout/premium/{userId}
+     *
+     * Body (ProductRequest):
+     *   { "amount": 399, "quantity": 1, "productName": "QuestBuddy Premium", "currency": "usd" }
+     *
+     * Response (StripeResponse):
+     *   { "status": "success", "message": "...", "sessionId": "...", "sessionUrl": "https://checkout.stripe.com/..." }
      */
     private void startCheckout() {
-        // Build request body to match PaymentCreateDTO
+        // Build URL with userId path variable
+        String url = CHECKOUT_URL + userId;
+
+        // Build request body to match ProductRequest
         JSONObject body = new JSONObject();
         try {
-            body.put("amount", PREMIUM_PRICE_DOLLARS);  // $4.99
+            body.put("amount", PREMIUM_PRICE_CENTS);       // 399 cents = $3.99
+            body.put("quantity", 1L);
+            body.put("productName", "QuestBuddy Premium");
             body.put("currency", "usd");
-            body.put("tripId", JSONObject.NULL);        // Premium not tied to a specific trip
-            body.put("description", "QuestBuddy Premium");
         } catch (JSONException e) {
             Toast.makeText(this, "Error creating payment request.", Toast.LENGTH_SHORT).show();
             return;
@@ -126,46 +131,37 @@ public class PremiumActivity extends AppCompatActivity {
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
-                PAYMENTS_INTENT_URL,
+                url,
                 body,
                 response -> {
-                    // Expected response:
-                    // { "paymentId": <long>, "paymentIntentId": "pi_...", "clientSecret": "..." }
-                    String paymentId = response.optString("paymentId", null);
-                    String clientSecret = response.optString("clientSecret", null);
+                    // StripeResponse: { status, message, sessionId, sessionUrl }
+                    String status = response.optString("status", "error");
+                    String sessionUrl = response.optString("sessionUrl", null);
 
-                    if (clientSecret == null || clientSecret.isEmpty()) {
+                    if (!"success".equalsIgnoreCase(status) || sessionUrl == null || sessionUrl.isEmpty()) {
                         Toast.makeText(
                                 this,
-                                "Payment intent created but no client secret returned.",
+                                "Failed to start checkout. Please try again.",
                                 Toast.LENGTH_SHORT
                         ).show();
                         return;
                     }
 
-                    String msg = "Payment created! id=" + paymentId;
-                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                    openStripeCheckout(sessionUrl);
                 },
-                error -> Toast.makeText(
-                        this,
-                        "Error contacting payment server.",
-                        Toast.LENGTH_SHORT
-                ).show()
-        ) {
-            // Add X-User-Id header to match PaymentController.requireUserId(...)
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/json");
-                headers.put("X-User-Id", String.valueOf(userId));
-                return headers;
-            }
-        };
+                error -> {
+                    Toast.makeText(
+                            this,
+                            "Error contacting payment server.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+        );
 
         queue.add(request);
     }
 
-    @SuppressWarnings("unused")
+    // Open Stripe Checkout URL in browser / custom tab
     private void openStripeCheckout(String sessionUrl) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(sessionUrl));
         startActivity(intent);
