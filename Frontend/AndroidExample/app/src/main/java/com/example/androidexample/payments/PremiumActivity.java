@@ -10,15 +10,21 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
 import com.example.androidexample.R;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * PremiumActivity
@@ -40,12 +46,17 @@ public class PremiumActivity extends AppCompatActivity {
     private static final String CHECKOUT_URL =
             HOST + "/api/v15/payments/checkout/premium/";
 
+    // Endpoint that lists all premium users
+    private static final String PREMIUM_USERS_URL =
+            HOST + "/api/v1/users/premium";
+
     // Amount is in *cents* because Stripe expects the smallest currency unit
     // 399 = $3.99
     private static final long PREMIUM_PRICE_CENTS = 399L;
 
     private RequestQueue queue;
     private int userId;
+    private boolean isPremium = false;   // track if this user is already premium
 
     private TextView tvTitle;
     private TextView tvSubtitle;
@@ -80,8 +91,21 @@ public class PremiumActivity extends AppCompatActivity {
 
         setupPremiumText();
 
+        // Check from backend if this user is already premium
+        checkPremiumStatus();
+
         // Start Stripe checkout when user taps Upgrade
-        btnUpgrade.setOnClickListener(v -> startCheckout());
+        btnUpgrade.setOnClickListener(v -> {
+            if (isPremium) {
+                Toast.makeText(
+                        this,
+                        "You are already a premium member",
+                        Toast.LENGTH_SHORT
+                ).show();
+            } else {
+                startCheckout();
+            }
+        });
 
         // Return Home button: go back to HomeActivity and pass userId
         btnReturnHome.setOnClickListener(v -> {
@@ -104,6 +128,49 @@ public class PremiumActivity extends AppCompatActivity {
                         "• AI-generated packing lists tailored to your plans";
 
         tvFeatures.setText(featuresText);
+    }
+
+    /**
+     * Calls backend /api/v1/users/premium and checks
+     * if this user's id is in the list.
+     */
+    private void checkPremiumStatus() {
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                PREMIUM_USERS_URL,
+                null,
+                response -> {
+                    isPremium = isUserInPremiumList(response, userId);
+                    // no UI change needed; we just flip the flag
+                },
+                error -> {
+                    // If this fails, we just assume not premium and let them try
+                    isPremium = false;
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                // Many of your APIs expect X-User-Id
+                headers.put("X-User-Id", String.valueOf(userId));
+                return headers;
+            }
+        };
+
+        queue.add(request);
+    }
+
+    // Helper: check if current userId appears in the premium users array
+    private boolean isUserInPremiumList(JSONArray array, int currentUserId) {
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject userObj = array.optJSONObject(i);
+            if (userObj == null) continue;
+            int id = userObj.optInt("id", -1);
+            if (id == currentUserId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
