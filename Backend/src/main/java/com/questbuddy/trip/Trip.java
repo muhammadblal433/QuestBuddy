@@ -83,4 +83,3 @@ public class Trip {
     public Instant getUpdatedAt() { return updatedAt; }
 }
 
-//.....
