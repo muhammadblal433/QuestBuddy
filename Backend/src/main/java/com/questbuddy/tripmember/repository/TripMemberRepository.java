@@ -14,4 +14,6 @@ public interface TripMemberRepository extends JpaRepository<TripMember, Long> {
     List<TripMember> findAllByTrip_IdAndStatusOrderByUser_IdAsc(Long tripId, TripMember.Status status);
 
     void deleteByTrip_IdAndUser_Id(Long tripId, Long userId);
+
+    List<TripMember> findAllByUser_IdAndStatusOrderByTrip_IdAsc(Long userId, TripMember.Status status);
 }

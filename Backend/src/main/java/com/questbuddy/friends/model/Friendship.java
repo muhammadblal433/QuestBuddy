@@ -1,6 +1,6 @@
 package com.questbuddy.friends.model;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

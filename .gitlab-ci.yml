@@ -11,9 +11,12 @@ maven-build:
   stage: mavenbuild     # one of the stages listed above
   tags:                 # to specify which runner to execute this job
     - springboot_tag    # change to your runner's tag
-  script:               # what to execute for this job
-    - cd Backend        # change 'Backend' to to where you have the pom.xml (do not add / in the beginning)
-    - mvn package       # maven package
+  script:
+    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+    - export PATH=$JAVA_HOME/bin:$PATH
+    - mvn -version  # Verify Maven now sees Java 17
+    - cd Backend
+    - mvn package
   artifacts:            # where to output the packaged jar file, change 'Backend' to to where you have the pom.xml
     paths:
       - Backend/target/*.jar # change 'Backend' to where you have 'target' (do not add a / in the beginning)
@@ -28,8 +31,10 @@ maven-test:
   tags:
     - springboot_tag   # change to your runner's tag
   script:
-    - cd Backend       # change 'Backend' to to where you have the pom.xml (do not add / in the beginning)
-    - mvn test         # maven test
+    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+    - export PATH=$JAVA_HOME/bin:$PATH
+    - cd Backend
+    - mvn test        # maven test
   only:
     refs:
       - main            # only to trigger the pipeline when changes are pushed to 'main'
@@ -41,7 +46,9 @@ auto-deploy:
   tags:
     - springboot_tag      # change to your runner's tag
   script:               # script to run the deployment service you created
-    - cd Backend        # change 'Backend' to to where you have the pom.xml (do not add / in the beginning)
+    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+    - export PATH=$JAVA_HOME/bin:$PATH
+    - cd Backend   # change 'Backend' to to where you have the pom.xml (do not add / in the beginning)
     - sudo mv target/*.jar /target/web-demo.jar
     - sudo systemctl stop system-web-demo
     - sudo systemctl start system-web-demo
