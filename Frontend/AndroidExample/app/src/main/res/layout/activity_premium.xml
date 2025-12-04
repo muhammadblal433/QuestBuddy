@@ -63,7 +63,7 @@
                 android:id="@+id/tvPremiumFeatures"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="• Unlimited trips\n• Custom group chat names\n• AI budget planner for your trip\n• AI-generated packing lists tailored to your plans"
+                android:text="• Unlimited trips and saved itineraries\n• Custom group chat names for every trip\n• Shared budgets to split trip costs with friends"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#222222"

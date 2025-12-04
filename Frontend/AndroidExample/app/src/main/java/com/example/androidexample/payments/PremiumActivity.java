@@ -122,10 +122,9 @@ public class PremiumActivity extends AppCompatActivity {
         tvSubtitle.setText("Plan smarter trips with powerful premium tools.");
 
         String featuresText =
-                "• Unlimited trips\n" +
-                        "• Custom group chat names\n" +
-                        "• AI budget planner for your trip\n" +
-                        "• AI-generated packing lists tailored to your plans";
+                "• Unlimited trips and saved itineraries\n" +
+                        "• Custom group chat names for every trip\n" +
+                        "• Shared budgets to split trip costs with friends";
 
         tvFeatures.setText(featuresText);
     }
