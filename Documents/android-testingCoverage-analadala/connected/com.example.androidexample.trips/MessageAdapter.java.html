@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">MessageAdapter.java</span></div><h1>MessageAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+import com.example.androidexample.R;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+import com.example.androidexample.R;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class MessageAdapter extends ListAdapter&lt;TripMessageResponseDTO, MessageAdapter.VH&gt; {
+
+    public interface Listener{
+        void onEdit(TripMessageResponseDTO msg);
+        void onDelete(TripMessageResponseDTO msg);
+        void onReact(TripMessageResponseDTO msg);
+        void onUnreact(TripMessageResponseDTO msg, String emoji);
+    }
+
+    private Listener listener;
+
+<span class="fc" id="L32">    public void setListener(Listener l) { this.listener = l; }</span>
+
+    //id of the current user
+    private final long me;
+
+    public MessageAdapter(long me) {
+<span class="fc" id="L38">        super(DIFF);</span>
+<span class="fc" id="L39">        this.me = me;</span>
+<span class="fc" id="L40">    }</span>
+
+    // view holder
+    static class VH extends RecyclerView.ViewHolder {
+        TextView text;
+        TextView meta;
+        TextView reactions;
+
+        VH(@NonNull View itemView) {
+<span class="fc" id="L49">            super(itemView);</span>
+<span class="fc" id="L50">            text = itemView.findViewById(R.id.text);</span>
+<span class="fc" id="L51">            meta = itemView.findViewById(R.id.meta);</span>
+<span class="fc" id="L52">            reactions = itemView.findViewById(R.id.reactions);</span>
+<span class="fc" id="L53">        }</span>
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+<span class="fc" id="L58">        TripMessageResponseDTO m = getItem(position);</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        return (m.getSenderId() == me)</span>
+<span class="fc" id="L60">                ? R.layout.item_message_out</span>
+<span class="nc" id="L61">                : R.layout.item_message_in;</span>
+    }
+
+    // inflate row layout
+    @NonNull
+    @Override
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="fc" id="L68">        View v = LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);</span>
+<span class="fc" id="L69">        return new VH(v);</span>
+    }
+
+    // bind data to ui
+    @Override
+    public void onBindViewHolder(@NonNull VH h, int position) {
+<span class="fc" id="L75">        TripMessageResponseDTO m = getItem(position);</span>
+
+        String content =
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                (m.isDeleted())</span>
+<span class="nc" id="L79">                        ? &quot;(message deleted)&quot;</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">                        : (m.getContent() == null ? &quot;&quot; : m.getContent());</span>
+
+<span class="fc" id="L82">        h.text.setText(content);</span>
+
+        // timestamp + edited flag
+<span class="fc" id="L85">        String time = formatTimestamp(m.getSentAt());</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (m.isEdited()) time += &quot; • edited&quot;;</span>
+
+        // reactions string
+<span class="fc" id="L89">        h.meta.setText(time);</span>
+
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">        if (m.getReactions() != null &amp;&amp; !m.getReactions().isEmpty()) {</span>
+<span class="nc" id="L92">            StringBuilder r = new StringBuilder();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            for (String emoji : m.getReactions().keySet()) {</span>
+<span class="nc" id="L94">                int count = m.getReactions().get(emoji);</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">                boolean mine = m.getMyReactions() != null &amp;&amp; m.getMyReactions().contains(emoji);</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                if (mine) {</span>
+<span class="nc" id="L98">                    r.append(&quot;[&quot;).append(emoji).append(&quot; &quot;).append(count).append(&quot;]  &quot;);</span>
+                } else {
+<span class="nc" id="L100">                    r.append(emoji).append(&quot; &quot;).append(count).append(&quot;   &quot;);</span>
+                }
+<span class="nc" id="L102">            }</span>
+
+<span class="nc" id="L104">            h.reactions.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L105">            h.reactions.setText(r.toString().trim());</span>
+<span class="nc" id="L106">            h.reactions.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L107" title="All 6 branches missed.">                if (listener != null &amp;&amp; m.getMyReactions() != null &amp;&amp; !m.getMyReactions().isEmpty()) {</span>
+                    // Unreact first emoji
+<span class="nc" id="L109">                    String emoji = m.getMyReactions().iterator().next();</span>
+<span class="nc" id="L110">                    listener.onUnreact(m, emoji);</span>
+                }
+<span class="nc" id="L112">            });</span>
+<span class="nc" id="L113">        } else {</span>
+<span class="fc" id="L114">            h.reactions.setVisibility(View.GONE);</span>
+        }
+<span class="fc" id="L116">        h.itemView.setOnLongClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if (listener == null) return true;</span>
+
+<span class="nc" id="L119">            PopupMenu menu = new PopupMenu(v.getContext(), v);</span>
+
+            // Do not allow editing deleted messages
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (!m.isDeleted()) {</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                if (m.getSenderId() == me) menu.getMenu().add(&quot;Edit&quot;);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                if (m.getSenderId() == me) menu.getMenu().add(&quot;Delete&quot;);</span>
+            }
+
+            // Always allow react
+<span class="nc" id="L128">            menu.getMenu().add(&quot;React&quot;);</span>
+
+<span class="nc" id="L130">            menu.setOnMenuItemClickListener(item -&gt; {</span>
+<span class="nc" id="L131">                String title = item.getTitle().toString();</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">                switch (title) {</span>
+<span class="nc" id="L133">                    case &quot;Edit&quot;: listener.onEdit(m); break;</span>
+<span class="nc" id="L134">                    case &quot;Delete&quot;: listener.onDelete(m); break;</span>
+<span class="nc" id="L135">                    case &quot;React&quot;: listener.onReact(m); break;</span>
+                }
+<span class="nc" id="L137">                return true;</span>
+            });
+
+<span class="nc" id="L140">            menu.show();</span>
+<span class="nc" id="L141">            return true;</span>
+        });
+<span class="fc" id="L143">    }</span>
+
+    // convert iso timestamp to hh:mm
+    private String formatTimestamp(String iso) {
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if (iso == null) return &quot;&quot;;</span>
+        try {
+<span class="fc" id="L149">            SimpleDateFormat parser =</span>
+                    new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot;, Locale.US);
+<span class="fc" id="L151">            Date d = parser.parse(iso);</span>
+
+<span class="fc" id="L153">            SimpleDateFormat out =</span>
+                    new SimpleDateFormat(&quot;hh:mm a&quot;, Locale.US);
+<span class="fc" id="L155">            return out.format(d);</span>
+<span class="nc" id="L156">        } catch (ParseException e) {</span>
+<span class="nc" id="L157">            return &quot;&quot;;</span>
+        }
+    }
+
+    // diffutil for list changes
+<span class="fc" id="L162">    private static final DiffUtil.ItemCallback&lt;TripMessageResponseDTO&gt; DIFF =</span>
+<span class="fc" id="L163">            new DiffUtil.ItemCallback&lt;TripMessageResponseDTO&gt;() {</span>
+                @Override
+                public boolean areItemsTheSame(@NonNull TripMessageResponseDTO a, @NonNull TripMessageResponseDTO b) {
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                    return a.getId() == b.getId();</span>
+                }
+
+                @Override
+                public boolean areContentsTheSame(@NonNull TripMessageResponseDTO a, @NonNull TripMessageResponseDTO b) {
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                    return a.getContent().equals(b.getContent())</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">                            &amp;&amp; a.isEdited() == b.isEdited()</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                            &amp;&amp; a.isDeleted() == b.isDeleted()</span>
+<span class="pc bpc" id="L174" title="3 of 4 branches missed.">                            &amp;&amp; ((a.getReactions() == null &amp;&amp; b.getReactions() == null)</span>
+<span class="pc bpc" id="L175" title="2 of 4 branches missed.">                            || (a.getReactions() != null &amp;&amp; a.getReactions().equals(b.getReactions())));</span>
+                }
+            };
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

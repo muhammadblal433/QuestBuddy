@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">HomeActivity.java</span></div><h1>HomeActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import org.json.JSONObject;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.ImageView;
+
+import com.example.androidexample.budget.BudgetListActivity;
+import com.example.androidexample.friends.FriendsListActivity;
+import com.example.androidexample.notifications.NotificationsActivity;
+import com.example.androidexample.notifications.WebSocketListener;
+import com.example.androidexample.notifications.WebSocketManager;
+import com.example.androidexample.packing.PackingChecklistActivity;
+import com.example.androidexample.tasks.TaskManagerActivity;
+import com.example.androidexample.trips.TripChatActivity;
+import com.example.androidexample.trips.TripListActivity;
+import com.nex3z.notificationbadge.NotificationBadge;
+import android.widget.Toast;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+<span class="nc" id="L33">public class HomeActivity extends AppCompatActivity {</span>
+
+    private DrawerLayout drawerLayout;
+    private ListView drawerList;
+    private ActionBarDrawerToggle drawerToggle;
+    private String[] drawerItems;
+
+    private int userId;
+    private NotificationBadge notificationBadge;
+<span class="nc" id="L42">    private int notificationCount = 0;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L46">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L47">        setContentView(R.layout.activity_home);</span>
+
+        // Get userId passed from LoginActivity
+<span class="nc" id="L50">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L53">            Toast.makeText(this, &quot;Invalid user session&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L54">            startActivity(new Intent(this, LoginActivity.class));</span>
+<span class="nc" id="L55">            finish();</span>
+<span class="nc" id="L56">            return;</span>
+        }
+
+<span class="nc" id="L59">        drawerLayout = findViewById(R.id.drawer_layout);</span>
+<span class="nc" id="L60">        drawerList = findViewById(R.id.left_drawer);</span>
+<span class="nc" id="L61">        Toolbar toolbar = findViewById(R.id.toolbar);</span>
+
+
+<span class="nc" id="L64">        toolbar.setTitleTextColor(getResources().getColor(android.R.color.white));</span>
+<span class="nc" id="L65">        setSupportActionBar(toolbar);</span>
+<span class="nc" id="L66">        getSupportActionBar().setTitle(&quot;Home&quot;);</span>
+<span class="nc" id="L67">        loadUserProfile(userId);</span>
+
+        // Enable home button as drawer toggle
+<span class="nc" id="L70">        getSupportActionBar().setDisplayHomeAsUpEnabled(true);</span>
+<span class="nc" id="L71">        getSupportActionBar().setHomeButtonEnabled(true);</span>
+
+<span class="nc" id="L73">        notificationBadge = findViewById(R.id.badge);</span>
+<span class="nc" id="L74">        ImageView btnNotifications = findViewById(R.id.btnNotifications);</span>
+<span class="nc" id="L75">        btnNotifications.setOnClickListener(v -&gt; {</span>
+            // Reset badge when opening notifications
+<span class="nc" id="L77">            notificationCount = 0;</span>
+<span class="nc" id="L78">            notificationBadge.setNumber(0);</span>
+<span class="nc" id="L79">            Intent intent = new Intent(HomeActivity.this, NotificationsActivity.class);</span>
+<span class="nc" id="L80">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L81">            startActivity(intent);</span>
+<span class="nc" id="L82">        });</span>
+
+<span class="nc" id="L84">        WebSocketManager.getInstance().setWebSocketListener(new WebSocketListener() {</span>
+            @Override
+<span class="nc" id="L86">            public void onWebSocketOpen(org.java_websocket.handshake.ServerHandshake handshake) {}</span>
+
+            @Override
+            public void onWebSocketMessage(String message) {
+<span class="nc" id="L90">                runOnUiThread(() -&gt; {</span>
+                    try {
+<span class="nc" id="L92">                        JSONObject json = new JSONObject(message);</span>
+<span class="nc" id="L93">                        String title = json.optString(&quot;title&quot;, &quot;New Notification&quot;);</span>
+<span class="nc" id="L94">                        String body = json.optString(&quot;message&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L96">                        Toast.makeText(</span>
+                                HomeActivity.this,
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                                &quot;🔔 &quot; + title + (body.isEmpty() ? &quot;&quot; : &quot;: &quot; + body),</span>
+                                Toast.LENGTH_LONG
+<span class="nc" id="L100">                        ).show();</span>
+
+<span class="nc" id="L102">                    } catch (org.json.JSONException e) {</span>
+<span class="nc" id="L103">                        Toast.makeText(</span>
+                                HomeActivity.this,
+                                &quot;🔔 New notification received!&quot;,
+                                Toast.LENGTH_LONG
+<span class="nc" id="L107">                        ).show();</span>
+<span class="nc" id="L108">                    }</span>
+
+<span class="nc" id="L110">                    notificationCount++;</span>
+<span class="nc" id="L111">                    notificationBadge.setNumber(notificationCount);</span>
+
+<span class="nc" id="L113">                    ImageView bell = findViewById(R.id.btnNotifications);</span>
+<span class="nc" id="L114">                    bell.animate().rotation(15).setDuration(120)</span>
+<span class="nc" id="L115">                            .withEndAction(() -&gt; bell.animate().rotation(0).setDuration(120))</span>
+<span class="nc" id="L116">                            .start();</span>
+
+<span class="nc" id="L118">                    getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L119">                            .edit()</span>
+<span class="nc" id="L120">                            .putInt(&quot;badgeCount&quot;, notificationCount)</span>
+<span class="nc" id="L121">                            .apply();</span>
+<span class="nc" id="L122">                });</span>
+<span class="nc" id="L123">            }</span>
+
+
+<span class="nc" id="L126">            @Override public void onWebSocketClose(int code, String reason, boolean remote) {}</span>
+<span class="nc" id="L127">            @Override public void onWebSocketError(Exception ex) {}</span>
+        });
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (!WebSocketManager.getInstance().isConnected()) {</span>
+<span class="nc" id="L131">            WebSocketManager.getInstance()</span>
+<span class="nc" id="L132">                    .connectWebSocket(&quot;ws://coms-3090-026.class.las.iastate.edu:8080/ws/notifications/&quot; + userId);</span>
+        }
+
+
+        // Add items (ex. Home, Profile, etc) into the navigation bar
+<span class="nc" id="L137">        drawerItems = getResources().getStringArray(R.array.drawer_items);</span>
+<span class="nc" id="L138">        drawerList.setAdapter(new ArrayAdapter&lt;&gt;(this, R.layout.drawer_item, drawerItems));</span>
+
+
+        // Handles how to react when each item is clicked on the navigation bar
+<span class="nc" id="L142">        drawerList.setOnItemClickListener((parent, view, position, id) -&gt; {</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if(drawerItems[position].equals(&quot;Home&quot;)){</span>
+<span class="nc" id="L144">                Toast.makeText(this, &quot;Already at Home!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L145">                drawerLayout.closeDrawer(GravityCompat.START);</span>
+            }
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Calendar&quot;)){</span>
+<span class="nc" id="L148">                Intent intent = new Intent(HomeActivity.this, CalendarActivity.class);</span>
+<span class="nc" id="L149">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L150">                startActivity(intent);</span>
+<span class="nc" id="L151">                finish();</span>
+<span class="nc" id="L152">            }</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Tasks Manager&quot;)){</span>
+<span class="nc" id="L154">                Intent intent = new Intent(HomeActivity.this, TaskManagerActivity.class);</span>
+<span class="nc" id="L155">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L156">                startActivity(intent);</span>
+<span class="nc" id="L157">                finish();</span>
+<span class="nc" id="L158">            }</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Friends&quot;)){</span>
+<span class="nc" id="L160">                Intent intent = new Intent(HomeActivity.this, FriendsListActivity.class);</span>
+<span class="nc" id="L161">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L162">                startActivity(intent);</span>
+<span class="nc" id="L163">                drawerLayout.closeDrawer(GravityCompat.START);</span>
+<span class="nc" id="L164">            }</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Currency Converter&quot;)){</span>
+<span class="nc" id="L166">                Intent intent = new Intent(HomeActivity.this, CurrencyConverterActivity.class);</span>
+<span class="nc" id="L167">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L168">                startActivity(intent);</span>
+<span class="nc" id="L169">                finish();</span>
+<span class="nc" id="L170">            }</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Settings&quot;)){</span>
+<span class="nc" id="L172">                Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);</span>
+<span class="nc" id="L173">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L174">                startActivity(intent);</span>
+<span class="nc" id="L175">                finish();</span>
+<span class="nc" id="L176">            }</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Packing CheckList&quot;)){</span>
+<span class="nc" id="L178">                Intent intent = new Intent(HomeActivity.this, PackingChecklistActivity.class);</span>
+<span class="nc" id="L179">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L180">                startActivity(intent);</span>
+<span class="nc" id="L181">                finish();</span>
+<span class="nc" id="L182">            }</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Group Chat&quot;)){</span>
+<span class="nc" id="L184">                Intent intent = new Intent(HomeActivity.this, TripChatActivity.class);</span>
+<span class="nc" id="L185">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L186">                startActivity(intent);</span>
+<span class="nc" id="L187">                finish();</span>
+<span class="nc" id="L188">            }</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Trips&quot;)){</span>
+<span class="nc" id="L190">                Intent intent = new Intent(HomeActivity.this, TripListActivity.class);</span>
+<span class="nc" id="L191">                intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L192">                startActivity(intent);</span>
+<span class="nc" id="L193">                finish();</span>
+<span class="nc" id="L194">            }</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Budget Manager&quot;)){</span>
+<span class="nc" id="L196">                Intent intent = new Intent(HomeActivity.this, BudgetListActivity.class);</span>
+<span class="nc" id="L197">                startActivity(intent);</span>
+<span class="nc" id="L198">                finish();</span>
+<span class="nc" id="L199">                Toast.makeText(this, &quot;Let's manage your trip budgets!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L200">            }</span>
+
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            else if(drawerItems[position].equals(&quot;Logout&quot;)){</span>
+<span class="nc" id="L203">                Intent intent = new Intent(HomeActivity.this, SignupActivity.class);</span>
+<span class="nc" id="L204">                startActivity(intent);</span>
+<span class="nc" id="L205">                finish();</span>
+<span class="nc" id="L206">                Toast.makeText(this, &quot;Logged out&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L207">            }</span>
+            else{
+<span class="nc" id="L209">                Toast.makeText(this, drawerItems[position] + &quot; clicked&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L210">                drawerLayout.closeDrawer(GravityCompat.START);</span>
+            }
+<span class="nc" id="L212">        });</span>
+
+        // Setup Drawer Toggle (for hamburger icon)
+<span class="nc" id="L215">        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,</span>
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+
+<span class="nc" id="L218">        drawerToggle.getDrawerArrowDrawable()</span>
+<span class="nc" id="L219">                .setColor(getResources().getColor(android.R.color.white));</span>
+
+<span class="nc" id="L221">        drawerLayout.addDrawerListener(drawerToggle);</span>
+<span class="nc" id="L222">        drawerToggle.syncState();</span>
+<span class="nc" id="L223">    }</span>
+
+    @Override
+    public void onBackPressed() {
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {</span>
+<span class="nc" id="L228">            drawerLayout.closeDrawer(GravityCompat.START);</span>
+        } else {
+<span class="nc" id="L230">            super.onBackPressed();</span>
+        }
+<span class="nc" id="L232">    }</span>
+
+
+    // loads the username of the logged-in user from the server and displays it
+    private void loadUserProfile(int userId) {
+<span class="nc" id="L237">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v2/users/&quot; + userId;</span>
+
+<span class="nc" id="L239">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    // Extract only username
+<span class="nc" id="L245">                    String username = response.optString(&quot;username&quot;, &quot;N/A&quot;);</span>
+
+<span class="nc" id="L247">                    TextView tvUsername = findViewById(R.id.tvUsername);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                    tvUsername.setText(username.equals(&quot;null&quot;) ? &quot;N/A&quot; : username);</span>
+<span class="nc" id="L249">                },</span>
+<span class="nc" id="L250">                error -&gt; Toast.makeText(this, &quot;Failed to load username&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L253">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L254">    }</span>
+
+    // saves the current notification badge count when the activity pauses
+    @Override
+    protected void onPause() {
+<span class="nc" id="L259">        super.onPause();</span>
+<span class="nc" id="L260">        getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L261">                .edit()</span>
+<span class="nc" id="L262">                .putInt(&quot;badgeCount&quot;, notificationCount)</span>
+<span class="nc" id="L263">                .apply();</span>
+<span class="nc" id="L264">    }</span>
+
+    // restores the badge count and reconnects websocket if needed
+    @Override
+    protected void onResume() {
+<span class="nc" id="L269">        super.onResume();</span>
+<span class="nc" id="L270">        notificationCount = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L271">                .getInt(&quot;badgeCount&quot;, 0);</span>
+<span class="nc" id="L272">        notificationBadge.setNumber(notificationCount);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        if (!WebSocketManager.getInstance().isConnected()) {</span>
+<span class="nc" id="L274">            WebSocketManager.getInstance()</span>
+<span class="nc" id="L275">                    .connectWebSocket(&quot;ws://coms-3090-026.class.las.iastate.edu:8080/ws/notifications/&quot; + userId);</span>
+        }
+<span class="nc" id="L277">    }</span>
+
+    // disconnects websocket if the activity is closing
+    @Override
+    protected void onStop() {
+<span class="nc" id="L282">        super.onStop();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        if (isFinishing()) {</span>
+<span class="nc" id="L284">            WebSocketManager.getInstance().disconnectWebSocket();</span>
+        }
+<span class="nc" id="L286">    }</span>
+
+    // removes websocket listener to prevent memory leaks
+    protected void onDestroy() {
+<span class="nc" id="L290">        super.onDestroy();</span>
+<span class="nc" id="L291">        WebSocketManager.getInstance().removeWebSocketListener();</span>
+<span class="nc" id="L292">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

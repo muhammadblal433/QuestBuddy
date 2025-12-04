@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AddEditTripEventActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.tripplanner</a> &gt; <span class="el_source">AddEditTripEventActivity.java</span></div><h1>AddEditTripEventActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.tripplanner;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.androidexample.R;
+import com.example.androidexample.tripplanner.TripEvent;
+import com.example.androidexample.tripplanner.TripEventApi;
+
+<span class="nc" id="L15">public class AddEditTripEventActivity extends AppCompatActivity {</span>
+
+    public static final String EXTRA_TRIP_ID = &quot;tripId&quot;;
+    public static final String EXTRA_USER_ID = &quot;userId&quot;;
+    public static final String EXTRA_EVENT = &quot;tripEvent&quot;;
+
+    private long tripId;
+    private long userId;
+
+    private TripEvent existingEvent;
+
+    private TripEventApi api;
+
+    private EditText edtName;
+    private EditText edtStartsAt;
+    private EditText edtEndsAt;
+    private EditText edtLocation;
+    private EditText edtNotes;
+    private EditText edtPosition;
+    private Button btnSave;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+<span class="nc" id="L38">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L39">        setContentView(R.layout.activity_add_edit_trip_event);</span>
+
+<span class="nc" id="L41">        tripId = getIntent().getLongExtra(EXTRA_TRIP_ID, -1L);</span>
+<span class="nc" id="L42">        userId = getIntent().getLongExtra(EXTRA_USER_ID, -1L);</span>
+<span class="nc" id="L43">        existingEvent = (TripEvent) getIntent().getSerializableExtra(EXTRA_EVENT);</span>
+
+<span class="nc" id="L45">        api = new TripEventApi(this);</span>
+
+<span class="nc" id="L47">        edtName = findViewById(R.id.edtName);</span>
+<span class="nc" id="L48">        edtStartsAt = findViewById(R.id.edtStartsAt);</span>
+<span class="nc" id="L49">        edtEndsAt = findViewById(R.id.edtEndsAt);</span>
+<span class="nc" id="L50">        edtLocation = findViewById(R.id.edtLocation);</span>
+<span class="nc" id="L51">        edtNotes = findViewById(R.id.edtNotes);</span>
+<span class="nc" id="L52">        edtPosition = findViewById(R.id.edtPosition);</span>
+<span class="nc" id="L53">        btnSave = findViewById(R.id.btnSave);</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (existingEvent != null) {</span>
+<span class="nc" id="L56">            setTitle(&quot;Edit Event&quot;);</span>
+<span class="nc" id="L57">            edtName.setText(existingEvent.name);</span>
+<span class="nc" id="L58">            edtStartsAt.setText(existingEvent.startsAt);</span>
+<span class="nc" id="L59">            edtEndsAt.setText(existingEvent.endsAt);</span>
+<span class="nc" id="L60">            edtLocation.setText(existingEvent.location);</span>
+<span class="nc" id="L61">            edtNotes.setText(existingEvent.notes);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (existingEvent.position != null) {</span>
+<span class="nc" id="L63">                edtPosition.setText(String.valueOf(existingEvent.position));</span>
+            }
+        } else {
+<span class="nc" id="L66">            setTitle(&quot;New Event&quot;);</span>
+        }
+
+<span class="nc" id="L69">        btnSave.setOnClickListener(v -&gt; save());</span>
+<span class="nc" id="L70">    }</span>
+
+    private void save() {
+<span class="nc" id="L73">        String name = edtName.getText().toString().trim();</span>
+<span class="nc" id="L74">        String startsAt = edtStartsAt.getText().toString().trim();</span>
+<span class="nc" id="L75">        String endsAt = edtEndsAt.getText().toString().trim();</span>
+<span class="nc" id="L76">        String location = edtLocation.getText().toString().trim();</span>
+<span class="nc" id="L77">        String notes = edtNotes.getText().toString().trim();</span>
+<span class="nc" id="L78">        String positionStr = edtPosition.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (TextUtils.isEmpty(name)) {</span>
+<span class="nc" id="L81">            edtName.setError(&quot;Required&quot;);</span>
+<span class="nc" id="L82">            return;</span>
+        }
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (TextUtils.isEmpty(startsAt)) {</span>
+<span class="nc" id="L85">            edtStartsAt.setError(&quot;Required&quot;);</span>
+<span class="nc" id="L86">            return;</span>
+        }
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (TextUtils.isEmpty(endsAt)) {</span>
+<span class="nc" id="L89">            edtEndsAt.setError(&quot;Required&quot;);</span>
+<span class="nc" id="L90">            return;</span>
+        }
+
+<span class="nc" id="L93">        Integer position = null;</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (!TextUtils.isEmpty(positionStr)) {</span>
+            try {
+<span class="nc" id="L96">                position = Integer.parseInt(positionStr);</span>
+<span class="nc" id="L97">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L98">                edtPosition.setError(&quot;Invalid number&quot;);</span>
+<span class="nc" id="L99">                return;</span>
+<span class="nc" id="L100">            }</span>
+        }
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (existingEvent == null) {</span>
+<span class="nc" id="L104">            api.createEvent(</span>
+                    userId,
+                    tripId,
+                    name,
+                    startsAt,
+                    endsAt,
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                    TextUtils.isEmpty(location) ? null : location,</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                    TextUtils.isEmpty(notes) ? null : notes,</span>
+                    position,
+<span class="nc" id="L113">                    new TripEventApi.EventCallback() {</span>
+                        @Override
+                        public void onSuccess(TripEvent event) {
+<span class="nc" id="L116">                            Toast.makeText(AddEditTripEventActivity.this,</span>
+<span class="nc" id="L117">                                    &quot;Event created&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L118">                            finish();</span>
+<span class="nc" id="L119">                        }</span>
+
+                        @Override
+                        public void onError(String errorMessage) {
+<span class="nc" id="L123">                            Toast.makeText(AddEditTripEventActivity.this,</span>
+                                    &quot;Create failed: &quot; + errorMessage,
+<span class="nc" id="L125">                                    Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L126">                        }</span>
+                    }
+            );
+        } else {
+<span class="nc" id="L130">            api.editEvent(</span>
+                    userId,
+                    tripId,
+                    existingEvent.id,
+                    name,
+                    startsAt,
+                    endsAt,
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                    TextUtils.isEmpty(location) ? null : location,</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                    TextUtils.isEmpty(notes) ? null : notes,</span>
+                    position,
+<span class="nc" id="L140">                    new TripEventApi.EventCallback() {</span>
+                        @Override
+                        public void onSuccess(TripEvent event) {
+<span class="nc" id="L143">                            Toast.makeText(AddEditTripEventActivity.this,</span>
+<span class="nc" id="L144">                                    &quot;Event updated&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L145">                            finish();</span>
+<span class="nc" id="L146">                        }</span>
+
+                        @Override
+                        public void onError(String errorMessage) {
+<span class="nc" id="L150">                            Toast.makeText(AddEditTripEventActivity.this,</span>
+                                    &quot;Update failed: &quot; + errorMessage,
+<span class="nc" id="L152">                                    Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L153">                        }</span>
+                    }
+            );
+        }
+<span class="nc" id="L157">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MessageAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">MessageAdapter.java</span></div><h1>MessageAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+import com.example.androidexample.R;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import com.example.androidexample.R;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class MessageAdapter extends ListAdapter&lt;TripMessageResponseDTO, MessageAdapter.VH&gt; {
+
+    //id of the current user
+    private final long me;
+
+    public MessageAdapter(long me) {
+<span class="nc" id="L26">        super(DIFF);</span>
+<span class="nc" id="L27">        this.me = me;</span>
+<span class="nc" id="L28">    }</span>
+
+    // view holder
+    static class VH extends RecyclerView.ViewHolder {
+        TextView text;
+        TextView meta;
+        TextView reactions;
+
+        VH(@NonNull View itemView) {
+<span class="nc" id="L37">            super(itemView);</span>
+<span class="nc" id="L38">            text = itemView.findViewById(R.id.text);</span>
+<span class="nc" id="L39">            meta = itemView.findViewById(R.id.meta);</span>
+<span class="nc" id="L40">            reactions = itemView.findViewById(R.id.reactions);</span>
+<span class="nc" id="L41">        }</span>
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+<span class="nc" id="L46">        TripMessageResponseDTO m = getItem(position);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        return (m.getSenderId() == me)</span>
+<span class="nc" id="L48">                ? R.layout.item_message_out</span>
+<span class="nc" id="L49">                : R.layout.item_message_in;</span>
+    }
+
+    // inflate row layout
+    @NonNull
+    @Override
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L56">        View v = LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);</span>
+<span class="nc" id="L57">        return new VH(v);</span>
+    }
+
+    // bind data to ui
+    @Override
+    public void onBindViewHolder(@NonNull VH h, int position) {
+<span class="nc" id="L63">        TripMessageResponseDTO m = getItem(position);</span>
+
+        String content =
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                (m.isDeleted())</span>
+<span class="nc" id="L67">                        ? &quot;(message deleted)&quot;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                        : (m.getContent() == null ? &quot;&quot; : m.getContent());</span>
+
+<span class="nc" id="L70">        h.text.setText(content);</span>
+
+        // timestamp + edited flag
+<span class="nc" id="L73">        String time = formatTimestamp(m.getSentAt());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (m.isEdited()) time += &quot; • edited&quot;;</span>
+
+        // reactions string
+<span class="nc" id="L77">        h.meta.setText(time);</span>
+
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        if (m.getReactions() != null &amp;&amp; !m.getReactions().isEmpty()) {</span>
+<span class="nc" id="L80">            StringBuilder r = new StringBuilder();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            for (String emoji : m.getReactions().keySet()) {</span>
+<span class="nc" id="L82">                int count = m.getReactions().get(emoji);</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">                boolean mine = m.getMyReactions() != null &amp;&amp; m.getMyReactions().contains(emoji);</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                if (mine) {</span>
+<span class="nc" id="L86">                    r.append(&quot;[&quot;).append(emoji).append(&quot; &quot;).append(count).append(&quot;]  &quot;);</span>
+                } else {
+<span class="nc" id="L88">                    r.append(emoji).append(&quot; &quot;).append(count).append(&quot;   &quot;);</span>
+                }
+<span class="nc" id="L90">            }</span>
+
+<span class="nc" id="L92">            h.reactions.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L93">            h.reactions.setText(r.toString().trim());</span>
+<span class="nc" id="L94">        } else {</span>
+<span class="nc" id="L95">            h.reactions.setVisibility(View.GONE);</span>
+        }
+<span class="nc" id="L97">    }</span>
+
+    // convert iso timestamp to hh:mm
+    private String formatTimestamp(String iso) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (iso == null) return &quot;&quot;;</span>
+        try {
+<span class="nc" id="L103">            SimpleDateFormat parser =</span>
+                    new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot;, Locale.US);
+<span class="nc" id="L105">            Date d = parser.parse(iso);</span>
+
+<span class="nc" id="L107">            SimpleDateFormat out =</span>
+                    new SimpleDateFormat(&quot;hh:mm a&quot;, Locale.US);
+<span class="nc" id="L109">            return out.format(d);</span>
+<span class="nc" id="L110">        } catch (ParseException e) {</span>
+<span class="nc" id="L111">            return &quot;&quot;;</span>
+        }
+    }
+
+    // diffutil for list changes
+<span class="nc" id="L116">    private static final DiffUtil.ItemCallback&lt;TripMessageResponseDTO&gt; DIFF =</span>
+<span class="nc" id="L117">            new DiffUtil.ItemCallback&lt;TripMessageResponseDTO&gt;() {</span>
+                @Override
+                public boolean areItemsTheSame(@NonNull TripMessageResponseDTO a, @NonNull TripMessageResponseDTO b) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                    return a.getId() == b.getId();</span>
+                }
+
+                @Override
+                public boolean areContentsTheSame(@NonNull TripMessageResponseDTO a, @NonNull TripMessageResponseDTO b) {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                    return a.getContent().equals(b.getContent())</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                            &amp;&amp; a.isEdited() == b.isEdited()</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                            &amp;&amp; a.isDeleted() == b.isDeleted()</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">                            &amp;&amp; ((a.getReactions() == null &amp;&amp; b.getReactions() == null)</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">                            || (a.getReactions() != null &amp;&amp; a.getReactions().equals(b.getReactions())));</span>
+                }
+            };
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

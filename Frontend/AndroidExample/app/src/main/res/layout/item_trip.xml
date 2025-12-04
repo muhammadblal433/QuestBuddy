@@ -28,7 +28,7 @@
             android:id="@+id/btnEditName"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
             android:src="@drawable/edit_button_24"
             android:tint="#FFFFFF" />
 
@@ -38,7 +38,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginStart="4dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_delete"
             android:tint="#FFFFFF" />
     </LinearLayout>
@@ -50,7 +50,8 @@
         android:layout_height="wrap_content"
         android:text="Destination"
         android:textColor="#FFFFFF"
-        android:alpha="0.85" />
+        android:alpha="0.85"
+        android:layout_marginTop="4dp"/>
 
     <TextView
         android:id="@+id/tvDateRange"
@@ -59,7 +60,7 @@
         android:text="2025-01-01 -> 2025-01-05"
         android:textColor="#FFFFFF"
         android:alpha="0.7"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="2dp" />
 
     <TextView
         android:id="@+id/tvStartLocation"
@@ -67,6 +68,41 @@
         android:layout_height="wrap_content"
         android:textColor="#FFFFFF"
         android:text="Start: Ames, IA"
-        android:alpha="0.7" />
+        android:alpha="0.7"
+        android:layout_marginTop="2dp"/>
+
+    <LinearLayout
+        android:id="@+id/layoutButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        android:paddingBottom="2dp">
+
+        <Button
+            android:id="@+id/btnChat"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Chat"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/white_outline_button"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:layout_marginEnd="12dp"/>
+
+        <Button
+            android:id="@+id/btnPlanner"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Planner"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/white_outline_button"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:layout_marginEnd="12dp"/>
+    </LinearLayout>
 
 </LinearLayout>

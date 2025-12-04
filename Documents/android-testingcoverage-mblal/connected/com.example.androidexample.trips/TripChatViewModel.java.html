@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripChatViewModel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripChatViewModel.java</span></div><h1>TripChatViewModel.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+import com.android.volley.RequestQueue;
+import org.json.JSONObject;
+
+import java.util.*;
+
+
+public class TripChatViewModel extends ViewModel {
+    private final TripChatApi api;
+    private final long me;
+    private final long tripId;
+
+<span class="nc" id="L17">    private final MutableLiveData&lt;List&lt;TripMessageResponseDTO&gt;&gt; messages = new MutableLiveData&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L18">    private Long oldestIdLoaded = null;</span>
+
+    private final TripWebSocket wsOrNull;
+
+
+<span class="nc" id="L23">    public TripChatViewModel(String baseUrl, String baseWsUrl, long me, long tripId, RequestQueue queue) {</span>
+<span class="nc" id="L24">        this.api = new TripChatApi(baseUrl, queue);</span>
+<span class="nc" id="L25">        this.me = me; this.tripId = tripId;</span>
+
+        // Only create/connect WS if we have a valid ws:// or wss:// URL
+<span class="nc bnc" id="L28" title="All 6 branches missed.">        if (baseWsUrl != null &amp;&amp; (baseWsUrl.startsWith(&quot;ws://&quot;) || baseWsUrl.startsWith(&quot;wss://&quot;))) {</span>
+<span class="nc" id="L29">            wsOrNull = new TripWebSocket(baseWsUrl, me, tripId, new TripWebSocket.WsListener() {</span>
+<span class="nc" id="L30">                @Override public void onOpen() {}</span>
+<span class="nc" id="L31">                @Override public void onMessage(String json) { reloadLatest(); }</span>
+<span class="nc" id="L32">                @Override public void onClosed(int code, String reason) {}</span>
+<span class="nc" id="L33">                @Override public void onFailure(Throwable t) { /* no crash; maybe log */ }</span>
+            });
+        } else {
+<span class="nc" id="L36">            wsOrNull = null;</span>
+        }
+
+<span class="nc" id="L39">        start();</span>
+<span class="nc" id="L40">    }</span>
+
+<span class="nc" id="L42">    public LiveData&lt;List&lt;TripMessageResponseDTO&gt;&gt; getMessages() { return messages; }</span>
+
+    private void start() {
+<span class="nc" id="L45">        reloadLatest();           // REST still works without WS</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        try { if (wsOrNull != null) wsOrNull.connect(); } catch (Throwable ignored) {} }</span>
+
+    private void applyIncomingMessage(TripMessageResponseDTO msg) {
+<span class="nc" id="L49">        List&lt;TripMessageResponseDTO&gt; list = new ArrayList&lt;&gt;(messages.getValue());</span>
+<span class="nc" id="L50">        boolean updated = false;</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        for (int i = 0; i &lt; list.size(); i++) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (list.get(i).getId() == msg.getId()) {</span>
+<span class="nc" id="L54">                list.set(i, msg);</span>
+<span class="nc" id="L55">                updated = true;</span>
+<span class="nc" id="L56">                break;</span>
+            }
+        }
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (!updated) list.add(msg);</span>
+
+<span class="nc" id="L61">        list.sort(Comparator.comparingLong(TripMessageResponseDTO::getId));</span>
+<span class="nc" id="L62">        messages.postValue(list);</span>
+<span class="nc" id="L63">    }</span>
+
+    private void reloadLatest() {
+<span class="nc" id="L66">        api.listMessages(me, tripId, null, 50, new TripChatApi.Callback&lt;List&lt;TripMessageResponseDTO&gt;&gt;() {</span>
+            @Override public void onSuccess(List&lt;TripMessageResponseDTO&gt; list) {
+<span class="nc" id="L68">                list.sort((a,b) -&gt; Long.compare(a.getId(), b.getId()));</span>
+<span class="nc" id="L69">                messages.postValue(list);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                if (!list.isEmpty()) {</span>
+<span class="nc" id="L71">                    long min = list.get(0).getId();</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">                    for (TripMessageResponseDTO m : list) if (m.getId() &lt; min) min = m.getId();</span>
+<span class="nc" id="L73">                    oldestIdLoaded = min;</span>
+                }
+<span class="nc" id="L75">            }</span>
+<span class="nc" id="L76">            @Override public void onError(Throwable t) { /* optional: expose error */ }</span>
+        });
+<span class="nc" id="L78">    }</span>
+
+    // Loads older messages for infinite scroll.
+    public void loadMore() {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (oldestIdLoaded == null) return;</span>
+<span class="nc" id="L83">        api.listMessages(me, tripId, oldestIdLoaded, 50, new TripChatApi.Callback&lt;List&lt;TripMessageResponseDTO&gt;&gt;() {</span>
+            @Override public void onSuccess(List&lt;TripMessageResponseDTO&gt; page) {
+<span class="nc" id="L85">                List&lt;TripMessageResponseDTO&gt; cur = new ArrayList&lt;&gt;(messages.getValue());</span>
+<span class="nc" id="L86">                cur.addAll(0, page);</span>
+<span class="nc" id="L87">                cur.sort((a,b) -&gt; Long.compare(a.getId(), b.getId()));</span>
+<span class="nc" id="L88">                messages.postValue(cur);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                if (!page.isEmpty()) {</span>
+<span class="nc" id="L90">                    long min = page.get(0).getId();</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">                    for (TripMessageResponseDTO m : page) if (m.getId() &lt; min) min = m.getId();</span>
+<span class="nc" id="L92">                    oldestIdLoaded = min;</span>
+                }
+<span class="nc" id="L94">            }</span>
+<span class="nc" id="L95">            @Override public void onError(Throwable t) { }</span>
+        });
+<span class="nc" id="L97">    }</span>
+
+    public void send(String content) {
+<span class="nc" id="L100">        List&lt;TripMessageResponseDTO&gt; cur = new ArrayList&lt;&gt;(messages.getValue());</span>
+<span class="nc" id="L101">        long tempId = -System.currentTimeMillis();</span>
+
+<span class="nc" id="L103">        TripMessageResponseDTO optimistic = new TripMessageResponseDTO(</span>
+                tempId, tripId, me, content,
+<span class="nc" id="L105">                null, null, isoNow(), null, false, null,</span>
+                null, null, null, false, null, null
+        );
+<span class="nc" id="L108">        cur.add(optimistic);</span>
+<span class="nc" id="L109">        messages.postValue(cur);</span>
+
+<span class="nc" id="L111">        TripMessageCreateDTO body = new TripMessageCreateDTO(</span>
+<span class="nc" id="L112">                content, null, null, UUID.randomUUID().toString(), isoNow()</span>
+        );
+
+<span class="nc" id="L115">        api.post(me, tripId, body, new TripChatApi.Callback&lt;TripMessageResponseDTO&gt;() {</span>
+            @Override public void onSuccess(TripMessageResponseDTO server) {
+<span class="nc" id="L117">                replaceTemp(tempId, server);</span>
+<span class="nc" id="L118">            }</span>
+            @Override public void onError(Throwable t) {
+<span class="nc" id="L120">                replaceTemp(tempId, new TripMessageResponseDTO(</span>
+<span class="nc" id="L121">                        tempId, tripId, me, &quot;Failed to send: &quot; + content,</span>
+<span class="nc" id="L122">                        null, null, isoNow(), null,</span>
+                        false, null, null, null,
+                        null, false, null, null
+                ));
+<span class="nc" id="L126">            }</span>
+        });
+<span class="nc" id="L128">    }</span>
+
+    // Allows for instant messages, doesn't take long time for messages to load
+    private void replaceTemp(long tempId, TripMessageResponseDTO actual) {
+<span class="nc" id="L132">        List&lt;TripMessageResponseDTO&gt; list = new ArrayList&lt;&gt;(messages.getValue());</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        for (int i = 0; i &lt; list.size(); i++) {</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (list.get(i).getId() == tempId) {</span>
+<span class="nc" id="L135">                list.set(i, actual);</span>
+<span class="nc" id="L136">                break;</span>
+            }
+        }
+<span class="nc" id="L139">        list.sort(Comparator.comparingLong(TripMessageResponseDTO::getId));</span>
+<span class="nc" id="L140">        messages.postValue(list);</span>
+<span class="nc" id="L141">    }</span>
+
+    // Sends an edit request for an existing message.
+    public void edit(long msgId, String newText, long version) {
+<span class="nc" id="L145">        TripMessageEditDTO dto = new TripMessageEditDTO(newText, version);</span>
+
+<span class="nc" id="L147">        api.edit(me, tripId, msgId, dto, new TripChatApi.Callback&lt;TripMessageResponseDTO&gt;() {</span>
+            @Override public void onSuccess(TripMessageResponseDTO server) {
+<span class="nc" id="L149">                applyIncomingMessage(server);</span>
+<span class="nc" id="L150">            }</span>
+<span class="nc" id="L151">            @Override public void onError(Throwable t) {}</span>
+        });
+<span class="nc" id="L153">    }</span>
+
+    // Sends a delete request for an existing message.
+    public void delete(long msgId, long version) {
+<span class="nc" id="L157">        api.delete(me, tripId, msgId, version, new TripChatApi.Callback&lt;TripMessageResponseDTO&gt;() {</span>
+            @Override public void onSuccess(TripMessageResponseDTO server) {
+<span class="nc" id="L159">                applyIncomingMessage(server);</span>
+<span class="nc" id="L160">            }</span>
+<span class="nc" id="L161">            @Override public void onError(Throwable t) {}</span>
+        });
+<span class="nc" id="L163">    }</span>
+
+    // Adds a reaction (emoji) to a message.
+    public void react(long msgId, String emoji) {
+<span class="nc" id="L167">        api.react(me, tripId, msgId, emoji, new TripChatApi.Callback&lt;Map&lt;String,Integer&gt;&gt;() {</span>
+            @Override public void onSuccess(Map&lt;String,Integer&gt; map) {
+<span class="nc" id="L169">                reloadLatest();</span>
+<span class="nc" id="L170">            }</span>
+<span class="nc" id="L171">            @Override public void onError(Throwable t) { }</span>
+        });
+<span class="nc" id="L173">    }</span>
+
+    // Removes a reaction (emoji) from a message.
+    public void unreact(long msgId, String emoji) {
+<span class="nc" id="L177">        api.unreact(me, tripId, msgId, emoji, new TripChatApi.Callback&lt;Map&lt;String,Integer&gt;&gt;() {</span>
+            @Override public void onSuccess(Map&lt;String,Integer&gt; map) {
+<span class="nc" id="L179">                reloadLatest();</span>
+<span class="nc" id="L180">            }</span>
+<span class="nc" id="L181">            @Override public void onError(Throwable t) { }</span>
+        });
+<span class="nc" id="L183">    }</span>
+
+    // Returns current timestamp in ISO-8601 format.
+    private static String isoNow() {
+<span class="nc" id="L187">        java.text.SimpleDateFormat f = new java.text.SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot;, java.util.Locale.US);</span>
+<span class="nc" id="L188">        return f.format(new java.util.Date());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

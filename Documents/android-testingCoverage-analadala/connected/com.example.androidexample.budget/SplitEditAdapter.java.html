@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SplitEditAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.budget</a> &gt; <span class="el_source">SplitEditAdapter.java</span></div><h1>SplitEditAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample.budget;
+import com.example.androidexample.R;
+
+
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.List;
+
+
+public class SplitEditAdapter extends RecyclerView.Adapter&lt;SplitEditAdapter.ViewHolder&gt; {
+
+
+    private List&lt;Split&gt; splits;
+    private String currentUser;
+    private boolean isOwner;
+
+
+<span class="nc" id="L25">    public SplitEditAdapter(List&lt;Split&gt; splits, String currentUser, boolean isOwner) {</span>
+<span class="nc" id="L26">        this.splits = splits;</span>
+<span class="nc" id="L27">        this.currentUser = currentUser;</span>
+<span class="nc" id="L28">        this.isOwner = isOwner;</span>
+<span class="nc" id="L29">    }</span>
+
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L35">        View v = LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L36">                .inflate(R.layout.item_split_editable, parent, false);</span>
+<span class="nc" id="L37">        return new ViewHolder(v);</span>
+    }
+
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+<span class="nc" id="L43">        Split s = splits.get(position);</span>
+
+
+<span class="nc" id="L46">        holder.tvUsername.setText(&quot;User: &quot; + s.getUsername());</span>
+<span class="nc" id="L47">        holder.etShare.setText(String.valueOf(s.getShareAmount()));</span>
+<span class="nc" id="L48">        holder.etPaid.setText(String.valueOf(s.getPaidAmount()));</span>
+
+
+<span class="nc bnc" id="L51" title="All 4 branches missed.">        boolean canEdit = isOwner || s.getUsername().equalsIgnoreCase(currentUser);</span>
+<span class="nc" id="L52">        holder.etShare.setEnabled(canEdit);</span>
+<span class="nc" id="L53">        holder.etPaid.setEnabled(canEdit);</span>
+
+
+<span class="nc" id="L56">        holder.etShare.addTextChangedListener(new TextWatcher() {</span>
+<span class="nc" id="L57">            @Override public void beforeTextChanged(CharSequence c, int i, int i1, int i2) {}</span>
+<span class="nc" id="L58">            @Override public void afterTextChanged(Editable e) {}</span>
+
+
+            @Override
+            public void onTextChanged(CharSequence c, int i, int i1, int i2) {
+                try {
+<span class="nc" id="L64">                    double val = Double.parseDouble(c.toString());</span>
+<span class="nc" id="L65">                    s.setShareAmount(val);</span>
+<span class="nc" id="L66">                } catch (Exception ex) {</span>
+<span class="nc" id="L67">                    s.setShareAmount(0);</span>
+<span class="nc" id="L68">                }</span>
+<span class="nc" id="L69">            }</span>
+        });
+
+
+<span class="nc" id="L73">        holder.etPaid.addTextChangedListener(new TextWatcher() {</span>
+<span class="nc" id="L74">            @Override public void beforeTextChanged(CharSequence c, int i, int i1, int i2) {}</span>
+<span class="nc" id="L75">            @Override public void afterTextChanged(Editable e) {}</span>
+
+
+            @Override
+            public void onTextChanged(CharSequence c, int i, int i1, int i2) {
+                try {
+<span class="nc" id="L81">                    double val = Double.parseDouble(c.toString());</span>
+<span class="nc" id="L82">                    s.setPaidAmount(val);</span>
+<span class="nc" id="L83">                } catch (Exception ex) {</span>
+<span class="nc" id="L84">                    s.setPaidAmount(0);</span>
+<span class="nc" id="L85">                }</span>
+<span class="nc" id="L86">            }</span>
+        });
+<span class="nc" id="L88">    }</span>
+
+
+    @Override
+    public int getItemCount() {
+<span class="nc" id="L93">        return splits.size();</span>
+    }
+
+
+    public List&lt;Split&gt; getUpdatedSplits() {
+<span class="nc" id="L98">        return splits;</span>
+    }
+
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvUsername;
+        EditText etShare, etPaid;
+
+
+        public ViewHolder(@NonNull View itemView) {
+<span class="nc" id="L108">            super(itemView);</span>
+<span class="nc" id="L109">            tvUsername = itemView.findViewById(R.id.tvUsername);</span>
+<span class="nc" id="L110">            etShare = itemView.findViewById(R.id.etShareAmount);</span>
+<span class="nc" id="L111">            etPaid = itemView.findViewById(R.id.etPaidAmount);</span>
+<span class="nc" id="L112">        }</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

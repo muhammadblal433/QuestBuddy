@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateBudgetActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.budget</a> &gt; <span class="el_source">CreateBudgetActivity.java</span></div><h1>CreateBudgetActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.budget;
+import com.example.androidexample.R;
+
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.math.BigDecimal;
+
+// lets user create a new budget with participants
+<span class="nc" id="L21">public class CreateBudgetActivity extends AppCompatActivity {</span>
+
+    private EditText etBudgetName;
+    private LinearLayout participantsContainer;
+    private RequestQueue queue;
+    private String username;
+
+    private static final String BASE_URL =
+            &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v11/users/&quot;;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L33">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L34">        setContentView(R.layout.activity_budget_create);</span>
+
+<span class="nc" id="L36">        etBudgetName = findViewById(R.id.etBudgetName);</span>
+<span class="nc" id="L37">        participantsContainer = findViewById(R.id.participantsContainer);</span>
+<span class="nc" id="L38">        Button btnAddParticipant = findViewById(R.id.btnAddParticipant);</span>
+<span class="nc" id="L39">        Button btnCreate = findViewById(R.id.btnCreateBudget);</span>
+
+<span class="nc" id="L41">        queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L42">        username = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L43">                .getString(&quot;username&quot;, &quot;null&quot;);</span>
+
+<span class="nc" id="L45">        addParticipantView();</span>
+<span class="nc" id="L46">        addParticipantView();</span>
+
+<span class="nc" id="L48">        btnAddParticipant.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L49">            addParticipantView();</span>
+<span class="nc" id="L50">            scrollToBottom();</span>
+<span class="nc" id="L51">        });</span>
+
+<span class="nc" id="L53">        btnCreate.setOnClickListener(v -&gt; createBudget());</span>
+<span class="nc" id="L54">    }</span>
+
+    // adds a participant card to layout
+    private void addParticipantView() {
+<span class="nc" id="L58">        View participantView = LayoutInflater.from(this)</span>
+<span class="nc" id="L59">                .inflate(R.layout.item_participant_input, participantsContainer, false);</span>
+
+<span class="nc" id="L61">        TextView label = participantView.findViewById(R.id.tvParticipantLabel);</span>
+<span class="nc" id="L62">        label.setText(&quot;Participant &quot; + (participantsContainer.getChildCount() + 1));</span>
+
+<span class="nc" id="L64">        Button btnDelete = participantView.findViewById(R.id.btnDeleteParticipant);</span>
+<span class="nc" id="L65">        btnDelete.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (participantsContainer.getChildCount() &gt; 1) {</span>
+<span class="nc" id="L67">                participantsContainer.removeView(participantView);</span>
+<span class="nc" id="L68">                renumberParticipants();</span>
+            } else {
+<span class="nc" id="L70">                Toast.makeText(this, &quot;At least one participant required&quot;, Toast.LENGTH_SHORT).show();</span>
+            }
+<span class="nc" id="L72">        });</span>
+
+<span class="nc" id="L74">        participantsContainer.addView(participantView);</span>
+<span class="nc" id="L75">    }</span>
+
+    // renumbers participant labels after delete
+    private void renumberParticipants() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (int i = 0; i &lt; participantsContainer.getChildCount(); i++) {</span>
+<span class="nc" id="L80">            View pView = participantsContainer.getChildAt(i);</span>
+<span class="nc" id="L81">            TextView label = pView.findViewById(R.id.tvParticipantLabel);</span>
+<span class="nc" id="L82">            label.setText(&quot;Participant &quot; + (i + 1));</span>
+        }
+<span class="nc" id="L84">    }</span>
+
+    // scrolls view to bottom
+    private void scrollToBottom() {
+<span class="nc" id="L88">        final ScrollView scrollView = findViewById(R.id.scrollViewBudgetCreate);</span>
+<span class="nc" id="L89">        scrollView.post(() -&gt; scrollView.fullScroll(View.FOCUS_DOWN));</span>
+<span class="nc" id="L90">    }</span>
+
+    // builds json and sends post request to create budget
+    private void createBudget() {
+<span class="nc" id="L94">        String name = etBudgetName.getText().toString().trim();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (TextUtils.isEmpty(name)) {</span>
+<span class="nc" id="L96">            etBudgetName.setError(&quot;Budget name required&quot;);</span>
+<span class="nc" id="L97">            return;</span>
+        }
+
+<span class="nc" id="L100">        JSONArray splitsArray = new JSONArray();</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        for (int i = 0; i &lt; participantsContainer.getChildCount(); i++) {</span>
+<span class="nc" id="L103">            View pView = participantsContainer.getChildAt(i);</span>
+<span class="nc" id="L104">            EditText etUsername = pView.findViewById(R.id.etUsername);</span>
+<span class="nc" id="L105">            EditText etShare = pView.findViewById(R.id.etShareAmount);</span>
+<span class="nc" id="L106">            EditText etPaid = pView.findViewById(R.id.etPaidAmount);</span>
+
+<span class="nc" id="L108">            String uname = etUsername.getText().toString().trim();</span>
+<span class="nc" id="L109">            String shareStr = etShare.getText().toString().trim();</span>
+<span class="nc" id="L110">            String paidStr = etPaid.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (TextUtils.isEmpty(uname)) continue; // skip if no username</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            BigDecimal share = new BigDecimal(TextUtils.isEmpty(shareStr) ? &quot;0&quot; : shareStr);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            BigDecimal paid = new BigDecimal(TextUtils.isEmpty(paidStr) ? &quot;0&quot; : paidStr);</span>
+
+<span class="nc" id="L117">            JSONObject split = new JSONObject();</span>
+            try {
+<span class="nc" id="L119">                split.put(&quot;username&quot;, uname);</span>
+<span class="nc" id="L120">                split.put(&quot;shareAmount&quot;, share);</span>
+<span class="nc" id="L121">                split.put(&quot;paidAmount&quot;, paid);</span>
+<span class="nc" id="L122">                splitsArray.put(split);</span>
+<span class="nc" id="L123">            } catch (JSONException e) {</span>
+<span class="nc" id="L124">                e.printStackTrace();</span>
+<span class="nc" id="L125">            }</span>
+        }
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (splitsArray.length() == 0) {</span>
+<span class="nc" id="L129">            Toast.makeText(this, &quot;Add at least one participant&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L130">            return;</span>
+        }
+
+<span class="nc" id="L133">        JSONObject body = new JSONObject(); // main request body</span>
+        try {
+<span class="nc" id="L135">            body.put(&quot;name&quot;, name);</span>
+<span class="nc" id="L136">            body.put(&quot;splits&quot;, splitsArray);</span>
+<span class="nc" id="L137">        } catch (JSONException e) {</span>
+<span class="nc" id="L138">            e.printStackTrace();</span>
+<span class="nc" id="L139">        }</span>
+
+<span class="nc" id="L141">        String url = BASE_URL + username + &quot;/budgets&quot;; // full api endpoiint</span>
+
+<span class="nc" id="L143">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST, url, body,
+                response -&gt; {
+<span class="nc" id="L146">                    Toast.makeText(this, &quot;Budget created successfully!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L147">                    finish();</span>
+<span class="nc" id="L148">                },</span>
+<span class="nc" id="L149">                error -&gt; Toast.makeText(this, &quot;Error creating budget&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L152">        queue.add(request); // send request</span>
+<span class="nc" id="L153">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

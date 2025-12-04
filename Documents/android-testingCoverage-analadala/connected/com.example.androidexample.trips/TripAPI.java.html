@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripAPI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripAPI.java</span></div><h1>TripAPI.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+
+import android.content.Context;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+<span class="nc" id="L21">public class TripAPI {</span>
+
+    private static final String BASE_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080&quot;;
+    private static final String LIST_TRIPS = BASE_URL + &quot;/api/v6/trips&quot;;
+
+    private static RequestQueue queue;
+    private static RequestQueue getQueue(Context ctx) {
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        if (queue == null) {</span>
+<span class="fc" id="L29">            synchronized (TripAPI.class) {</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">                if (queue == null) {</span>
+<span class="fc" id="L31">                    queue = Volley.newRequestQueue(ctx.getApplicationContext());</span>
+                }
+<span class="fc" id="L33">            }</span>
+        }
+<span class="fc" id="L35">        return queue;</span>
+    }
+
+    // ---------- Callbacks ----------
+    public interface ListCallback   { void onSuccess(List&lt;TripDTO&gt; trips); void onError(String message); }
+    public interface OneCallback    { void onSuccess(TripDTO trip);        void onError(String message); }
+    public interface VoidCallback   { void onSuccess();                    void onError(String message); }
+
+    // ---------- GET (already had) ----------
+    public static void fetchTrips(Context ctx, long userId, final ListCallback cb) {
+<span class="fc" id="L45">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                LIST_TRIPS,
+                null,
+                arr -&gt; {
+                    try {
+<span class="fc" id="L51">                        cb.onSuccess(parseTripArray(arr));</span>
+<span class="nc" id="L52">                    } catch (Exception e) {</span>
+<span class="nc" id="L53">                        cb.onError(&quot;Parse error: &quot; + e.getMessage());</span>
+<span class="fc" id="L54">                    }</span>
+<span class="fc" id="L55">                },</span>
+<span class="nc" id="L56">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="fc" id="L57">        ) {</span>
+<span class="fc" id="L58">            @Override public Map&lt;String, String&gt; getHeaders() { return authHeaders(userId); }</span>
+        };
+<span class="fc" id="L60">        getQueue(ctx).add(req);</span>
+<span class="fc" id="L61">    }</span>
+
+    // ---------- POST /api/v6/trips ----------
+    public static void createTrip(Context ctx, long userId, TripDTO in, final OneCallback cb) {
+<span class="nc" id="L65">        JSONObject body = toCreateOrUpdateJson(in);</span>
+<span class="nc" id="L66">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                LIST_TRIPS,
+                body,
+                obj -&gt; {
+<span class="nc" id="L71">                    try { cb.onSuccess(parseTrip(obj)); }</span>
+<span class="nc" id="L72">                    catch (Exception e) { cb.onError(&quot;Parse error: &quot; + e.getMessage()); }</span>
+<span class="nc" id="L73">                },</span>
+<span class="nc" id="L74">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="nc" id="L75">        ) {</span>
+<span class="nc" id="L76">            @Override public Map&lt;String, String&gt; getHeaders() { return authJsonHeaders(userId); }</span>
+        };
+<span class="nc" id="L78">        getQueue(ctx).add(req);</span>
+<span class="nc" id="L79">    }</span>
+
+    // ---------- PUT /api/v6/trips/{id} ----------
+    public static void updateTrip(Context ctx, long userId, long id, TripDTO in, final OneCallback cb) {
+<span class="nc" id="L83">        String url = LIST_TRIPS + &quot;/&quot; + id;</span>
+<span class="nc" id="L84">        JSONObject body = toCreateOrUpdateJson(in);</span>
+<span class="nc" id="L85">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                body,
+                obj -&gt; {
+<span class="nc" id="L90">                    try { cb.onSuccess(parseTrip(obj)); }</span>
+<span class="nc" id="L91">                    catch (Exception e) { cb.onError(&quot;Parse error: &quot; + e.getMessage()); }</span>
+<span class="nc" id="L92">                },</span>
+<span class="nc" id="L93">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="nc" id="L94">        ) {</span>
+<span class="nc" id="L95">            @Override public Map&lt;String, String&gt; getHeaders() { return authJsonHeaders(userId); }</span>
+        };
+<span class="nc" id="L97">        getQueue(ctx).add(req);</span>
+<span class="nc" id="L98">    }</span>
+
+    // ---------- DELETE /api/v6/trips/{id} ----------
+    public static void deleteTrip(Context ctx, long userId, long id, final VoidCallback cb) {
+<span class="nc" id="L102">        String url = LIST_TRIPS + &quot;/&quot; + id;</span>
+<span class="nc" id="L103">        StringRequest req = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+<span class="nc" id="L106">                s -&gt; cb.onSuccess(),</span>
+<span class="nc" id="L107">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="nc" id="L108">        ) {</span>
+<span class="nc" id="L109">            @Override public Map&lt;String, String&gt; getHeaders() { return authHeaders(userId); }</span>
+        };
+<span class="nc" id="L111">        getQueue(ctx).add(req);</span>
+<span class="nc" id="L112">    }</span>
+
+    // ---------- Helpers ----------
+    private static Map&lt;String, String&gt; authHeaders(long userId) {
+<span class="fc" id="L116">        Map&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L117">        h.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="fc" id="L118">        h.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L119">        return h;</span>
+    }
+
+    private static Map&lt;String, String&gt; authJsonHeaders(long userId) {
+<span class="nc" id="L123">        Map&lt;String, String&gt; h = authHeaders(userId);</span>
+<span class="nc" id="L124">        h.put(&quot;Content-Type&quot;, &quot;application/json; charset=utf-8&quot;);</span>
+<span class="nc" id="L125">        return h;</span>
+    }
+
+    private static JSONObject toCreateOrUpdateJson(TripDTO t) {
+<span class="nc" id="L129">        JSONObject o = new JSONObject();</span>
+        try {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (t.name != null) o.put(&quot;name&quot;, t.name);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (t.destination != null) o.put(&quot;destination&quot;, t.destination);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (t.startLocationName != null) o.put(&quot;startLocationName&quot;, t.startLocationName);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (t.startLat != null) o.put(&quot;startLat&quot;, t.startLat);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (t.startLon != null) o.put(&quot;startLon&quot;, t.startLon);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (t.startDate != null) o.put(&quot;startDate&quot;, t.startDate);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            if (t.endDate != null) o.put(&quot;endDate&quot;, t.endDate);</span>
+<span class="nc" id="L138">        } catch (Exception ignored) {}</span>
+<span class="nc" id="L139">        return o;</span>
+    }
+
+    private static TripDTO parseTrip(JSONObject o) throws Exception {
+<span class="nc" id="L143">        TripDTO t = new TripDTO();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (!o.isNull(&quot;id&quot;))      t.id = o.getLong(&quot;id&quot;);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (!o.isNull(&quot;ownerId&quot;)) t.ownerId = o.getLong(&quot;ownerId&quot;);</span>
+<span class="nc" id="L146">        t.name = o.optString(&quot;name&quot;, null);</span>
+<span class="nc" id="L147">        t.destination = o.optString(&quot;destination&quot;, null);</span>
+<span class="nc" id="L148">        t.startLocationName = o.optString(&quot;startLocationName&quot;, null);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (!o.isNull(&quot;startLat&quot;)) t.startLat = o.getDouble(&quot;startLat&quot;);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        if (!o.isNull(&quot;startLon&quot;)) t.startLon = o.getDouble(&quot;startLon&quot;);</span>
+<span class="nc" id="L151">        t.startDate = o.optString(&quot;startDate&quot;, null);</span>
+<span class="nc" id="L152">        t.endDate   = o.optString(&quot;endDate&quot;, null);</span>
+<span class="nc" id="L153">        t.createdAt = o.optString(&quot;createdAt&quot;, null);</span>
+<span class="nc" id="L154">        t.updatedAt = o.optString(&quot;updatedAt&quot;, null);</span>
+<span class="nc" id="L155">        return t;</span>
+    }
+
+    private static List&lt;TripDTO&gt; parseTripArray(JSONArray arr) throws Exception {
+<span class="fc" id="L159">        List&lt;TripDTO&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        for (int i = 0; i &lt; arr.length(); i++) out.add(parseTrip(arr.getJSONObject(i)));</span>
+<span class="fc" id="L161">        return out;</span>
+    }
+
+    private static String normalizeVolleyError(VolleyError e) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (e.networkResponse != null) {</span>
+<span class="nc" id="L166">            String body = &quot;&quot;;</span>
+<span class="nc" id="L167">            try { body = new String(e.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8); } catch (Exception ignored) {}</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            return &quot;HTTP &quot; + e.networkResponse.statusCode + (body.isEmpty() ? &quot;&quot; : (&quot; - &quot; + body));</span>
+        }
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (e.getCause() != null) return e.getCause().toString();</span>
+<span class="nc" id="L171">        return e.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

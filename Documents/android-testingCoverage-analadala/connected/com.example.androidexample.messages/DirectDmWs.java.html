@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirectDmWs.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.messages</a> &gt; <span class="el_source">DirectDmWs.java</span></div><h1>DirectDmWs.java</h1><pre class="source lang-java linenums">package com.example.androidexample.messages;
+
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import androidx.annotation.Nullable;
+
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft_6455;
+import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.URI;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+
+public class DirectDmWs {
+
+    public interface Listener {
+        void onOpen();
+        void onClose(int code, String reason, boolean willRetry);
+        void onError(Throwable t);
+        void onEvent(JSONObject event);
+    }
+
+    private static final String TAG = &quot;DM-WS&quot;;
+
+<span class="nc" id="L34">    private final Handler main = new Handler(Looper.getMainLooper());</span>
+    private final String url;
+    private final long userId;
+    private final Listener listener;
+
+    @Nullable private WebSocketClient ws;
+<span class="nc" id="L40">    private boolean manualClose = false;</span>
+
+    // reconnect backoff
+<span class="nc" id="L43">    private int attempt = 0;</span>
+
+<span class="nc" id="L45">    public DirectDmWs(String url, long userId, Listener listener) {</span>
+<span class="nc" id="L46">        this.url = url;</span>
+<span class="nc" id="L47">        this.userId = userId;</span>
+<span class="nc" id="L48">        this.listener = listener;</span>
+<span class="nc" id="L49">    }</span>
+
+    public void connect() {
+<span class="nc" id="L52">        manualClose = false;</span>
+
+        try {
+<span class="nc" id="L55">            URI uri = new URI(url);</span>
+
+<span class="nc" id="L57">            Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L58">            headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+
+<span class="nc" id="L60">            ws = new WebSocketClient(uri, new Draft_6455(), headers, 0) {</span>
+                @Override public void onOpen(ServerHandshake handshakedata) {
+<span class="nc" id="L62">                    attempt = 0;</span>
+                    // keep-alive (seconds). Library will send pings internally.
+<span class="nc" id="L64">                    setConnectionLostTimeout(30);</span>
+<span class="nc" id="L65">                    postMain(listener::onOpen);</span>
+<span class="nc" id="L66">                }</span>
+
+                @Override public void onMessage(String message) {
+                    try {
+<span class="nc" id="L70">                        JSONObject evt = new JSONObject(message);</span>
+<span class="nc" id="L71">                        postMain(() -&gt; listener.onEvent(evt));</span>
+<span class="nc" id="L72">                    } catch (JSONException e) {</span>
+<span class="nc" id="L73">                        Log.w(TAG, &quot;Non-JSON message: &quot; + message);</span>
+<span class="nc" id="L74">                    }</span>
+<span class="nc" id="L75">                }</span>
+
+                @Override public void onClose(int code, String reason, boolean remote) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                    boolean willRetry = !manualClose;</span>
+<span class="nc" id="L79">                    postMain(() -&gt; listener.onClose(code, reason, willRetry));</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                    if (willRetry) scheduleReconnect();</span>
+<span class="nc" id="L81">                }</span>
+
+                @Override public void onError(Exception ex) {
+<span class="nc" id="L84">                    Log.e(TAG, &quot;WS error&quot;, ex);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                    boolean willRetry = !manualClose;</span>
+<span class="nc" id="L86">                    postMain(() -&gt; listener.onError(ex));</span>
+                    // onError may be called before/without onClose; schedule reconnect
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                    if (willRetry) scheduleReconnect();</span>
+<span class="nc" id="L89">                }</span>
+            };
+
+            // Enable TLS for wss://
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (&quot;wss&quot;.equalsIgnoreCase(uri.getScheme())) {</span>
+                try {
+<span class="nc" id="L95">                    SSLContext sslContext = SSLContext.getInstance(&quot;TLS&quot;);</span>
+<span class="nc" id="L96">                    sslContext.init(null, null, new SecureRandom());</span>
+<span class="nc" id="L97">                    SSLSocketFactory factory = sslContext.getSocketFactory();</span>
+<span class="nc" id="L98">                    ws.setSocket(factory.createSocket());</span>
+<span class="nc" id="L99">                } catch (Exception e) {</span>
+<span class="nc" id="L100">                    Log.e(TAG, &quot;Failed to init TLS; connecting without custom factory&quot;, e);</span>
+<span class="nc" id="L101">                }</span>
+            }
+
+<span class="nc" id="L104">            ws.connect(); // async</span>
+<span class="nc" id="L105">        } catch (Exception e) {</span>
+<span class="nc" id="L106">            Log.e(TAG, &quot;connect() error&quot;, e);</span>
+<span class="nc" id="L107">            postMain(() -&gt; listener.onError(e));</span>
+<span class="nc" id="L108">            scheduleReconnect();</span>
+<span class="nc" id="L109">        }</span>
+<span class="nc" id="L110">    }</span>
+
+    private void scheduleReconnect() {
+<span class="nc" id="L113">        attempt++;</span>
+<span class="nc" id="L114">        long delayMs = Math.min(30_000, (long) Math.pow(2, Math.min(6, attempt)) * 500L);</span>
+<span class="nc" id="L115">        main.postDelayed(this::connect, delayMs);</span>
+<span class="nc" id="L116">    }</span>
+
+    public void close() {
+<span class="nc" id="L119">        manualClose = true;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (ws != null) {</span>
+<span class="nc" id="L121">            try { ws.close(1000, &quot;bye&quot;); } catch (Exception ignored) {}</span>
+<span class="nc" id="L122">            ws = null;</span>
+        }
+<span class="nc" id="L124">    }</span>
+
+    public void send(JSONObject obj) {
+<span class="nc" id="L127">        WebSocketClient s = ws;</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">        if (s == null || !s.isOpen()) return;   // or throw / log</span>
+<span class="nc" id="L129">        s.send(obj.toString());</span>
+<span class="nc" id="L130">    }</span>
+
+<span class="nc" id="L132">    private void postMain(Runnable r) { main.post(r); }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

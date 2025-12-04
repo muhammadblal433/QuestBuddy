@@ -181,12 +181,6 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
-            else if(drawerItems[position].equals("Group Chat")){
-                Intent intent = new Intent(HomeActivity.this, TripChatActivity.class);
-                intent.putExtra("userId", userId);
-                startActivity(intent);
-                finish();
-            }
             else if(drawerItems[position].equals("Trips")){
                 Intent intent = new Intent(HomeActivity.this, TripListActivity.class);
                 intent.putExtra("userId", userId);
