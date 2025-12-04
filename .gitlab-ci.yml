@@ -12,10 +12,9 @@ maven-build:
   tags:                 # to specify which runner to execute this job
     - springboot_tag    # change to your runner's tag
   script:
-    - java -version
-    - javac -version
-    - echo $JAVA_HOME
-    - mvn -version
+    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+    - export PATH=$JAVA_HOME/bin:$PATH
+    - mvn -version  # Verify Maven now sees Java 17
     - cd Backend
     - mvn package
   artifacts:            # where to output the packaged jar file, change 'Backend' to to where you have the pom.xml
