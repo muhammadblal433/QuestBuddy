@@ -1,4 +1,5 @@
 package com.example.androidexample.budget;
+import com.example.androidexample.R;
 
 
 import android.text.Editable;
@@ -11,7 +12,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
-import com.example.androidexample.R;
 
 
 public class SplitEditAdapter extends RecyclerView.Adapter<SplitEditAdapter.ViewHolder> {

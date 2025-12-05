@@ -1,4 +1,5 @@
 package com.example.androidexample.friends;
+import com.example.androidexample.R;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 public class FriendProfileActivity extends AppCompatActivity {
 

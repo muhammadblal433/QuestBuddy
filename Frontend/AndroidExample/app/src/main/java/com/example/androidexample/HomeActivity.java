@@ -18,6 +18,7 @@ import com.example.androidexample.packing.PackingChecklistActivity;
 import com.example.androidexample.tasks.TaskManagerActivity;
 import com.example.androidexample.trips.TripChatActivity;
 import com.example.androidexample.trips.TripListActivity;
+import com.example.androidexample.payments.PremiumActivity;
 import com.nex3z.notificationbadge.NotificationBadge;
 import android.widget.Toast;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -180,12 +181,6 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             }
-            else if(drawerItems[position].equals("Group Chat")){
-                Intent intent = new Intent(HomeActivity.this, TripChatActivity.class);
-                intent.putExtra("userId", userId);
-                startActivity(intent);
-                finish();
-            }
             else if(drawerItems[position].equals("Trips")){
                 Intent intent = new Intent(HomeActivity.this, TripListActivity.class);
                 intent.putExtra("userId", userId);
@@ -198,7 +193,12 @@ public class HomeActivity extends AppCompatActivity {
                 finish();
                 Toast.makeText(this, "Let's manage your trip budgets!", Toast.LENGTH_SHORT).show();
             }
-
+            else if (drawerItems[position].equals("Go Premium / Payments")) {
+                Intent intent = new Intent(HomeActivity.this, PremiumActivity.class);
+                intent.putExtra("userId", userId);   // optional, PremiumActivity uses SharedPreferences already
+                startActivity(intent);
+                drawerLayout.closeDrawer(GravityCompat.START);
+            }
             else if(drawerItems[position].equals("Logout")){
                 Intent intent = new Intent(HomeActivity.this, SignupActivity.class);
                 startActivity(intent);

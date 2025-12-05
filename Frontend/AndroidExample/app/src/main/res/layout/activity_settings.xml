@@ -48,7 +48,7 @@
         android:layout_height="120dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="40dp"
-        android:src="@drawable/default_pic"
+        android:src="@drawable/default_pic_v2"
         android:background="@drawable/circle_background"
         android:scaleType="centerCrop" />
 

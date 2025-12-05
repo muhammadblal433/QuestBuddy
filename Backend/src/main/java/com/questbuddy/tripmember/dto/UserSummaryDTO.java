@@ -1,6 +1,6 @@
 package com.questbuddy.tripmember.dto;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 
 public record UserSummaryDTO(
         Long id,

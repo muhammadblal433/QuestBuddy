@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationsActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.notifications</a> &gt; <span class="el_source">NotificationsActivity.java</span></div><h1>NotificationsActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample.notifications;
+import com.example.androidexample.R;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.androidexample.HomeActivity;
+
+import android.content.Intent;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="fc" id="L27">public class NotificationsActivity extends AppCompatActivity</span>
+        implements NotificationsAdapter.OnNotificationActionListener, WebSocketListener {
+
+    private RecyclerView recyclerView;
+    private NotificationsAdapter adapter;
+<span class="fc" id="L32">    private List&lt;NotificationModel&gt; allNotifications = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L33">    private List&lt;NotificationModel&gt; filteredNotifications = new ArrayList&lt;&gt;();</span>
+    private RequestQueue queue;
+
+    private int userId;
+    private static final String BASE_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v7/notifications&quot;;
+    private static final String WS_URL = &quot;ws://coms-3090-026.class.las.iastate.edu:8080/ws/notifications/&quot;;
+
+    private Button btnAll, btnRead;
+<span class="fc" id="L41">    private String currentFilter = &quot;ALL&quot;;</span>
+
+    // sets up the activity, initializes views, adapters, websocket, and fetches notifications
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L46">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L47">        setContentView(R.layout.activity_notifications);</span>
+
+<span class="fc" id="L49">        recyclerView = findViewById(R.id.recyclerNotifications);</span>
+<span class="fc" id="L50">        recyclerView.setLayoutManager(new LinearLayoutManager(this));</span>
+
+<span class="fc" id="L52">        btnAll = findViewById(R.id.btnAll);</span>
+<span class="fc" id="L53">        btnRead = findViewById(R.id.btnRead);</span>
+
+<span class="fc" id="L55">        Button btnReturnHome = findViewById(R.id.btnReturnHome);</span>
+<span class="fc" id="L56">        btnReturnHome.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L57">            Intent intent = new Intent(NotificationsActivity.this, HomeActivity.class);</span>
+
+<span class="nc" id="L59">            int userId = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE).getInt(&quot;userId&quot;, -1);</span>
+<span class="nc" id="L60">            String username = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE).getString(&quot;username&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L62">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L63">            intent.putExtra(&quot;username&quot;, username);</span>
+
+<span class="nc" id="L65">            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+
+<span class="nc" id="L67">            startActivity(intent);</span>
+<span class="nc" id="L68">            finish();</span>
+<span class="nc" id="L69">        });</span>
+
+
+<span class="fc" id="L72">        queue = Volley.newRequestQueue(this);</span>
+
+<span class="fc" id="L74">        adapter = new NotificationsAdapter(this, filteredNotifications, this);</span>
+<span class="fc" id="L75">        recyclerView.setAdapter(adapter);</span>
+
+<span class="fc" id="L77">        SharedPreferences prefs = getSharedPreferences(&quot;session&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L78">        int savedId = prefs.getInt(&quot;userId&quot;, -1);</span>
+<span class="fc" id="L79">        userId = getIntent().getIntExtra(&quot;userId&quot;, savedId);</span>
+
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L82">            Toast.makeText(this, &quot;User ID missing. Please log in again.&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L83">            finish();</span>
+<span class="nc" id="L84">            return;</span>
+        }
+
+<span class="fc" id="L87">        WebSocketManager wsManager = WebSocketManager.getInstance();</span>
+<span class="fc" id="L88">        wsManager.setWebSocketListener(this);</span>
+
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (!wsManager.isConnected()) {</span>
+<span class="fc" id="L91">            wsManager.connectWebSocket(WS_URL + userId);</span>
+        }
+
+<span class="pc" id="L94">        btnAll.setOnClickListener(v -&gt; switchFilter(&quot;ALL&quot;));</span>
+<span class="pc" id="L95">        btnRead.setOnClickListener(v -&gt; switchFilter(&quot;READ&quot;));</span>
+
+<span class="fc" id="L97">        fetchNotifications();</span>
+<span class="fc" id="L98">    }</span>
+
+    // removes websocket listener when the activity is destroyed
+    @Override
+    protected void onDestroy() {
+<span class="fc" id="L103">        super.onDestroy();</span>
+<span class="fc" id="L104">        WebSocketManager.getInstance().removeWebSocketListener();</span>
+<span class="fc" id="L105">    }</span>
+
+    // switches between showing all notifications or only read ones
+    private void switchFilter(String filter) {
+<span class="fc" id="L109">        currentFilter = filter;</span>
+<span class="fc" id="L110">        filteredNotifications.clear();</span>
+
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (filter.equals(&quot;READ&quot;)) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            for (NotificationModel n : allNotifications) {</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                if (n.isRead()) filteredNotifications.add(n);</span>
+<span class="nc" id="L115">            }</span>
+        } else {
+<span class="fc" id="L117">            filteredNotifications.addAll(allNotifications);</span>
+        }
+
+<span class="fc" id="L120">        adapter.notifyDataSetChanged();</span>
+<span class="fc" id="L121">    }</span>
+
+    // retrieves all notifications from the server and updates the display
+    private void fetchNotifications() {
+<span class="fc" id="L125">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, BASE_URL, null,</span>
+                response -&gt; {
+<span class="fc" id="L127">                    allNotifications.clear();</span>
+<span class="fc" id="L128">                    parseNotifications(response);</span>
+<span class="fc" id="L129">                    switchFilter(currentFilter);</span>
+<span class="fc" id="L130">                },</span>
+<span class="nc" id="L131">                error -&gt; Toast.makeText(this, &quot;Error fetching notifications&quot;, Toast.LENGTH_SHORT).show()</span>
+<span class="fc" id="L132">        ) {</span>
+            @Override
+            public java.util.Map&lt;String, String&gt; getHeaders() {
+<span class="fc" id="L135">                java.util.Map&lt;String, String&gt; headers = new java.util.HashMap&lt;&gt;();</span>
+<span class="fc" id="L136">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="fc" id="L137">                return headers;</span>
+            }
+        };
+<span class="fc" id="L140">        queue.add(request);</span>
+<span class="fc" id="L141">    }</span>
+
+    // parses the json response into notification objects
+    private void parseNotifications(JSONArray response) {
+        try {
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L147">                JSONObject obj = response.getJSONObject(i);</span>
+<span class="nc" id="L148">                NotificationModel n = new NotificationModel(</span>
+<span class="nc" id="L149">                        obj.getLong(&quot;id&quot;),</span>
+<span class="nc" id="L150">                        obj.optLong(&quot;recipientId&quot;),</span>
+<span class="nc" id="L151">                        obj.optString(&quot;title&quot;),</span>
+<span class="nc" id="L152">                        obj.optString(&quot;message&quot;),</span>
+<span class="nc" id="L153">                        obj.optString(&quot;type&quot;),</span>
+<span class="nc" id="L154">                        obj.optString(&quot;createdAt&quot;),</span>
+<span class="nc" id="L155">                        obj.optBoolean(&quot;read&quot;)</span>
+                );
+<span class="nc" id="L157">                allNotifications.add(n);</span>
+            }
+<span class="nc" id="L159">        } catch (Exception e) {</span>
+<span class="nc" id="L160">            e.printStackTrace();</span>
+<span class="fc" id="L161">        }</span>
+<span class="fc" id="L162">    }</span>
+
+    // logs when the websocket successfully connects
+    @Override
+    public void onWebSocketOpen(org.java_websocket.handshake.ServerHandshake handshake) {
+<span class="fc" id="L167">        Log.d(&quot;WebSocket&quot;, &quot;Connected to notifications WebSocket for user &quot; + userId);</span>
+<span class="fc" id="L168">    }</span>
+
+    // handles incoming websocket messages for new or read notifications
+    @Override
+    public void onWebSocketMessage(String message) {
+<span class="nc" id="L173">        Log.d(&quot;WebSocket&quot;, &quot;Received: &quot; + message);</span>
+<span class="nc" id="L174">        runOnUiThread(() -&gt; {</span>
+            try {
+<span class="nc" id="L176">                JSONObject json = new JSONObject(message);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                if (!json.has(&quot;kind&quot;)) return;</span>
+
+<span class="nc" id="L179">                String kind = json.getString(&quot;kind&quot;);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                if (&quot;NEW&quot;.equals(kind)) {</span>
+<span class="nc" id="L181">                    NotificationModel n = new NotificationModel(</span>
+<span class="nc" id="L182">                            json.getLong(&quot;id&quot;),</span>
+<span class="nc" id="L183">                            json.optLong(&quot;recipientId&quot;),</span>
+<span class="nc" id="L184">                            json.optString(&quot;title&quot;),</span>
+<span class="nc" id="L185">                            json.optString(&quot;message&quot;),</span>
+<span class="nc" id="L186">                            json.optString(&quot;type&quot;),</span>
+<span class="nc" id="L187">                            json.optString(&quot;createdAt&quot;),</span>
+<span class="nc" id="L188">                            json.optBoolean(&quot;read&quot;)</span>
+                    );
+<span class="nc" id="L190">                    allNotifications.add(0, n);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                    if (!&quot;READ&quot;.equals(currentFilter)) filteredNotifications.add(0, n);</span>
+<span class="nc" id="L192">                    adapter.notifyItemInserted(0);</span>
+<span class="nc" id="L193">                    recyclerView.scrollToPosition(0);</span>
+<span class="nc" id="L194">                    findViewById(R.id.tvNoNotifications).setVisibility(View.GONE);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                } else if (&quot;READ&quot;.equals(kind)) {</span>
+<span class="nc" id="L196">                    handleReadUpdate(json.getLong(&quot;id&quot;));</span>
+                }
+<span class="nc" id="L198">            } catch (Exception e) {</span>
+<span class="nc" id="L199">                Log.e(&quot;WebSocket&quot;, &quot;Error parsing message&quot;, e);</span>
+<span class="nc" id="L200">            }</span>
+<span class="nc" id="L201">        });</span>
+<span class="nc" id="L202">    }</span>
+
+    // marks a notification as read in the local list
+    private void handleReadUpdate(long id) {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        for (NotificationModel n : allNotifications) {</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (n.getId() == id) {</span>
+<span class="nc" id="L208">                n.setRead(true);</span>
+<span class="nc" id="L209">                break;</span>
+            }
+<span class="nc" id="L211">        }</span>
+<span class="nc" id="L212">        switchFilter(currentFilter);</span>
+<span class="nc" id="L213">    }</span>
+
+<span class="nc" id="L215">    @Override public void onWebSocketClose(int code, String reason, boolean remote) {}</span>
+<span class="nc" id="L216">    @Override public void onWebSocketError(Exception ex) {}</span>
+
+    // marks a specific notification as read both locally and on the server
+    @Override
+    public void onMarkAsRead(NotificationModel n) {
+<span class="nc" id="L221">        String url = BASE_URL + &quot;/&quot; + n.getId() + &quot;/read&quot;;</span>
+
+<span class="nc" id="L223">        JsonObjectRequest req = new JsonObjectRequest(Request.Method.PUT, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L225">                    n.setRead(true);</span>
+
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                    if (!&quot;READ&quot;.equals(currentFilter)) {</span>
+<span class="nc" id="L228">                        filteredNotifications.remove(n);</span>
+                    }
+
+<span class="nc" id="L231">                    adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L232">                    Toast.makeText(this, &quot;Marked as read&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L233">                },</span>
+<span class="nc" id="L234">                error -&gt; Toast.makeText(this, &quot;Failed to mark as read&quot;, Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L235">        ) {</span>
+            @Override
+            public java.util.Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L238">                java.util.Map&lt;String, String&gt; headers = new java.util.HashMap&lt;&gt;();</span>
+<span class="nc" id="L239">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L240">                return headers;</span>
+            }
+        };
+<span class="nc" id="L243">        queue.add(req);</span>
+<span class="nc" id="L244">    }</span>
+
+    // deletes a notification from both the server and the local list
+    @Override
+    public void onDelete(NotificationModel n) {
+<span class="nc" id="L249">        String url = BASE_URL + &quot;/&quot; + n.getId();</span>
+<span class="nc" id="L250">        StringRequest req = new StringRequest(Request.Method.DELETE, url,</span>
+                response -&gt; {
+<span class="nc" id="L252">                    allNotifications.remove(n);</span>
+<span class="nc" id="L253">                    filteredNotifications.remove(n);</span>
+<span class="nc" id="L254">                    adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L255">                },</span>
+<span class="nc" id="L256">                error -&gt; Toast.makeText(this, &quot;Delete failed&quot;, Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L257">        ) {</span>
+            @Override
+            public java.util.Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L260">                java.util.Map&lt;String, String&gt; headers = new java.util.HashMap&lt;&gt;();</span>
+<span class="nc" id="L261">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L262">                return headers;</span>
+            }
+        };
+<span class="nc" id="L265">        queue.add(req);</span>
+<span class="nc" id="L266">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

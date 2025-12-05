@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignupActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">SignupActivity.java</span></div><h1>SignupActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Patterns;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+
+
+<span class="nc" id="L26">public class SignupActivity extends AppCompatActivity {</span>
+    private EditText etEmail, etPassword, etConfirmPassword, etUserName;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L32">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L33">        setContentView(R.layout.activity_signup);</span>
+
+<span class="nc" id="L35">        etEmail = findViewById(R.id.etEmailSignup);</span>
+<span class="nc" id="L36">        etPassword = findViewById(R.id.etPasswordSignup);</span>
+<span class="nc" id="L37">        etConfirmPassword = findViewById(R.id.etConfirmPassword);</span>
+<span class="nc" id="L38">        etUserName = findViewById(R.id.etUsername);</span>
+<span class="nc" id="L39">        Button btnSignup = findViewById(R.id.btnSignup);</span>
+<span class="nc" id="L40">        TextView tvLoginLink = findViewById(R.id.tvLoginLink);</span>
+
+<span class="nc" id="L42">        btnSignup.setOnClickListener(v -&gt;{</span>
+<span class="nc" id="L43">            String email = etEmail.getText().toString().trim();</span>
+<span class="nc" id="L44">            String username = etUserName.getText().toString().trim();</span>
+<span class="nc" id="L45">            String pw = etPassword.getText().toString().trim();</span>
+<span class="nc" id="L46">            String confirmPw = etConfirmPassword.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            if(!isValidEmail(email)){</span>
+<span class="nc" id="L49">                etEmail.setError(&quot;Enter a valid email&quot;);</span>
+<span class="nc" id="L50">                return;</span>
+            }
+
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if(!isValidPassword(pw)){</span>
+<span class="nc" id="L54">                etPassword.setError(&quot;Password must be 6+ chars, 1 digit, 1 letter&quot;);</span>
+<span class="nc" id="L55">                return;</span>
+            }
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if(!pw.equals(confirmPw)){</span>
+<span class="nc" id="L59">                etConfirmPassword.setError(&quot;Passwords do not match&quot;);</span>
+<span class="nc" id="L60">                return;</span>
+            }
+
+<span class="nc" id="L63">            signupUser(username, email, pw);</span>
+
+<span class="nc" id="L65">        });</span>
+<span class="nc" id="L66">        tvLoginLink.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L67">                startActivity(new Intent(SignupActivity.this, LoginActivity.class)));</span>
+
+<span class="nc" id="L69">    }</span>
+
+    private void signupUser(String username, String email, String password) {
+<span class="nc" id="L72">        JSONObject userJson = new JSONObject();</span>
+        try {
+<span class="nc" id="L74">            userJson.put(&quot;username&quot;, username);</span>
+<span class="nc" id="L75">            userJson.put(&quot;email&quot;, email);</span>
+<span class="nc" id="L76">            userJson.put(&quot;password&quot;, password);</span>
+<span class="nc" id="L77">            userJson.put(&quot;role&quot;, &quot;TRIP_MEMBER&quot;);</span>
+        }
+<span class="nc" id="L79">        catch (Exception e) {</span>
+<span class="nc" id="L80">            e.printStackTrace();</span>
+<span class="nc" id="L81">        }</span>
+
+<span class="nc" id="L83">        String url = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v1/auth/signup&quot;;</span>
+<span class="nc" id="L84">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                userJson,
+                response -&gt; {
+                    // Successful signup response
+<span class="nc" id="L90">                    Toast.makeText(this, &quot;Signup Successful!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+                    // Move to Login screen
+<span class="nc" id="L93">                    startActivity(new Intent(SignupActivity.this, LoginActivity.class));</span>
+<span class="nc" id="L94">                    finish();</span>
+<span class="nc" id="L95">                },</span>
+                error -&gt; {
+                    // Parse server error for specific message
+<span class="nc" id="L98">                    String errorMessage = &quot;Signup failed.&quot;;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L100">                        Log.e(&quot;VolleyError&quot;, &quot;Status Code: &quot; + error.networkResponse.statusCode);</span>
+<span class="nc" id="L101">                        Log.e(&quot;VolleyError&quot;, &quot;Response: &quot; + new String(error.networkResponse.data, StandardCharsets.UTF_8));</span>
+                    }
+<span class="nc bnc" id="L103" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.data != null) {</span>
+                        try {
+<span class="nc" id="L105">                            String responseBody = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L106">                            responseBody = responseBody.trim();</span>
+
+                            // Try parsing JSON manually
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                            if (responseBody.startsWith(&quot;{&quot;)) {</span>
+<span class="nc" id="L110">                                JSONObject data = new JSONObject(responseBody);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                                if (data.has(&quot;error&quot;)) {</span>
+<span class="nc" id="L112">                                    String errorCode = data.getString(&quot;error&quot;);</span>
+
+<span class="nc bnc" id="L114" title="All 3 branches missed.">                                    switch (errorCode) {</span>
+                                        case &quot;username_exists&quot;:
+<span class="nc" id="L116">                                            etUserName.setError(&quot;Username already exists&quot;);</span>
+<span class="nc" id="L117">                                            errorMessage = &quot;Username already exists&quot;;</span>
+<span class="nc" id="L118">                                            break;</span>
+                                        case &quot;email_exists&quot;:
+<span class="nc" id="L120">                                            etEmail.setError(&quot;Email already registered&quot;);</span>
+<span class="nc" id="L121">                                            errorMessage = &quot;Email already registered&quot;;</span>
+<span class="nc" id="L122">                                            break;</span>
+                                        default:
+<span class="nc" id="L124">                                            errorMessage = &quot;Signup failed: &quot; + errorCode;</span>
+                                            break;
+                                    }
+                                }
+<span class="nc" id="L128">                            } else {</span>
+                                // Handle non-JSON plain text errors
+<span class="nc" id="L130">                                errorMessage = responseBody;</span>
+                            }
+<span class="nc" id="L132">                        } catch (Exception e) {</span>
+<span class="nc" id="L133">                            e.printStackTrace();</span>
+<span class="nc" id="L134">                        }</span>
+                    }
+
+<span class="nc" id="L137">                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L138">                }</span>
+        );
+
+<span class="nc" id="L141">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L142">        queue.add(request);</span>
+<span class="nc" id="L143">    }</span>
+
+    // regex for email
+    private boolean isValidEmail(String email) {
+<span class="nc bnc" id="L147" title="All 4 branches missed.">        return !TextUtils.isEmpty(email) &amp;&amp; Patterns.EMAIL_ADDRESS.matcher(email).matches();</span>
+    }
+
+    // regex for password: at least 6 chars, at least 1 letter and at least 1 digit
+    private boolean isValidPassword(String password) {
+<span class="nc" id="L152">        return password.matches(&quot;^(?=.*[A-Za-z])(?=.*\\d).{6,}$&quot;);</span>
+    }
+}
+
+// test trigger for CI/CD
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

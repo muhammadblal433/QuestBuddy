@@ -2,16 +2,13 @@ package com.questbuddy.notification;
 
 import com.questbuddy.notification.dto.NotificationCreateDTO;
 import com.questbuddy.notification.dto.NotificationResponseDTO;
-import com.questbuddy.notification.Notification;
-import com.questbuddy.notification.NotificationType;
 
 import com.questbuddy.trip.Trip;
 import org.springframework.stereotype.Component;
-import java.time.Instant;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import com.questbuddy.calendar.Event;
-import com.questbuddy.model.Task;
+import com.questbuddy.task.model.Task;
 /**
  * This class is mainly for:
  *

@@ -99,7 +99,7 @@ public class SettingsActivity extends AppCompatActivity {
                     if (avatarUrl != null && !avatarUrl.isEmpty()) {
                         loadAvatar(avatarUrl);
                     } else {
-                        ivAvatar.setImageResource(R.drawable.default_pic);
+                        ivAvatar.setImageResource(R.drawable.default_pic_v2);
                     }
                 },
                 error -> Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show()
@@ -115,7 +115,7 @@ public class SettingsActivity extends AppCompatActivity {
                 0, 0,
                 ImageView.ScaleType.CENTER_CROP,
                 Bitmap.Config.RGB_565,
-                error -> ivAvatar.setImageResource(R.drawable.default_pic)
+                error -> ivAvatar.setImageResource(R.drawable.default_pic_v2)
         );
         Volley.newRequestQueue(this).add(imageRequest);
     }

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_button_orange"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:elevation="2dp">
+
+    <TextView
+        android:id="@+id/tvInviteTripName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:text="Trip name" />
+
+    <TextView
+        android:id="@+id/tvInviteDestination"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Destination"
+        android:textColor="#FFFFFF"
+        android:alpha="0.8"
+        android:layout_marginTop="2dp" />
+
+    <TextView
+        android:id="@+id/tvInviter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Invited by username"
+        android:textColor="#FFFFFF"
+        android:alpha="0.8"
+        android:layout_marginTop="2dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnAcceptInvite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accept"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/white_outline_button"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp" />
+
+        <Button
+            android:id="@+id/btnDeclineInvite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Decline"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/white_outline_button"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:layout_marginStart="12dp" />
+    </LinearLayout>
+
+</LinearLayout>

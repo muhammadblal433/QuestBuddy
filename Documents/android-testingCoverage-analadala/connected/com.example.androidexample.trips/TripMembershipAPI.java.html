@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TripMembershipAPI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample.trips</a> &gt; <span class="el_source">TripMembershipAPI.java</span></div><h1>TripMembershipAPI.java</h1><pre class="source lang-java linenums">package com.example.androidexample.trips;
+
+import android.content.Context;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+<span class="nc" id="L19">public class TripMembershipAPI {</span>
+
+    private static final String BASE_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080&quot;;
+    private static final String LIST_MY_INVITES = BASE_URL + &quot;/api/v12/me/trip-invites&quot;;
+
+    private static RequestQueue queue;
+    private static RequestQueue getQueue(Context ctx) {
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (queue == null) {</span>
+<span class="fc" id="L27">            synchronized (TripMembershipAPI.class) {</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">                if (queue == null) {</span>
+<span class="fc" id="L29">                    queue = Volley.newRequestQueue(ctx.getApplicationContext());</span>
+                }
+<span class="fc" id="L31">            }</span>
+        }
+<span class="fc" id="L33">        return queue;</span>
+    }
+
+    public interface InvitesCallback {
+        void onSuccess(List&lt;TripInviteDTO&gt; invites);
+        void onError(String message);
+    }
+
+    public interface SimpleCallback {
+        void onSuccess();
+        void onError(String message);
+    }
+
+    private static Map&lt;String, String&gt; authJsonHeaders(long userId) {
+<span class="nc" id="L47">        Map&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L48">        h.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L49">        h.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L50">        h.put(&quot;Content-Type&quot;, &quot;application/json; charset=utf-8&quot;);</span>
+<span class="nc" id="L51">        return h;</span>
+    }
+
+    private static Map&lt;String, String&gt; authHeaders(long userId) {
+<span class="fc" id="L55">        Map&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L56">        h.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="fc" id="L57">        h.put(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L58">        return h;</span>
+    }
+
+    private static String normalizeVolleyError(VolleyError e) {
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (e.networkResponse != null) {</span>
+<span class="fc" id="L63">            String body = &quot;&quot;;</span>
+            try {
+<span class="fc" id="L65">                body = new String(e.networkResponse.data, java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="pc" id="L66">            } catch (Exception ignored) {}</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">            return &quot;HTTP &quot; + e.networkResponse.statusCode + (body.isEmpty() ? &quot;&quot; : (&quot; - &quot; + body));</span>
+        }
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (e.getCause() != null) return e.getCause().toString();</span>
+<span class="nc" id="L70">        return e.toString();</span>
+    }
+
+    public static void listMyInvites(Context ctx, long userId, final InvitesCallback cb) {
+<span class="fc" id="L74">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                LIST_MY_INVITES,
+                null,
+                arr -&gt; {
+                    try {
+<span class="nc" id="L80">                        List&lt;TripInviteDTO&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">                        for (int i = 0; i &lt; arr.length(); i++) {</span>
+<span class="nc" id="L82">                            JSONObject o = arr.getJSONObject(i);</span>
+<span class="nc" id="L83">                            TripInviteDTO t = new TripInviteDTO();</span>
+<span class="nc" id="L84">                            t.tripId = o.getLong(&quot;tripId&quot;);</span>
+<span class="nc" id="L85">                            t.tripName = o.optString(&quot;tripName&quot;, null);</span>
+<span class="nc" id="L86">                            t.destination = o.optString(&quot;destination&quot;, null);</span>
+<span class="nc" id="L87">                            t.inviterUsername = o.optString(&quot;inviterUsername&quot;, null);</span>
+<span class="nc" id="L88">                            t.inviterDisplayName = o.optString(&quot;inviterDisplayName&quot;, null);</span>
+<span class="nc" id="L89">                            out.add(t);</span>
+                        }
+<span class="nc" id="L91">                        cb.onSuccess(out);</span>
+<span class="nc" id="L92">                    } catch (Exception e) {</span>
+<span class="nc" id="L93">                        cb.onError(&quot;Parse error: &quot; + e.getMessage());</span>
+<span class="nc" id="L94">                    }</span>
+<span class="nc" id="L95">                },</span>
+<span class="fc" id="L96">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="fc" id="L97">        ) {</span>
+<span class="fc" id="L98">            @Override public Map&lt;String, String&gt; getHeaders() { return authHeaders(userId); }</span>
+        };
+
+<span class="fc" id="L101">        getQueue(ctx).add(req);</span>
+<span class="fc" id="L102">    }</span>
+
+    public static void approveInvite(Context ctx, long userId, long tripId, final SimpleCallback cb) {
+<span class="nc" id="L105">        String url = BASE_URL + &quot;/api/v12/trips/&quot; + tripId + &quot;/members/approve&quot;;</span>
+<span class="nc" id="L106">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L108">            body.put(&quot;status&quot;, &quot;ACCEPTED&quot;);</span>
+<span class="nc" id="L109">        } catch (Exception ignored) {}</span>
+
+<span class="nc" id="L111">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                body,
+<span class="nc" id="L115">                obj -&gt; cb.onSuccess(),</span>
+<span class="nc" id="L116">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="nc" id="L117">        ) {</span>
+<span class="nc" id="L118">            @Override public Map&lt;String, String&gt; getHeaders() { return authJsonHeaders(userId); }</span>
+        };
+
+<span class="nc" id="L121">        getQueue(ctx).add(req);</span>
+<span class="nc" id="L122">    }</span>
+
+    public static void declineInvite(Context ctx, long userId, long tripId, final SimpleCallback cb) {
+<span class="nc" id="L125">        String url = BASE_URL + &quot;/api/v12/trips/&quot; + tripId + &quot;/members/decline&quot;;</span>
+<span class="nc" id="L126">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L128">            body.put(&quot;status&quot;, &quot;DECLINED&quot;);</span>
+<span class="nc" id="L129">        } catch (Exception ignored) {}</span>
+
+<span class="nc" id="L131">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                body,
+<span class="nc" id="L135">                obj -&gt; cb.onSuccess(),</span>
+<span class="nc" id="L136">                error -&gt; cb.onError(normalizeVolleyError(error))</span>
+<span class="nc" id="L137">        ) {</span>
+<span class="nc" id="L138">            @Override public Map&lt;String, String&gt; getHeaders() { return authJsonHeaders(userId); }</span>
+        };
+
+<span class="nc" id="L141">        getQueue(ctx).add(req);</span>
+<span class="nc" id="L142">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

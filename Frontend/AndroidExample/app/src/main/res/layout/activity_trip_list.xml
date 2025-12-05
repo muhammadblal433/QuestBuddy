@@ -37,12 +37,43 @@
             android:visibility="gone" />
     </FrameLayout>
 
-    <Button
-        android:id="@+id/btnAdd"
+    <LinearLayout
+        android:id="@+id/layoutBottomButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Trip"
-        android:textColor="#FFFFFF"
-        android:background="@drawable/rounded_button_orange"
-        android:layout_margin="8dp" />
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <Button
+            android:id="@+id/btnAdd"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Add Trip"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rounded_button_orange"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnViewInvites"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="View Invitations"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rounded_button_orange"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnReturnHome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Return Home"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rounded_button_orange"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
 </LinearLayout>

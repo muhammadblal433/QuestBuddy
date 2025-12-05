@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DayViewActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">DayViewActivity.java</span></div><h1>DayViewActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.app.TimePickerDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="nc" id="L29">public class DayViewActivity extends AppCompatActivity {</span>
+
+    private String selectedDate;
+    private LinearLayout timeColumn;
+    private FrameLayout taskColumn;
+    private int userId;
+
+    // Keep track of event IDs mapped to task blocks
+<span class="nc" id="L37">    private final Map&lt;Integer, JSONObject&gt; taskMap = new HashMap&lt;&gt;();</span>
+
+    private static final String TASKS_URL = &quot;http://coms-3090-026.class.las.iastate.edu:8080/api/v4/calendar/events&quot;;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L43">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L44">        setContentView(R.layout.activity_day_view);</span>
+
+<span class="nc" id="L46">        selectedDate = getIntent().getStringExtra(&quot;selectedDate&quot;);</span>
+<span class="nc" id="L47">        userId = getIntent().getIntExtra(&quot;userId&quot;, -1);</span>
+
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L50">            Toast.makeText(this, &quot;Invalid user session&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L51">            startActivity(new Intent(this, LoginActivity.class));</span>
+<span class="nc" id="L52">            finish();</span>
+<span class="nc" id="L53">            return;</span>
+        }
+
+<span class="nc" id="L56">        TextView dateHeader = findViewById(R.id.dayDateText);</span>
+<span class="nc" id="L57">        dateHeader.setText(selectedDate);</span>
+
+<span class="nc" id="L59">        timeColumn = findViewById(R.id.timeColumn);</span>
+<span class="nc" id="L60">        taskColumn = findViewById(R.id.taskColumn);</span>
+
+<span class="nc" id="L62">        populateTimeColumn();</span>
+<span class="nc" id="L63">        fetchTasksForSelectedDay();</span>
+
+<span class="nc" id="L65">        Button addBtn = findViewById(R.id.addTaskBtn);</span>
+<span class="nc" id="L66">        Button returnBtn = findViewById(R.id.returnCalendar);</span>
+
+<span class="nc" id="L68">        returnBtn.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L69">            Intent intent = new Intent(DayViewActivity.this, CalendarActivity.class);</span>
+<span class="nc" id="L70">            intent.putExtra(&quot;userId&quot;, userId);</span>
+<span class="nc" id="L71">            startActivity(intent);</span>
+<span class="nc" id="L72">            finish();</span>
+<span class="nc" id="L73">        });</span>
+
+<span class="nc" id="L75">        addBtn.setOnClickListener(v -&gt; showAddTaskDialog());</span>
+<span class="nc" id="L76">    }</span>
+
+    private void populateTimeColumn() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (int i = 0; i &lt; 24; i++) {</span>
+<span class="nc" id="L80">            TextView timeText = new TextView(this);</span>
+<span class="nc" id="L81">            timeText.setText(String.format(&quot;%02d:00&quot;, i));</span>
+<span class="nc" id="L82">            timeText.setPadding(8, 30, 8, 30);</span>
+<span class="nc" id="L83">            timeText.setTextSize(14);</span>
+<span class="nc" id="L84">            timeColumn.addView(timeText);</span>
+        }
+<span class="nc" id="L86">    }</span>
+
+    // --- GET all events for the user ---
+    private void fetchTasksForSelectedDay() {
+<span class="nc" id="L90">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+
+<span class="nc" id="L92">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, TASKS_URL, null,</span>
+                response -&gt; {
+<span class="nc" id="L94">                    LocalDate thisDay = parseDate(selectedDate);</span>
+
+
+<span class="nc" id="L97">                    ArrayList&lt;JSONObject&gt; tasksForDay = new ArrayList&lt;&gt;(taskMap.values());</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L101">                            JSONObject task = response.getJSONObject(i);</span>
+<span class="nc" id="L102">                            String startAt = task.optString(&quot;startAt&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                            if (startAt.length() &gt;= 10) {</span>
+<span class="nc" id="L104">                                LocalDate taskDate = LocalDate.parse(startAt.substring(0, 10));</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">                                if (taskDate.equals(thisDay)) {</span>
+<span class="nc" id="L106">                                    int id = task.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L107">                                    taskMap.put(id, task);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                                    if (!tasksForDay.contains(task))</span>
+<span class="nc" id="L109">                                        tasksForDay.add(task);</span>
+                                }
+                            }
+<span class="nc" id="L112">                        } catch (JSONException e) {</span>
+<span class="nc" id="L113">                            e.printStackTrace();</span>
+<span class="nc" id="L114">                        }</span>
+                    }
+
+<span class="nc" id="L117">                    displayTasks(new ArrayList&lt;&gt;(taskMap.values()));</span>
+<span class="nc" id="L118">                },</span>
+<span class="nc" id="L119">                error -&gt; Toast.makeText(this, &quot;Failed to fetch tasks: &quot; + error.getMessage(), Toast.LENGTH_SHORT).show()</span>
+<span class="nc" id="L120">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L123">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L124">                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L125">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L126">                return headers;</span>
+            }
+        };
+
+<span class="nc" id="L130">        queue.add(request);</span>
+<span class="nc" id="L131">    }</span>
+
+    private void displayTasks(ArrayList&lt;JSONObject&gt; tasks) {
+<span class="nc" id="L134">        taskColumn.removeAllViews();</span>
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        for (JSONObject task : tasks) {</span>
+            try {
+<span class="nc" id="L138">                int id = task.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L139">                String title = task.getString(&quot;title&quot;);</span>
+<span class="nc" id="L140">                String startAt = task.getString(&quot;startAt&quot;);</span>
+<span class="nc" id="L141">                String endAt = task.getString(&quot;endAt&quot;);</span>
+
+<span class="nc" id="L143">                OffsetDateTime startUTC = OffsetDateTime.parse(startAt);</span>
+<span class="nc" id="L144">                OffsetDateTime endUTC = OffsetDateTime.parse(endAt);</span>
+
+<span class="nc" id="L146">                addTaskBlock(id, title, startUTC.toLocalTime(), endUTC.toLocalTime());</span>
+<span class="nc" id="L147">            } catch (JSONException e) {</span>
+<span class="nc" id="L148">                e.printStackTrace();</span>
+<span class="nc" id="L149">            }</span>
+<span class="nc" id="L150">        }</span>
+<span class="nc" id="L151">    }</span>
+
+    private void showAddTaskDialog() {
+<span class="nc" id="L154">        LinearLayout dialogLayout = new LinearLayout(this);</span>
+<span class="nc" id="L155">        dialogLayout.setOrientation(LinearLayout.VERTICAL);</span>
+<span class="nc" id="L156">        dialogLayout.setPadding(32, 32, 32, 32);</span>
+
+<span class="nc" id="L158">        EditText titleInput = new EditText(this);</span>
+<span class="nc" id="L159">        titleInput.setHint(&quot;Task title&quot;);</span>
+
+<span class="nc" id="L161">        EditText startTimeInput = new EditText(this);</span>
+<span class="nc" id="L162">        startTimeInput.setHint(&quot;Start time (HH:mm)&quot;);</span>
+<span class="nc" id="L163">        startTimeInput.setFocusable(false);</span>
+
+<span class="nc" id="L165">        EditText endTimeInput = new EditText(this);</span>
+<span class="nc" id="L166">        endTimeInput.setHint(&quot;End time (HH:mm)&quot;);</span>
+<span class="nc" id="L167">        endTimeInput.setFocusable(false);</span>
+
+<span class="nc" id="L169">        dialogLayout.addView(titleInput);</span>
+<span class="nc" id="L170">        dialogLayout.addView(startTimeInput);</span>
+<span class="nc" id="L171">        dialogLayout.addView(endTimeInput);</span>
+
+<span class="nc" id="L173">        final LocalTime[] start = new LocalTime[1];</span>
+<span class="nc" id="L174">        final LocalTime[] end = new LocalTime[1];</span>
+
+<span class="nc" id="L176">        startTimeInput.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L177">            TimePickerDialog picker = new TimePickerDialog(this, (view, hour, minute) -&gt; {</span>
+<span class="nc" id="L178">                start[0] = LocalTime.of(hour, minute);</span>
+<span class="nc" id="L179">                startTimeInput.setText(start[0].format(DateTimeFormatter.ofPattern(&quot;HH:mm&quot;)));</span>
+<span class="nc" id="L180">            }, 12, 0, true);</span>
+<span class="nc" id="L181">            picker.show();</span>
+<span class="nc" id="L182">        });</span>
+
+<span class="nc" id="L184">        endTimeInput.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L185">            TimePickerDialog picker = new TimePickerDialog(this, (view, hour, minute) -&gt; {</span>
+<span class="nc" id="L186">                end[0] = LocalTime.of(hour, minute);</span>
+<span class="nc" id="L187">                endTimeInput.setText(end[0].format(DateTimeFormatter.ofPattern(&quot;HH:mm&quot;)));</span>
+<span class="nc" id="L188">            }, 13, 0, true);</span>
+<span class="nc" id="L189">            picker.show();</span>
+<span class="nc" id="L190">        });</span>
+
+<span class="nc" id="L192">        new android.app.AlertDialog.Builder(this)</span>
+<span class="nc" id="L193">                .setTitle(&quot;Add Task&quot;)</span>
+<span class="nc" id="L194">                .setView(dialogLayout)</span>
+<span class="nc" id="L195">                .setPositiveButton(&quot;Save&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L196">                    String title = titleInput.getText().toString().trim();</span>
+<span class="nc bnc" id="L197" title="All 6 branches missed.">                    if (title.isEmpty() || start[0] == null || end[0] == null) {</span>
+<span class="nc" id="L198">                        Toast.makeText(this, &quot;Please fill all fields&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L199">                        return;</span>
+                    }
+<span class="nc" id="L201">                    saveTaskToServer(title, start[0], end[0]);</span>
+<span class="nc" id="L202">                })</span>
+<span class="nc" id="L203">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L204">                .show();</span>
+<span class="nc" id="L205">    }</span>
+
+    private void addTaskBlock(int id, String title, LocalTime start, LocalTime end) {
+<span class="nc" id="L208">        TextView block = new TextView(this);</span>
+<span class="nc" id="L209">        block.setText(title);</span>
+<span class="nc" id="L210">        block.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));</span>
+<span class="nc" id="L211">        block.setPadding(16, 16, 16, 16);</span>
+<span class="nc" id="L212">        block.setTextColor(getResources().getColor(android.R.color.white));</span>
+<span class="nc" id="L213">        block.setTextSize(14);</span>
+<span class="nc" id="L214">        block.setElevation(6);</span>
+
+<span class="nc" id="L216">        int startMinutes = start.getHour() * 60 + start.getMinute();</span>
+<span class="nc" id="L217">        int endMinutes = end.getHour() * 60 + end.getMinute();</span>
+<span class="nc" id="L218">        int durationMinutes = Math.max(15, endMinutes - startMinutes);</span>
+
+<span class="nc" id="L220">        int totalHeight = timeColumn.getHeight();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (totalHeight == 0) {</span>
+<span class="nc" id="L222">            timeColumn.post(() -&gt; addTaskBlock(id, title, start, end));</span>
+<span class="nc" id="L223">            return;</span>
+        }
+
+<span class="nc" id="L226">        float pxPerMinute = (float) (totalHeight + 75) / (24f * 60f);</span>
+<span class="nc" id="L227">        int topMargin = (int) (startMinutes * pxPerMinute);</span>
+<span class="nc" id="L228">        int height = (int) (durationMinutes * pxPerMinute);</span>
+
+<span class="nc" id="L230">        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(</span>
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                height
+        );
+<span class="nc" id="L234">        params.topMargin = topMargin;</span>
+<span class="nc" id="L235">        block.setLayoutParams(params);</span>
+
+<span class="nc" id="L237">        block.setOnClickListener(v -&gt; showEditDeleteDialog(id));</span>
+
+<span class="nc" id="L239">        taskColumn.addView(block);</span>
+<span class="nc" id="L240">    }</span>
+
+    private void showEditDeleteDialog(int id) {
+<span class="nc" id="L243">        JSONObject task = taskMap.get(id);</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (task == null) return;</span>
+
+<span class="nc" id="L246">        String title = task.optString(&quot;title&quot;, &quot;Untitled&quot;);</span>
+<span class="nc" id="L247">        String[] options = {&quot;Edit&quot;, &quot;Delete&quot;};</span>
+<span class="nc" id="L248">        new android.app.AlertDialog.Builder(this)</span>
+<span class="nc" id="L249">                .setTitle(title)</span>
+<span class="nc" id="L250">                .setItems(options, (dialog, which) -&gt; {</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">                    if (which == 0) showEditTaskDialog(id, task);</span>
+<span class="nc" id="L252">                    else deleteTaskFromServer(id);</span>
+<span class="nc" id="L253">                })</span>
+<span class="nc" id="L254">                .show();</span>
+<span class="nc" id="L255">    }</span>
+
+    private void showEditTaskDialog(int id, JSONObject task) {
+<span class="nc" id="L258">        LinearLayout layout = new LinearLayout(this);</span>
+<span class="nc" id="L259">        layout.setOrientation(LinearLayout.VERTICAL);</span>
+<span class="nc" id="L260">        layout.setPadding(32, 32, 32, 32);</span>
+
+<span class="nc" id="L262">        EditText titleInput = new EditText(this);</span>
+<span class="nc" id="L263">        titleInput.setText(task.optString(&quot;title&quot;, &quot;&quot;));</span>
+<span class="nc" id="L264">        layout.addView(titleInput);</span>
+
+<span class="nc" id="L266">        new android.app.AlertDialog.Builder(this)</span>
+<span class="nc" id="L267">                .setTitle(&quot;Edit Task&quot;)</span>
+<span class="nc" id="L268">                .setView(layout)</span>
+<span class="nc" id="L269">                .setPositiveButton(&quot;Save&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L270">                    String newTitle = titleInput.getText().toString().trim();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">                    if (!newTitle.isEmpty()) updateTaskOnServer(id, newTitle, task);</span>
+<span class="nc" id="L272">                })</span>
+<span class="nc" id="L273">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L274">                .show();</span>
+<span class="nc" id="L275">    }</span>
+
+    private void updateTaskOnServer(int id, String newTitle, JSONObject task) {
+        try {
+<span class="nc" id="L279">            JSONObject body = new JSONObject(task.toString());</span>
+<span class="nc" id="L280">            body.put(&quot;title&quot;, newTitle);</span>
+
+<span class="nc" id="L282">            RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L283">            JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, TASKS_URL + &quot;/&quot; + id, body,</span>
+                    response -&gt; {
+<span class="nc" id="L285">                        Toast.makeText(this, &quot;Task updated!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L286">                        fetchTasksForSelectedDay();</span>
+<span class="nc" id="L287">                    },</span>
+<span class="nc" id="L288">                    error -&gt; Toast.makeText(this, &quot;Error updating task&quot;, Toast.LENGTH_LONG).show()</span>
+<span class="nc" id="L289">            ) {</span>
+                @Override
+                public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L292">                    Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L293">                    headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L294">                    headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L295">                    return headers;</span>
+                }
+            };
+<span class="nc" id="L298">            queue.add(request);</span>
+
+<span class="nc" id="L300">        } catch (JSONException e) {</span>
+<span class="nc" id="L301">            e.printStackTrace();</span>
+<span class="nc" id="L302">        }</span>
+<span class="nc" id="L303">    }</span>
+
+    private void deleteTaskFromServer(int id) {
+<span class="nc" id="L306">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+
+<span class="nc" id="L308">        String url = TASKS_URL + &quot;/&quot; + id;</span>
+
+<span class="nc" id="L310">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+                    // Works whether backend returns [] or 204 No Content
+<span class="nc" id="L315">                    Toast.makeText(this, &quot;Task deleted!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L316">                    taskMap.remove(id);</span>
+<span class="nc" id="L317">                    taskColumn.removeAllViews();</span>
+<span class="nc" id="L318">                    fetchTasksForSelectedDay();</span>
+<span class="nc" id="L319">                },</span>
+                error -&gt; {
+<span class="nc" id="L321">                    String message = &quot;Error deleting task&quot;;</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L323">                        message += &quot; (Code: &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+                        try {
+<span class="nc" id="L325">                            String body = new String(error.networkResponse.data, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L326">                            message += &quot;\nResponse: &quot; + body;</span>
+<span class="nc" id="L327">                        } catch (Exception ignored) {}</span>
+                    }
+<span class="nc" id="L329">                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L330">                    error.printStackTrace();</span>
+<span class="nc" id="L331">                }</span>
+<span class="nc" id="L332">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L335">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L336">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L337">                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L338">                return headers;</span>
+            }
+        };
+
+<span class="nc" id="L342">        queue.add(request);</span>
+<span class="nc" id="L343">    }</span>
+
+    private void saveTaskToServer(String title, LocalTime start, LocalTime end) {
+<span class="nc" id="L346">        LocalDate date = parseDate(selectedDate);</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">        if (date == null) return;</span>
+
+<span class="nc" id="L349">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot;);</span>
+<span class="nc" id="L350">        String startAt = date.atTime(start).format(formatter);</span>
+<span class="nc" id="L351">        String endAt = date.atTime(end).format(formatter);</span>
+
+<span class="nc" id="L353">        JSONObject taskJson = new JSONObject();</span>
+        try {
+<span class="nc" id="L355">            taskJson.put(&quot;title&quot;, title);</span>
+<span class="nc" id="L356">            taskJson.put(&quot;description&quot;, &quot;Daily sync&quot;);</span>
+<span class="nc" id="L357">            taskJson.put(&quot;startAt&quot;, startAt);</span>
+<span class="nc" id="L358">            taskJson.put(&quot;endAt&quot;, endAt);</span>
+<span class="nc" id="L359">            taskJson.put(&quot;location&quot;, &quot;home&quot;);</span>
+<span class="nc" id="L360">            taskJson.put(&quot;allDay&quot;, false);</span>
+<span class="nc" id="L361">        } catch (JSONException e) {</span>
+<span class="nc" id="L362">            e.printStackTrace();</span>
+<span class="nc" id="L363">        }</span>
+
+<span class="nc" id="L365">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+
+<span class="nc" id="L367">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, TASKS_URL, taskJson,</span>
+                response -&gt; {
+                    try {
+<span class="nc" id="L370">                        int id = response.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L371">                        taskMap.put(id, response); // Store new event immediately</span>
+<span class="nc" id="L372">                    } catch (JSONException e) {</span>
+<span class="nc" id="L373">                        e.printStackTrace();</span>
+<span class="nc" id="L374">                    }</span>
+<span class="nc" id="L375">                    Toast.makeText(this, &quot;Task saved!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L376">                    fetchTasksForSelectedDay();</span>
+<span class="nc" id="L377">                },</span>
+<span class="nc" id="L378">                error -&gt; Toast.makeText(this, &quot;Error saving task&quot;, Toast.LENGTH_LONG).show()</span>
+<span class="nc" id="L379">        ) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() {
+<span class="nc" id="L382">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L383">                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);</span>
+<span class="nc" id="L384">                headers.put(&quot;X-User-Id&quot;, String.valueOf(userId));</span>
+<span class="nc" id="L385">                return headers;</span>
+            }
+        };
+
+<span class="nc" id="L389">        queue.add(request);</span>
+<span class="nc" id="L390">    }</span>
+
+    private LocalDate parseDate(String dateStr) {
+        try {
+<span class="nc" id="L394">            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;d MMMM yyyy&quot;);</span>
+<span class="nc" id="L395">            return LocalDate.parse(dateStr, formatter);</span>
+<span class="nc" id="L396">        } catch (Exception e) {</span>
+<span class="nc" id="L397">            return null;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

@@ -3,7 +3,7 @@ package com.questbuddy.tripmember.model;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-import com.questbuddy.model.User;
+import com.questbuddy.user.model.User;
 import com.questbuddy.trip.Trip;
 
 /**

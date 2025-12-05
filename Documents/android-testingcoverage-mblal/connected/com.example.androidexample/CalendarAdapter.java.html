@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CalendarAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CalendarAdapter.java</span></div><h1>CalendarAdapter.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+
+/**
+ * This class is responsible for creating, structuring and populating the calendar cell in the RecyclerView
+ */
+class CalendarAdapter extends RecyclerView.Adapter&lt;CalendarViewHolder&gt;
+{
+    private final ArrayList&lt;String&gt; daysOfMonth;
+    private final OnItemListener onItemListener;
+
+    private final ArrayList&lt;String&gt; taskDates;
+
+    private LocalDate monthDate;
+
+<span class="nc" id="L26">    public CalendarAdapter(ArrayList&lt;String&gt; daysOfMonth, OnItemListener onItemListener, LocalDate monthDate, ArrayList&lt;String&gt; taskDates) {</span>
+<span class="nc" id="L27">        this.daysOfMonth = daysOfMonth;</span>
+<span class="nc" id="L28">        this.onItemListener = onItemListener;</span>
+<span class="nc" id="L29">        this.monthDate = monthDate;</span>
+<span class="nc" id="L30">        this.taskDates = taskDates;</span>
+<span class="nc" id="L31">    }</span>
+
+    @NonNull
+    @Override
+    // Overrides the calendar_cell.xml file by giving each cell a height of 1/6 (since there are 6 rows) of it's parent (which is the RecyclerView)
+    public CalendarViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
+    {
+<span class="nc" id="L38">        LayoutInflater inflater = LayoutInflater.from(parent.getContext());</span>
+<span class="nc" id="L39">        View view = inflater.inflate(R.layout.calendar_cell, parent, false);</span>
+<span class="nc" id="L40">        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();</span>
+<span class="nc" id="L41">        layoutParams.height = (int) (parent.getHeight() * 0.166666666);</span>
+<span class="nc" id="L42">        return new CalendarViewHolder(view, onItemListener);</span>
+    }
+
+    // Binds each cell in the grid to the holder (which consists of the UI for each day cell) and sets the text as the day number
+    @Override
+    public void onBindViewHolder(@NonNull CalendarViewHolder holder, int position) {
+<span class="nc" id="L48">        String dayText = daysOfMonth.get(position);</span>
+<span class="nc" id="L49">        holder.dayOfMonth.setText(dayText);</span>
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (!dayText.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L52">            int day = Integer.parseInt(dayText);</span>
+
+            // Build a LocalDate safely using the month/year we already know
+<span class="nc" id="L55">            LocalDate cellDate = monthDate.withDayOfMonth(day);</span>
+<span class="nc" id="L56">            String formattedDate = cellDate.toString();</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if (taskDates.contains(formattedDate)) {</span>
+<span class="nc" id="L59">                holder.taskIndicator.setVisibility(View.VISIBLE);</span>
+            } else {
+<span class="nc" id="L61">                holder.taskIndicator.setVisibility(View.GONE);</span>
+            }
+<span class="nc" id="L63">        } else {</span>
+<span class="nc" id="L64">            holder.taskIndicator.setVisibility(View.GONE);</span>
+        }
+<span class="nc" id="L66">    }</span>
+
+    // returns the size of our ArrayList containing all the days
+    @Override
+    public int getItemCount()
+    {
+<span class="nc" id="L72">        return daysOfMonth.size();</span>
+    }
+
+    // This interface sets up a way for the adapter to tell the activity when a calendar day is clicked.
+    public interface OnItemListener
+    {
+        void onItemClick(int position, String dayText);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.12.3</div></body></html>

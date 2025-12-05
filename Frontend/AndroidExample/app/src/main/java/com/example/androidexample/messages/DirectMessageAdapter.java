@@ -1,4 +1,5 @@
 package com.example.androidexample.messages;
+import com.example.androidexample.R;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.example.androidexample.R;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,7 +19,6 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.androidexample.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;

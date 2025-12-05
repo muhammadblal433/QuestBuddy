@@ -1,0 +1,131 @@
+[33mcommit ad5a864876460a5708a8d41744d696e5fc290b32[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32manaladala-demo2[m[33m)[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Sun Sep 21 19:37:16 2025 -0500
+
+    implemented LoginActivity with validation and updated manifest
+
+[33mcommit cc6ad6eb963045a76fcd558282004617518ffe1f[m[33m ([m[1;31morigin/analadala-demo2[m[33m)[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Sun Sep 21 19:30:03 2025 -0500
+
+    added login screen with travel theme
+
+[33mcommit 03458c0e914d41de62ce90e9e7fa77f5b84e11df[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Sun Sep 21 15:50:21 2025 -0500
+
+    added frontend folder from main into analadala-demo2
+
+[33mcommit 061a3b6f32bcbb892514d38b0c6c97333b72858c[m[33m ([m[1;31morigin/analadala-demo1[m[33m, [m[1;32manaladala-demo1[m[33m)[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Fri Sep 12 09:54:56 2025 -0500
+
+    exp2: removed old getIntent().getExtras() method (replaced with ActivityResultLauncher)
+
+[33mcommit c4f5970820384b2bacfc3d86cc91fe9724da4eca[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Thu Sep 11 11:14:48 2025 -0500
+
+    exp3: Signup — added password strength validation (min length + digit) with inline errors
+
+[33mcommit db9d9de8ae99ebd0a3cdc28d00e3f16515dafe96[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Thu Sep 11 09:33:47 2025 -0500
+
+    exp3: Main — added welcome Toast message after successful login/signup
+
+[33mcommit 0b2217eb4349ea79668c8602ae6169b1763e2285[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Thu Sep 11 09:25:31 2025 -0500
+
+    exp3: Login — added input validation and Toast for empty fields
+
+[33mcommit 518aaaa21d688d64fd5b2c1704f5eb679ed6610e[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Tue Sep 9 09:56:50 2025 -0500
+
+    exp2: adjusted UI - increased last result text size and reduced margin between result and button
+
+[33mcommit c0cf6835d9d4c9b02575d5c1f72b38e5e657cee3[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Tue Sep 9 09:48:32 2025 -0500
+
+    exp2: improved comments in CounterActivity
+
+[33mcommit 03310071091d63c2150dede4f5751518c64c3e4b[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Mon Sep 8 19:24:54 2025 -0500
+
+    exp2: used ActivityResultLauncher API to return counter value to MainActivity
+
+[33mcommit 50e8b0509447546a4288398153f995f98b8cc320[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Mon Sep 8 19:02:52 2025 -0500
+
+    exp2: prevent negative counts in CounterActivity
+
+[33mcommit 97a0de4138194654d96419be2cfd5fe9a28413ef[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Mon Sep 8 11:38:59 2025 -0500
+
+    exp1: centered Hello World text and buttons in layout
+
+[33mcommit d449ee732ecbe80549f50b9abe95137670b85cf9[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Sun Sep 7 20:22:27 2025 -0500
+
+    exp1: added reset button to restore Hello World and reset counter
+
+[33mcommit 15ae6f4be7bd5dddd17fca58e3c20a02cf1427ea[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Sun Sep 7 17:59:32 2025 -0500
+
+    exp1: added background color toggle for Hello World
+
+[33mcommit f4682dd347ecd49406ef1d6c609b1bdaa2eddf2f[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Sun Sep 7 17:55:38 2025 -0500
+
+    exp1: added toggle button and counter feature
+
+[33mcommit cc7f1d72be7339a78195e06e0b058bba31676987[m
+Author: Aniroop Naladala <aniroopnaladala37@gmail.com>
+Date:   Fri Sep 5 15:55:38 2025 -0500
+
+    This is my first push
+
+[33mcommit f87888006f426cca8d7765a5cd16370779fcf177[m
+Author: Md Jubair Ibna Mostafa <jubair@iastate.edu>
+Date:   Mon Aug 25 15:53:29 2025 +0000
+
+    gitignore file added
+
+[33mcommit 06972890d674affb66a76856cb7f39c672fadfc6[m
+Author: Md Jubair Ibna Mostafa <jubair@iastate.edu>
+Date:   Mon Aug 25 15:52:35 2025 +0000
+
+    Add new directory
+
+[33mcommit b3067f592081bd7d5963318dbd948b81a9646b3f[m
+Author: Md Jubair Ibna Mostafa <jubair@iastate.edu>
+Date:   Mon Aug 25 15:52:28 2025 +0000
+
+    Add new directory
+
+[33mcommit 0d1198677a45db4b3e1cbc7cf62dea35b4bebb75[m
+Author: Md Jubair Ibna Mostafa <jubair@iastate.edu>
+Date:   Mon Aug 25 15:52:18 2025 +0000
+
+    Add new directory
+
+[33mcommit a1e3acb843d21dbe969b7d964a455e83099a8b43[m
+Author: Md Jubair Ibna Mostafa <jubair@iastate.edu>
+Date:   Mon Aug 25 15:51:36 2025 +0000
+
+    Add new directory
+
+[33mcommit 8c795313a02622ec807ec4ec8eb40ac481121f31[m
+Author: Md Jubair Ibna Mostafa <jubair@iastate.edu>
+Date:   Mon Aug 25 15:47:49 2025 +0000
+
+    Initial commit

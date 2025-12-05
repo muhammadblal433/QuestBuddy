@@ -1,13 +1,14 @@
 package com.example.androidexample.trips;
+import com.example.androidexample.R;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.androidexample.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,8 @@ import java.util.List;
 public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
 
     public interface Listener {
-        void onOpen(TripDTO t);
+        void onChat(TripDTO t);
+        void onPlanner(TripDTO t);
         void onEdit(TripDTO t);
         void onDelete(TripDTO t);
     }
@@ -51,7 +53,8 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
         String startLoc = t.startLocationName != null ? t.startLocationName : "Unknown";
         h.tvStartLocation.setText("Start: " + startLoc);
 
-        h.itemView.setOnClickListener(v -> { if (listener != null) listener.onOpen(t); });
+        h.btnChat.setOnClickListener(v -> { if (listener != null) listener.onChat(t); });
+        h.btnPlanner.setOnClickListener(v -> { if (listener != null) listener.onPlanner(t); });
         h.btnEdit.setOnClickListener(v -> { if (listener != null) listener.onEdit(t); });
         h.btnDelete.setOnClickListener(v -> { if (listener != null) listener.onDelete(t); });
     }
@@ -61,6 +64,8 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
     static class VH extends RecyclerView.ViewHolder {
         TextView tvName, tvDestination, tvDateRange, tvStartLocation;
         AppCompatImageButton btnEdit, btnDelete;
+
+        Button btnChat, btnPlanner;
         VH(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
@@ -69,6 +74,8 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
             tvStartLocation = itemView.findViewById(R.id.tvStartLocation);
             btnEdit = itemView.findViewById(R.id.btnEditName);
             btnDelete = itemView.findViewById(R.id.btnDelete);
+            btnChat = itemView.findViewById(R.id.btnChat);
+            btnPlanner = itemView.findViewById(R.id.btnPlanner);
         }
     }
 }
