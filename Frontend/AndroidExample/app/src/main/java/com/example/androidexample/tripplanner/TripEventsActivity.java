@@ -67,6 +67,11 @@ public class TripEventsActivity extends AppCompatActivity {
             public void onItemLongClick(TripEvent event) {
                 deleteEvent(event);
             }
+
+            @Override
+            public void onDeleteClick(TripEvent event) {
+                deleteEvent(event);
+            }
         });
 
         recycler.setLayoutManager(new LinearLayoutManager(this));
