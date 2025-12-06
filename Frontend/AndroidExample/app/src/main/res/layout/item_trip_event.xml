@@ -1,42 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="12dp"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:padding="12dp"
     android:background="@drawable/rounded_button_orange"
     android:elevation="2dp"
     android:layout_marginTop="10dp"
     android:layout_marginBottom="10dp">
 
-    <!-- Event name -->
-    <TextView
-        android:id="@+id/txtEventName"
+    <!-- Delete button in top right corner -->
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:background="@android:color/transparent"
+        android:src="@android:drawable/ic_menu_delete"
+        android:contentDescription="Delete event"
+        android:padding="4dp"
+        app:tint="#FFFFFF" />
+
+    <!-- Content container -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Event name"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+        android:orientation="vertical"
+        android:layout_marginEnd="36dp">
 
-    <!-- Time -->
-    <TextView
-        android:id="@+id/txtEventTime"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="2025-01-01T09:00:00Z"
-        android:layout_marginTop="4dp"
-        android:textColor="#FFFFFF"
-        android:alpha="0.8" />
+        <!-- Event name -->
+        <TextView
+            android:id="@+id/txtEventName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Event name"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
-    <!-- Location -->
-    <TextView
-        android:id="@+id/txtEventLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Location"
-        android:layout_marginTop="2dp"
-        android:textColor="#FFFFFF"
-        android:alpha="0.75" />
+        <!-- Time -->
+        <TextView
+            android:id="@+id/txtEventTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dec 05, 2025 • 7:50 PM"
+            android:layout_marginTop="4dp"
+            android:textColor="#FFFFFF"
+            android:alpha="0.8" />
 
-</LinearLayout>
+        <!-- Location -->
+        <TextView
+            android:id="@+id/txtEventLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Location"
+            android:layout_marginTop="2dp"
+            android:textColor="#FFFFFF"
+            android:alpha="0.75" />
+
+    </LinearLayout>
+
+</RelativeLayout>
