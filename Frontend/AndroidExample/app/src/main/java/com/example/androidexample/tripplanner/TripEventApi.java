@@ -122,6 +122,9 @@ public class TripEventApi {
             if (position != null) body.put("position", position);
 
             body.put("attachmentRefs", new org.json.JSONArray());
+
+            System.out.println("CREATE EVENT BODY = " + body.toString());
+
         } catch (JSONException e) {
             callback.onError("JSON error: " + e.getMessage());
             return;
@@ -142,13 +145,19 @@ public class TripEventApi {
                 error -> callback.onError(parseVolleyError(error))
         ) {
             @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
+            public Map<String, String> getHeaders() {
                 return buildHeaders(userId);
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
             }
         };
 
         ApiClient.getInstance(context).addToRequestQueue(req);
     }
+
 
     public void editEvent(
             long userId,
@@ -172,6 +181,10 @@ public class TripEventApi {
             if (location != null) body.put("location", location);
             if (notes != null) body.put("notes", notes);
             if (position != null) body.put("position", position);
+
+            body.put("attachmentRefs", new org.json.JSONArray());
+
+            System.out.println("EDIT EVENT BODY = " + body.toString());
         } catch (JSONException e) {
             callback.onError("JSON error: " + e.getMessage());
             return;
