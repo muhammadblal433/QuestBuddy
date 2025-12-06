@@ -7,25 +7,14 @@
     android:background="@android:color/white"
     tools:context=".tripplanner.TripEventsActivity">
 
-    <!-- Top header bar for the screen title -->
-    <LinearLayout
-        android:id="@+id/headerBar"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="?attr/colorPrimary"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Trip Itinerary"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:textSize="20sp" />
-    </LinearLayout>
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/orange_medium"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:title="Trip Itinerary"
+        app:titleTextColor="@color/white" />
 
     <!-- Main content area where the event list and loading spinner live -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -67,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        app:tint="@android:color/white"
+        app:tint="@android:color/black"
         app:backgroundTint="?attr/colorPrimary"
         app:layout_anchor="@id/contentLayout"
         app:layout_anchorGravity="bottom|end" />
