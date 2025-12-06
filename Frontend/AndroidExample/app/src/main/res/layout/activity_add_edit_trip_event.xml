@@ -59,11 +59,11 @@
             <EditText
                 android:id="@+id/edtStartsAt"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:hint="Starts at (ISO-8601)"
-                android:padding="8dp"
-                android:inputType="text" />
+                android:layout_height="wrap_content"
+                android:hint="Select start date &amp; time"
+                android:focusable="false"
+                android:clickable="true"
+                android:inputType="none" />
 
             <View
                 android:layout_width="match_parent"
@@ -73,11 +73,11 @@
             <EditText
                 android:id="@+id/edtEndsAt"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:hint="Ends at (ISO-8601)"
-                android:padding="8dp"
-                android:inputType="text" />
+                android:layout_height="wrap_content"
+                android:hint="Select end date &amp; time"
+                android:focusable="false"
+                android:clickable="true"
+                android:inputType="none" />
 
             <View
                 android:layout_width="match_parent"

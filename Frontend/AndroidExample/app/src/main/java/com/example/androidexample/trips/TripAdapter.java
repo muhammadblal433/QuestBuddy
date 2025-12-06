@@ -20,6 +20,7 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
         void onPlanner(TripDTO t);
         void onEdit(TripDTO t);
         void onDelete(TripDTO t);
+        void onInvite(TripDTO t);
     }
 
     private final List<TripDTO> data = new ArrayList<>();
@@ -57,13 +58,14 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
         h.btnPlanner.setOnClickListener(v -> { if (listener != null) listener.onPlanner(t); });
         h.btnEdit.setOnClickListener(v -> { if (listener != null) listener.onEdit(t); });
         h.btnDelete.setOnClickListener(v -> { if (listener != null) listener.onDelete(t); });
+        h.btnInvite.setOnClickListener(v -> { if (listener != null) listener.onInvite(t); });
     }
 
     @Override public int getItemCount() { return data.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
         TextView tvName, tvDestination, tvDateRange, tvStartLocation;
-        AppCompatImageButton btnEdit, btnDelete;
+        AppCompatImageButton btnEdit, btnDelete, btnInvite;
 
         Button btnChat, btnPlanner;
         VH(@NonNull View itemView) {
@@ -76,6 +78,7 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.VH> {
             btnDelete = itemView.findViewById(R.id.btnDelete);
             btnChat = itemView.findViewById(R.id.btnChat);
             btnPlanner = itemView.findViewById(R.id.btnPlanner);
+            btnInvite = itemView.findViewById(R.id.btnInvite);
         }
     }
 }
