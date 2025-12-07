@@ -16,6 +16,18 @@
         app:title="Trip Itinerary"
         app:titleTextColor="@color/white" />
 
+    <ImageButton
+        android:id="@+id/btnReturn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="end"
+        android:layout_marginEnd="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_revert"
+        android:contentDescription="Return to trip list"
+        android:padding="12dp"
+        app:tint="#FFFFFF" />
+
     <!-- Main content area where the event list and loading spinner live -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/contentLayout"
