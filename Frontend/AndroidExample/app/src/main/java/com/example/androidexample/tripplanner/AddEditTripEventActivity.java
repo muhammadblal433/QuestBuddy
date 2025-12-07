@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -49,6 +50,11 @@ public class AddEditTripEventActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_edit_trip_event);
+
+        ImageButton btnReturn = findViewById(R.id.btnReturn);
+        btnReturn.setOnClickListener(v -> {
+            finish(); // Simply close this activity and return to TripListActivity(only added code, dont change anything else)
+        });
 
         tripId = getIntent().getLongExtra(EXTRA_TRIP_ID, -1L);
         userId = getIntent().getLongExtra(EXTRA_USER_ID, -1L);
