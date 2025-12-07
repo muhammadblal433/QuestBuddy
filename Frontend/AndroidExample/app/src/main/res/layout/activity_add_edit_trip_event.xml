@@ -97,6 +97,21 @@
                 android:layout_height="1dp"
                 android:background="#DDDDDD" />
 
+            <!-- New position field -->
+            <EditText
+                android:id="@+id/edtPosition"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:hint="Position in itinerary (optional)"
+                android:padding="8dp"
+                android:inputType="number" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD" />
+
             <EditText
                 android:id="@+id/edtNotes"
                 android:layout_width="match_parent"
