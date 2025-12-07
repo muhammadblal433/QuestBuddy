@@ -179,8 +179,7 @@ public class BudgetController {
             )
             @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
         Long ownerId = idOf(ownerUsername);
-        if (requesterUsername == null || requesterUsername.isBlank()
-                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+        if (requesterUsername == null || requesterUsername.isBlank()) {
             // original owner behavior (unchanged)
             return service.list(ownerId);
         }
@@ -233,8 +232,7 @@ public class BudgetController {
             )
             @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
         Long ownerId = idOf(ownerUsername);
-        if (requesterUsername == null || requesterUsername.isBlank()
-                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+        if (requesterUsername == null || requesterUsername.isBlank()) {
             // original owner behavior
             return service.get(ownerId, budgetId);
         }
@@ -287,8 +285,7 @@ public class BudgetController {
             )
             @RequestHeader(value = "X-Username", required = false) String requesterUsername) {
         Long ownerId = idOf(ownerUsername);
-        if (requesterUsername == null || requesterUsername.isBlank()
-                || ownerUsername.equalsIgnoreCase(requesterUsername)) {
+        if (requesterUsername == null || requesterUsername.isBlank()) {
             // original owner behavior
             return service.balances(ownerId, budgetId);
         }

@@ -85,10 +85,38 @@ public class BudgetServiceImplemented implements BudgetService {
         if (requesterUsername == null || requesterUsername.isBlank()) {
             return List.of();
         }
-        // Load owner's budgets and filter to those where requester appears in splits
-        return budgets.findAllByOwner_Id(ownerId, Sort.by("createdAt").descending())
-                .stream()
-                .filter(b -> canViewAsParticipant(b, requesterUsername))
+
+        // Treat requesterUsername as the "viewer". Return every budget where that viewer
+        // is either the owner or a participant, regardless of the ownerId path value.
+        User viewer = users.findByUsernameIgnoreCase(requesterUsername)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "user_not_found: " + requesterUsername));
+        Long viewerId = viewer.getId();
+
+        // Budgets the viewer owns
+        List<Budget> owned = budgets.findAllByOwner_Id(viewerId, Sort.by("createdAt").descending());
+
+        // Budgets where the viewer is a participant
+        List<BudgetSplit> participantSplits = splits.findAllByUser_Id(viewerId);
+
+        // Combine & de-duplicate
+        Map<Long, Budget> combined = new HashMap<>();
+        for (Budget b : owned) {
+            if (b.getId() != null) {
+                combined.put(b.getId(), b);
+            }
+        }
+        for (BudgetSplit s : participantSplits) {
+            Budget b = s.getBudget();
+            if (b != null && b.getId() != null) {
+                combined.put(b.getId(), b);
+            }
+        }
+
+        List<Budget> result = new ArrayList<>(combined.values());
+        // Sort newest first (same as original owner-list behavior)
+        result.sort(Comparator.comparing(Budget::getCreatedAt).reversed());
+
+        return result.stream()
                 .map(mapper::toResponse)
                 .toList();
     }
@@ -104,11 +132,29 @@ public class BudgetServiceImplemented implements BudgetService {
     @Override
     @Transactional(readOnly = true)
     public BudgetResponseDTO get(Long ownerId, Long budgetId, String requesterUsername) {
-        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+        // If no viewer is provided, keep the original strict owner behavior
+        if (requesterUsername == null || requesterUsername.isBlank()) {
+            Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+            return mapper.toResponse(b);
+        }
+
+        // Viewer-based semantics: allow if viewer is owner OR participant
+        Budget b = budgets.findById(budgetId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
-        if (!canViewAsParticipant(b, requesterUsername)) {
+
+        String viewer = requesterUsername.trim().toLowerCase();
+        String ownerUsername = b.getOwner() != null && b.getOwner().getUsername() != null
+                ? b.getOwner().getUsername().trim().toLowerCase()
+                : null;
+
+        boolean isOwner = ownerUsername != null && ownerUsername.equals(viewer);
+        boolean isParticipant = canViewAsParticipant(b, requesterUsername);
+
+        if (!isOwner && !isParticipant) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
         }
+
         return mapper.toResponse(b);
     }
 
@@ -267,11 +313,28 @@ public class BudgetServiceImplemented implements BudgetService {
     @Override
     @Transactional(readOnly = true)
     public List<BudgetBalanceDTO> balances(Long ownerId, Long budgetId, String requesterUsername) {
-        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+        // If no viewer is provided, keep the original strict owner behavior
+        if (requesterUsername == null || requesterUsername.isBlank()) {
+            Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
+            return mapper.toBalances(b);
+        }
+
+        Budget b = budgets.findById(budgetId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "budget_not_found"));
-        if (!canViewAsParticipant(b, requesterUsername)) {
+
+        String viewer = requesterUsername.trim().toLowerCase();
+        String ownerUsername = b.getOwner() != null && b.getOwner().getUsername() != null
+                ? b.getOwner().getUsername().trim().toLowerCase()
+                : null;
+
+        boolean isOwner = ownerUsername != null && ownerUsername.equals(viewer);
+        boolean isParticipant = canViewAsParticipant(b, requesterUsername);
+
+        if (!isOwner && !isParticipant) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
         }
+
         return mapper.toBalances(b);
     }
 
