@@ -107,20 +107,6 @@
                 android:padding="8dp"
                 android:inputType="textMultiLine" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#DDDDDD" />
-
-            <EditText
-                android:id="@+id/edtPosition"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:hint="Position (for ordering)"
-                android:padding="8dp"
-                android:inputType="number" />
-
         </LinearLayout>
 
         <!-- Big orange save button -->
