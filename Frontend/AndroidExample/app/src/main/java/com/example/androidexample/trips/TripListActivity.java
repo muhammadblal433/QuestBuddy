@@ -80,6 +80,11 @@ public class TripListActivity extends AppCompatActivity {
             @Override public void onDelete(TripDTO t) {
                 confirmDelete(t);
             }
+
+            @Override
+            public void onInvite(TripDTO t) {
+                showInviteDialog(t);
+            }
         });
 
         recycler.setLayoutManager(new LinearLayoutManager(this));
@@ -103,6 +108,12 @@ public class TripListActivity extends AppCompatActivity {
         });
 
         loadData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadData(); // Refresh the trip list whenever you return to this screen
     }
 
     private void loadData() {
@@ -187,6 +198,51 @@ public class TripListActivity extends AppCompatActivity {
                             }
                         });
                     }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showInviteDialog(TripDTO trip) {
+        final EditText input = new EditText(this);
+        input.setHint("Enter username");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Invite to " + trip.name)
+                .setMessage("Type the username of the person you want to invite.")
+                .setView(input)
+                .setPositiveButton("Send Invite", (dialog, which) -> {
+                    String username = input.getText().toString().trim();
+                    if (username.isEmpty()) {
+                        Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    TripMembershipAPI.inviteByUsername(
+                            this,
+                            userId,
+                            trip.id,
+                            username,
+                            new TripMembershipAPI.SimpleCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    Toast.makeText(
+                                            TripListActivity.this,
+                                            "Invite sent to " + username,
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+
+                                @Override
+                                public void onError(String message) {
+                                    Toast.makeText(
+                                            TripListActivity.this,
+                                            "Invite failed: " + message,
+                                            Toast.LENGTH_LONG
+                                    ).show();
+                                }
+                            }
+                    );
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_travel"
+    android:fillViewport="true"
+    tools:context=".payments.PremiumActivity">
+
+    <!-- Outer container to center the premium card similar to login screen -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center">
+
+        <!-- App / section title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QuestBuddy Premium"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:paddingTop="30dp"
+            android:paddingBottom="24dp" />
+
+        <!-- Premium content card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="28dp"
+            android:background="#CCFFFFFF"
+            android:elevation="6dp"
+            android:layout_marginBottom="40dp">
+
+            <!-- Title line -->
+            <TextView
+                android:id="@+id/tvPremiumTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Unlock QuestBuddy Premium, Travel Like a Pro"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#222222"
+                android:paddingBottom="12dp" />
+
+            <!-- Subtitle -->
+            <TextView
+                android:id="@+id/tvPremiumSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plan smarter trips with powerful premium tools."
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#444444"
+                android:paddingBottom="24dp" />
+
+            <!-- Features / bullet list -->
+            <TextView
+                android:id="@+id/tvPremiumFeatures"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Unlimited trips and saved itineraries\n• Custom group chat names for every trip\n• Shared budgets to split trip costs with friends"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#222222"
+                android:lineSpacingExtra="6dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="28dp"
+                android:paddingStart="4dp" />
+
+            <!-- Upgrade button -->
+            <Button
+                android:id="@+id/btnUpgradePremium"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Upgrade to Premium"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:background="@drawable/rounded_button_orange"
+                android:textColor="@android:color/white" />
+
+            <!-- Return to Home button -->
+            <Button
+                android:id="@+id/btnReturnHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/rounded_button_orange"
+                android:backgroundTint="@android:color/holo_red_dark"
+
+                android:paddingStart="32dp"
+                android:paddingTop="12dp"
+
+                android:paddingEnd="32dp"
+                android:paddingBottom="12dp"
+                android:text="Return Home"
+                android:textAllCaps="false"
+
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

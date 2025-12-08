@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import com.example.androidexample.payments.PremiumActivity;
 
 
 // shows all budgets for the logged-in user
@@ -71,6 +72,14 @@ public class BudgetListActivity extends AppCompatActivity {
             intent.putExtra("userId", userId);
             startActivity(intent);
             finish();
+        });
+
+        // Upgrade to Premium button
+        Button btnUpgradePremium = findViewById(R.id.btnUpgradePremium);
+        btnUpgradePremium.setOnClickListener(v -> {
+            Intent intent = new Intent(BudgetListActivity.this, PremiumActivity.class);
+            intent.putExtra("userId", userId);
+            startActivity(intent);
         });
     }
 
