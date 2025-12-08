@@ -3,9 +3,11 @@ package com.questbuddy.service;
 import com.questbuddy.task.model.Task;
 import com.questbuddy.task.repository.TaskRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.NoSuchElementException;
 
 import com.questbuddy.notification.NotificationService;
 import com.questbuddy.notification.NotificationType;
@@ -25,6 +27,7 @@ public class TaskServiceImplemented implements TaskService {
     }
 
     @Override
+    @Transactional
     public Task createTask(Task task) {
         Task saved = taskRepo.save(task);
 
@@ -56,6 +59,7 @@ public class TaskServiceImplemented implements TaskService {
     }
 
     @Override
+    @Transactional
     public Task updateTask(Long id, Task updatedTask) {
         return taskRepo.findById(id)
                 .map(task -> {
@@ -77,12 +81,18 @@ public class TaskServiceImplemented implements TaskService {
                     }
                     return saved;
                 })
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                // turns this into 404
+                .orElseThrow(() -> new NoSuchElementException("Task not found"));
     }
 
     @Override
+    @Transactional
     public void deleteTask(Long id) {
-        // Optional: notify owner here if you load the task first.
+        // Check existence first to avoid EmptyResultDataAccessException -> 500
+        if (!taskRepo.existsById(id)) {
+            throw new NoSuchElementException("Task not found");
+        }
+
         taskRepo.deleteById(id);
     }
 }
