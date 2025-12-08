@@ -1,5 +1,3 @@
-package com.questbuddy.testing;
-
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.json.JSONArray;
