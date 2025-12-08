@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.ComponentActivity;
@@ -34,6 +35,11 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_chat);
 
+        ImageButton btnReturn = findViewById(R.id.btnReturn);
+        btnReturn.setOnClickListener(v -> {
+            finish(); // Simply close this activity and return to the previous one
+        });
+
         me = getIntent().getLongExtra("userId", -1);
         tripId = getIntent().getLongExtra("tripId", -1);
 
@@ -52,7 +58,8 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
 
         // ViewModel with custom factory (provides URLs, ids, and Volley queue)
         vm = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull @Override
+            @NonNull
+            @Override
             @SuppressWarnings("unchecked")
             public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
                 return (T) new TripChatViewModel(baseUrl, baseWsUrl, me, tripId, queue);
@@ -124,7 +131,7 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
     @Override
     public void onReact(TripMessageResponseDTO msg) {
         // Reaction picker
-        String[] emojis = {"👍","❤️","😂","🔥","🎉","😮","😢"};
+        String[] emojis = {"👍", "❤️", "😂", "🔥", "🎉", "😮", "😢"};
 
         new android.app.AlertDialog.Builder(this)
                 .setTitle("React")

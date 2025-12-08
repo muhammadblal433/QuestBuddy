@@ -17,6 +17,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.androidexample.HomeActivity;
 import com.example.androidexample.LoginActivity;
@@ -123,7 +124,7 @@ public class TaskManagerActivity extends AppCompatActivity {
     }
 
     // POST - Add new task
-     private void addTask(String title, String description) {
+    private void addTask(String title, String description) {
         JSONObject taskJson = new JSONObject();
         try {
             taskJson.put("userId", userId);
@@ -182,10 +183,10 @@ public class TaskManagerActivity extends AppCompatActivity {
     // DELETE - Remove task
     public void deleteTask(long taskId) {
         String url = BASE_URL + "/" + taskId;
-        JsonObjectRequest request = new JsonObjectRequest(
+
+        StringRequest request = new StringRequest(
                 Request.Method.DELETE,
                 url,
-                null,
                 response -> {
                     Toast.makeText(this, "Task deleted!", Toast.LENGTH_SHORT).show();
                     getTasks();
@@ -195,8 +196,16 @@ public class TaskManagerActivity extends AppCompatActivity {
                         }
                     }, 500);
                 },
-                error -> Toast.makeText(this, "DELETE Error: " + error.getMessage(), Toast.LENGTH_SHORT).show()
+                error -> {
+                    String message = "DELETE Error";
+                    if (error.networkResponse != null) {
+                        message += " (Code: " + error.networkResponse.statusCode + ")";
+                    }
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    error.printStackTrace();
+                }
         );
+
         queue.add(request);
     }
 
@@ -251,4 +260,3 @@ public class TaskManagerActivity extends AppCompatActivity {
     }
 
 }
-

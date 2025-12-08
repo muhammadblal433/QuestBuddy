@@ -22,6 +22,9 @@ import com.questbuddy.notification.NotificationType;
 import com.questbuddy.notification.dto.NotificationCreateDTO;
 import com.questbuddy.user.model.User;
 
+import com.questbuddy.calendar.EventService;
+import com.questbuddy.calendar.dto.EventCreateDTO;
+
 @Service
 public class TripEventService {
 
@@ -30,11 +33,17 @@ public class TripEventService {
 
     private final NotificationService notifications;
 
+    // calendar service to mirror trip events into user calendars
+    private final EventService eventService;
 
-    public TripEventService(TripEventRepository repo, TripMembershipService membership, NotificationService notifications) {
+    public TripEventService(TripEventRepository repo,
+                            TripMembershipService membership,
+                            NotificationService notifications,
+                            EventService eventService) {
         this.repo = repo;
         this.membership = membership;
         this.notifications = notifications;
+        this.eventService = eventService;
     }
 
     // helper for notis
@@ -75,6 +84,24 @@ public class TripEventService {
 
         TripEvent e = TripEventMapper.fromCreate(tripId, me, in);
         TripEvent saved = repo.save(e);
+
+        // mirror this trip event into the calendar for all accepted trip members
+        try {
+            for (User u : membership.listAccepted(me, tripId)) {
+                EventCreateDTO calendarDto = new EventCreateDTO(
+                        saved.getName(),
+                        saved.getNotes(),          // use notes as description (can be null)
+                        saved.getStartsAt(),
+                        saved.getEndsAt(),
+                        saved.getLocation(),       // can be null
+                        false                      // not an all-day event
+                );
+                eventService.create(u.getId(), calendarDto);
+            }
+        } catch (Exception ex) {
+            // best-effort: do not fail trip-event creation if calendar sync has issues
+            System.err.println("[TripEventService] calendar sync failed: " + ex.getMessage());
+        }
 
         notifyTripMembers(me, tripId, saved.getId(),
                 "New itinerary event",
