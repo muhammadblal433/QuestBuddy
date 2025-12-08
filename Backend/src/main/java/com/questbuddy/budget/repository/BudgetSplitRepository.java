@@ -7,4 +7,7 @@ import java.util.List;
 
 public interface BudgetSplitRepository extends JpaRepository<BudgetSplit, Long> {
     List<BudgetSplit> findAllByBudget_Id(Long budgetId);
+
+    // all splits for a given user
+    List<BudgetSplit> findAllByUser_Id(Long userId);
 }
