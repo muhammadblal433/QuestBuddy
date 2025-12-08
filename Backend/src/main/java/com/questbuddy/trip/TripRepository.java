@@ -21,12 +21,12 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
 
     // Trips where the user is an ACCEPTED MEMBER
     @Query("""
-        select distinct t
-        from Trip t
-        join TripMember tm on tm.trip = t
-        where tm.user.id = :userId
-          and tm.status = :status
-    """)
+    select distinct t
+    from Trip t
+    join TripMember tm on tm.trip = t
+    where tm.user.id = :userId
+      and tm.status = :status
+""")
     List<Trip> findAllForUserAsMemberWithStatus(
             @Param("userId") Long userId,
             @Param("status") TripMember.Status status
