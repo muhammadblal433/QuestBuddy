@@ -11,6 +11,12 @@ import java.util.List;
 // v12 membership
 import com.questbuddy.tripmember.service.TripMembershipService;
 
+import java.util.HashSet;
+import java.util.Comparator;
+import java.util.stream.Stream;
+
+import com.questbuddy.tripmember.model.TripMember;
+
 /**
  * Service class to handle the logic of trips - such as sorting param, checking if starttime and endtime makes sense (in terms of end MUST be after start)
  */
@@ -69,9 +75,25 @@ public class TripService {
         return mapper.toDto(saved);
     }
 
-    // List (by owner)
-    public List<TripResponseDTO> list(Long ownerId) {
-        return repo.findAllByOwnerId(ownerId, BY_START_ASC).stream().map(mapper::toDto).toList();
+    // List trips where user is OWNER or an ACCEPTED MEMBER
+    public List<TripResponseDTO> list(Long userId) {
+        // Trips I own, sorted by start date in the DB
+        List<Trip> owned = repo.findAllByOwnerId(userId, BY_START_ASC);
+
+        // Trips where I'm an ACCEPTED member
+        List<Trip> asMember = repo.findAllForUserAsMemberWithStatus(
+                userId,
+                TripMember.Status.ACCEPTED
+        );
+
+        // Merge + dedupe by trip id, then sort by startDate
+        var seenIds = new HashSet<Long>();
+
+        return Stream.concat(owned.stream(), asMember.stream())
+                .filter(t -> seenIds.add(t.getId()))                  // remove duplicates
+                .sorted(Comparator.comparing(Trip::getStartDate))     // global sort by startDate
+                .map(mapper::toDto)
+                .toList();
     }
 
     // Get a trip by id and ownerId

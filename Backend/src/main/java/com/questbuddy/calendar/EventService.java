@@ -169,7 +169,7 @@ public class EventService {
                     "Event Deleted",
                     "“" + title + "” was deleted.",
                     NotificationType.EVENT_CANCELLED,
-                    e.getId(),   // eventId
+                    null,   // eventId
                     null,        // tripId
                     null         // taskId
             ));
