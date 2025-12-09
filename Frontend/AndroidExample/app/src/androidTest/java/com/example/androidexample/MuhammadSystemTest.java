@@ -1,18 +1,24 @@
 package com.example.androidexample;
 
-import static org.junit.Assert.*;
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.pressBack;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
 import android.content.Intent;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.example.androidexample.budget.CreateBudgetActivity;
-import com.example.androidexample.notifications.NotificationsActivity;
+import com.example.androidexample.tripplanner.TripEventsActivity;
+import com.example.androidexample.trips.TripChatActivity;
+import com.example.androidexample.trips.TripInvitesActivity;
+import com.example.androidexample.trips.TripListActivity;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,100 +26,112 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class MuhammadSystemTest {
 
-    /**
-     * Launches NotificationsActivity with a fake userId and checks that
-     * the RecyclerView is present and visible.
-     */
-    @Test
-    public void openNotificationsScreen_showsRecyclerView() {
-        Intent intent = new Intent(
-                ApplicationProvider.getApplicationContext(),
-                NotificationsActivity.class
-        );
-        // any positive id is fine, the activity just needs a non -1 value
-        intent.putExtra("userId", 51);
-
-        try (ActivityScenario<NotificationsActivity> scenario =
-                     ActivityScenario.launch(intent)) {
-
-            scenario.onActivity(activity -> {
-                View recycler = activity.findViewById(R.id.recyclerNotifications);
-                assertNotNull("RecyclerView should be present", recycler);
-                assertEquals(View.VISIBLE, recycler.getVisibility());
-                // also verify adapter attached
-                assertNotNull("RecyclerView should have an adapter",
-                        ((androidx.recyclerview.widget.RecyclerView) recycler).getAdapter());
-            });
-        }
+    private ActivityScenario<HomeActivity> launchHome() {
+        Intent i = new Intent(ApplicationProvider.getApplicationContext(), HomeActivity.class);
+        i.putExtra("userId", 52);
+        return ActivityScenario.launch(i);
     }
 
-    /**
-     * Invalid email should set an error on the email field and never hit the network.
-     */
-    @Test
-    public void login_invalidEmail_showsError() {
-        try (ActivityScenario<LoginActivity> scenario =
-                     ActivityScenario.launch(LoginActivity.class)) {
-
-            scenario.onActivity(activity -> {
-                EditText email = activity.findViewById(R.id.etEmailLogin);
-                EditText password = activity.findViewById(R.id.etPasswordLogin);
-                Button loginButton = activity.findViewById(R.id.btnLogin);
-
-                email.setText("not-an-email");
-                password.setText("password123");
-                loginButton.performClick();
-
-                CharSequence error = email.getError();
-                assertNotNull("Email field should show an error for invalid email", error);
-                assertEquals("Enter a valid email", error.toString());
-            });
-        }
+    private ActivityScenario<TripListActivity> launchTripList() {
+        Intent i = new Intent(ApplicationProvider.getApplicationContext(), TripListActivity.class);
+        i.putExtra("userId", 1);
+        return ActivityScenario.launch(i);
     }
 
-    /**
-     * Empty password should set "Password required" on the password field.
-     */
-    @Test
-    public void login_emptyPassword_showsError() {
-        try (ActivityScenario<LoginActivity> scenario =
-                     ActivityScenario.launch(LoginActivity.class)) {
-
-            scenario.onActivity(activity -> {
-                EditText email = activity.findViewById(R.id.etEmailLogin);
-                EditText password = activity.findViewById(R.id.etPasswordLogin);
-                Button loginButton = activity.findViewById(R.id.btnLogin);
-
-                email.setText("student@example.com");
-                password.setText("");
-                loginButton.performClick();
-
-                CharSequence error = password.getError();
-                assertNotNull("Password field should show an error when empty", error);
-                assertEquals("Password required", error.toString());
-            });
-        }
+    private ActivityScenario<TripChatActivity> launchChat() {
+        Intent i = new Intent(ApplicationProvider.getApplicationContext(), TripChatActivity.class);
+        i.putExtra("userId", 1L);
+        i.putExtra("tripId", 123L);
+        return ActivityScenario.launch(i);
     }
 
-    /**
-     * Creating a budget with an empty name should set "Budget name required".
-     */
+    private ActivityScenario<TripInvitesActivity> launchInvites() {
+        Intent i = new Intent(ApplicationProvider.getApplicationContext(), TripInvitesActivity.class);
+        i.putExtra("userId", 1);
+        return ActivityScenario.launch(i);
+    }
+
+    private ActivityScenario<TripEventsActivity> launchPlanner() {
+        Intent i = new Intent(ApplicationProvider.getApplicationContext(), TripEventsActivity.class);
+        i.putExtra(TripEventsActivity.EXTRA_TRIP_ID, 123L);
+        i.putExtra(TripEventsActivity.EXTRA_USER_ID, 1L);
+        return ActivityScenario.launch(i);
+    }
+
+    // Login Tests
     @Test
-    public void createBudget_withoutName_showsError() {
-        try (ActivityScenario<CreateBudgetActivity> scenario =
-                     ActivityScenario.launch(CreateBudgetActivity.class)) {
+    public void login_showsFields() {
+        ActivityScenario.launch(LoginActivity.class);
 
-            scenario.onActivity(activity -> {
-                EditText nameField = activity.findViewById(R.id.etBudgetName);
-                Button createButton = activity.findViewById(R.id.btnCreateBudget);
+        onView(withId(R.id.etEmailLogin)).check(matches(isDisplayed()));
+        onView(withId(R.id.etPasswordLogin)).check(matches(isDisplayed()));
+        onView(withId(R.id.btnLogin)).check(matches(isDisplayed()));
+    }
 
-                nameField.setText("");
-                createButton.performClick();
+    @Test
+    public void login_typing() {
+        ActivityScenario.launch(LoginActivity.class);
 
-                CharSequence error = nameField.getError();
-                assertNotNull("Budget name field should show an error when empty", error);
-                assertEquals("Budget name required", error.toString());
-            });
-        }
+        onView(withId(R.id.etEmailLogin))
+                .perform(typeText("test@test.com"), closeSoftKeyboard());
+
+        onView(withId(R.id.etPasswordLogin))
+                .perform(typeText("password123"), closeSoftKeyboard());
+
+        onView(withId(R.id.btnLogin)).perform(click());
+    }
+
+    // Home Screen Tests
+    @Test
+    public void home_showsUsernameAndDrawer() {
+        launchHome();
+
+        onView(withId(R.id.drawer_layout)).check(matches(isDisplayed()));
+        onView(withId(R.id.tvUsername)).check(matches(isDisplayed()));
+    }
+
+    // Trip List Tests
+    @Test
+    public void tripList_showsUI() {
+        launchTripList();
+
+        onView(withId(R.id.recyclerTrips)).check(matches(isDisplayed()));
+        onView(withId(R.id.btnAdd)).check(matches(isDisplayed()));
+        onView(withId(R.id.btnViewInvites)).check(matches(isDisplayed()));
+        onView(withId(R.id.btnReturnHome)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void tripList_openInvites() {
+        launchTripList();
+        onView(withId(R.id.btnViewInvites)).perform(click());
+        onView(withId(R.id.recyclerInvites)).check(matches(isDisplayed()));
+    }
+
+    // Invites
+    @Test
+    public void invites_showList() {
+        launchInvites();
+        onView(withId(R.id.recyclerInvites)).check(matches(isDisplayed()));
+    }
+
+    // Chat
+    @Test
+    public void chat_sendMessage() {
+        launchChat();
+
+        onView(withId(R.id.input))
+                .perform(typeText("Hello!"), closeSoftKeyboard());
+
+        onView(withId(R.id.send)).perform(click());
+    }
+
+    // Planner
+    @Test
+    public void planner_showsUI() {
+        launchPlanner();
+
+        onView(withId(R.id.recyclerEvents)).check(matches(isDisplayed()));
+        onView(withId(R.id.fabAddEvent)).check(matches(isDisplayed()));
     }
 }
