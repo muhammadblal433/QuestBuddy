@@ -56,7 +56,7 @@ public class Event {
     public Long getId() {
         return id;
     }
-
+    public void setId(Long id) {}
 
     public Long getUserId() {
         return userId;
