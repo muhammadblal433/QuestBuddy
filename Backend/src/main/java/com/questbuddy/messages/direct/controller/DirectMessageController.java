@@ -337,7 +337,7 @@ public class DirectMessageController {
                     description = "Emoji reaction to remove",
                     example = "👍"
             )
-            @PathVariable String emoji) {
+            @RequestParam String emoji) {
         return service.toggleReaction(me, peerId, messageId, emoji);
     }
 }
