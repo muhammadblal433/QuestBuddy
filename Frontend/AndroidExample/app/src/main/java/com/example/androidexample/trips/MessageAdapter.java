@@ -41,12 +41,14 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
 
     // view holder
     static class VH extends RecyclerView.ViewHolder {
+        TextView username;
         TextView text;
         TextView meta;
         TextView reactions;
 
         VH(@NonNull View itemView) {
             super(itemView);
+            username = itemView.findViewById(R.id.username);
             text = itemView.findViewById(R.id.text);
             meta = itemView.findViewById(R.id.meta);
             reactions = itemView.findViewById(R.id.reactions);
@@ -73,6 +75,15 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
         TripMessageResponseDTO m = getItem(position);
+
+        if (h.username != null) {
+            if (m.getSenderId() == me) {
+                h.username.setText("Me");
+            } else {
+                String username = m.getSenderUsername();
+                h.username.setText(username != null && !username.isEmpty() ? username : "Unknown");
+            }
+        }
 
         String content =
                 (m.isDeleted())
