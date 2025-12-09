@@ -319,7 +319,7 @@ public class TripMessageController {
                     description = "Emoji reaction to remove",
                     example = "👍"
             )
-            @PathVariable String emoji) {
+            @RequestParam String emoji) {
         return service.toggleReaction(me, tripId, messageId, emoji);
     }
 }
