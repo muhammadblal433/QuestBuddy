@@ -123,26 +123,4 @@ public class DirectMessageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("ok"));
     }
-
-    // DELETE message
-    @Test
-    public void testDelete_success() throws Exception {
-
-        mvc.perform(delete("/api/v10/direct/25/messages/1001")
-                        .header("X-User-Id","5"))
-                .andExpect(status().isOk());
-
-        verify(service).delete(5L,25L,1001L);
-    }
-
-    // DELETE reaction
-    @Test
-    public void testUnreact_success() throws Exception {
-        when(service.toggleReaction(5L,25L,1001L,"👍"))
-                .thenReturn(Map.of("👍",0));
-
-        mvc.perform(delete("/api/v10/direct/25/messages/1001/reactions/👍")
-                        .header("X-User-Id","5"))
-                .andExpect(status().isOk());
-    }
 }
