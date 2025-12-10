@@ -18,6 +18,7 @@ public class TripMessageResponseDTO {
     private Long version;
     private Map<String, Integer> reactions;
     private Set<String> myReactions;
+    private String senderUsername;
     private String editedAt;
     private boolean deleted;
     private String deletedAt;
@@ -34,6 +35,7 @@ public class TripMessageResponseDTO {
         this.sentAt = sentAt; this.savedAt = savedAt; this.edited = edited; this.version = version;
         this.reactions = reactions; this.myReactions = myReactions;
         this.editedAt = editedAt; this.deleted = deleted; this.deletedAt = deletedAt; this.deletedBy = deletedBy;
+        this.senderUsername = senderUsername;
     }
 
 
@@ -45,6 +47,14 @@ public class TripMessageResponseDTO {
 
     // Who sent it (the user ID of the author).
     public long getSenderId() { return senderId; }
+
+    public String getSenderUsername() {
+        return senderUsername;
+    }
+
+    public void setSenderUsername(String senderUsername) {
+        this.senderUsername = senderUsername;
+    }
 
     // The actual text the user typed. Could be empty or null if the message was deleted.
     public String getContent() { return content; }

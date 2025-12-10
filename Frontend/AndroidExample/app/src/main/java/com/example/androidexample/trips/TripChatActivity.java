@@ -18,8 +18,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.List;
+
 
 public class TripChatActivity extends ComponentActivity implements MessageAdapter.Listener {
 
@@ -27,8 +33,12 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
     private final String baseUrl = "http://coms-3090-026.class.las.iastate.edu:8080"; // REST base (no trailing slash ok)
     private final String baseWsUrl = "ws://coms-3090-026.class.las.iastate.edu:8080";   // WS base
     private long me;
+    private MessageAdapter adapter;
     private long tripId;                              // trip/conversation id
     private TripChatViewModel vm;
+
+    private final Map<Long, String> usernameCache = new HashMap<>();
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +64,7 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
         View send = findViewById(R.id.send);
 
         // Volley queue (pass into ViewModel via factory)
-        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
 
         // ViewModel with custom factory (provides URLs, ids, and Volley queue)
         vm = new ViewModelProvider(this, new ViewModelProvider.Factory() {
@@ -62,12 +72,12 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
             @Override
             @SuppressWarnings("unchecked")
             public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-                return (T) new TripChatViewModel(baseUrl, baseWsUrl, me, tripId, queue);
+                return (T) new TripChatViewModel(baseUrl, baseWsUrl, me, tripId, requestQueue);
             }
         }).get(TripChatViewModel.class);
 
         // RecyclerView setup
-        MessageAdapter adapter = new MessageAdapter(me);
+        adapter = new MessageAdapter(me);
         adapter.setListener(this);
         LinearLayoutManager lm = new LinearLayoutManager(this);
         lm.setStackFromEnd(true);                // start list at the bottom like chat apps
@@ -76,6 +86,13 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
 
         // Observe messages and keep scrolled to the latest
         vm.getMessages().observe(this, (List<TripMessageResponseDTO> list) -> {
+            if (list != null) {
+                // Fetch usernames for all messages
+                for (TripMessageResponseDTO msg : list) {
+                    fetchUsernameIfNeeded(msg);
+                }
+            }
+
             adapter.submitList(list, () -> {
                 if (list != null && !list.isEmpty()) {
                     recycler.scrollToPosition(Math.max(0, list.size() - 1));
@@ -103,6 +120,63 @@ public class TripChatActivity extends ComponentActivity implements MessageAdapte
             }
         });
     }
+
+    // get username from get user by id endpoint
+    private void fetchUsernameIfNeeded(TripMessageResponseDTO msg) {
+        long senderId = msg.getSenderId();
+
+        Log.d("TripChat", "fetchUsernameIfNeeded start");
+        Log.d("TripChat", "sender id " + senderId);
+        Log.d("TripChat", "current username " + msg.getSenderUsername());
+
+        // skip if we already have the username
+        if (msg.getSenderUsername() != null && !msg.getSenderUsername().isEmpty()) {
+            Log.d("TripChat", "username already set, skipping");
+            return;
+        }
+
+        // check local cache first
+        if (usernameCache.containsKey(senderId)) {
+            Log.d("TripChat", "found in cache " + usernameCache.get(senderId));
+            msg.setSenderUsername(usernameCache.get(senderId));
+            adapter.notifyDataSetChanged();
+            return;
+        }
+
+        // fetch the username from the api
+        String url = baseUrl + "/api/v2/users/" + senderId;
+        Log.d("TripChat", "fetching from url " + url);
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d("TripChat", "api response received " + response.toString());
+                    String username = response.optString("username", "Unknown");
+                    Log.d("TripChat", "username " + username);
+                    usernameCache.put(senderId, username);
+                    msg.setSenderUsername(username);
+
+                    // update the ui after we get the username
+                    runOnUiThread(() -> {
+                        adapter.notifyDataSetChanged();
+                    });
+                },
+                error -> {
+                    Log.e("TripChat", "failed to fetch username for userId " + senderId);
+                    Log.e("TripChat", "error " + error.toString());
+                    if (error.networkResponse != null) {
+                        Log.e("TripChat", "status code " + error.networkResponse.statusCode);
+                    }
+                    msg.setSenderUsername("Unknown");
+                }
+        );
+
+        requestQueue.add(request);
+        Log.d("TripChat", "request added to queue");
+    }
+
     @Override
     public void onEdit(TripMessageResponseDTO msg) {
         // Simple edit popup
