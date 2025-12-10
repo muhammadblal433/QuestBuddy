@@ -76,6 +76,7 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
     public void onBindViewHolder(@NonNull VH h, int position) {
         TripMessageResponseDTO m = getItem(position);
 
+        // Set username - show "Me" for current user, otherwise show their username
         if (h.username != null) {
             if (m.getSenderId() == me) {
                 h.username.setText("Me");
@@ -85,6 +86,7 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
             }
         }
 
+        // Set message content - show "(message deleted)" if deleted
         String content =
                 (m.isDeleted())
                         ? "(message deleted)"
@@ -92,19 +94,23 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
 
         h.text.setText(content);
 
-        // timestamp + edited flag
+        // Format timestamp and add "edited" indicator if message was edited
         String time = formatTimestamp(m.getSentAt());
         if (m.isEdited()) time += " • edited";
-
-        // reactions string
         h.meta.setText(time);
 
+        // Handle reactions display
         if (m.getReactions() != null && !m.getReactions().isEmpty()) {
+            android.util.Log.d("MessageAdapter", "Message has reactions: " + m.getReactions());
+            android.util.Log.d("MessageAdapter", "My reactions: " + m.getMyReactions());
+
+            // Build reactions string - show user's reactions in brackets
             StringBuilder r = new StringBuilder();
             for (String emoji : m.getReactions().keySet()) {
                 int count = m.getReactions().get(emoji);
                 boolean mine = m.getMyReactions() != null && m.getMyReactions().contains(emoji);
 
+                // Wrap user's own reactions in brackets to highlight them
                 if (mine) {
                     r.append("[").append(emoji).append(" ").append(count).append("]  ");
                 } else {
@@ -112,47 +118,89 @@ public class MessageAdapter extends ListAdapter<TripMessageResponseDTO, MessageA
                 }
             }
 
+            // Show reactions text view and set the text
             h.reactions.setVisibility(View.VISIBLE);
             h.reactions.setText(r.toString().trim());
+            android.util.Log.d("MessageAdapter", "Setting reactions text: " + r.toString().trim());
+
+            // Handle clicking on reactions to remove them
             h.reactions.setOnClickListener(v -> {
-                if (listener != null && m.getMyReactions() != null && !m.getMyReactions().isEmpty()) {
-                    // Unreact first emoji
-                    String emoji = m.getMyReactions().iterator().next();
-                    listener.onUnreact(m, emoji);
+                android.util.Log.d("MessageAdapter", "Reactions TextView clicked!");
+                android.util.Log.d("MessageAdapter", "Listener is null? " + (listener == null));
+                android.util.Log.d("MessageAdapter", "MyReactions: " + m.getMyReactions());
+
+                // Only show remove menu if user has reactions on this message
+                if (listener == null || m.getMyReactions() == null || m.getMyReactions().isEmpty()) {
+                    android.util.Log.d("MessageAdapter", "Bailing out - no listener or no reactions");
+                    return;
                 }
+
+                // Create popup menu with option to remove each of user's reactions
+                android.util.Log.d("MessageAdapter", "Creating popup menu...");
+                PopupMenu menu = new PopupMenu(v.getContext(), v);
+                for (String emoji : m.getMyReactions()) {
+                    android.util.Log.d("MessageAdapter", "Adding menu item: Remove " + emoji);
+                    menu.getMenu().add("Remove " + emoji);
+                }
+
+                // Handle menu item selection
+                menu.setOnMenuItemClickListener(item -> {
+                    String title = item.getTitle().toString();
+                    String emoji = title.replace("Remove ", "");
+                    android.util.Log.d("MessageAdapter", "Menu item clicked: " + title + " -> emoji: " + emoji);
+                    listener.onUnreact(m, emoji);
+                    return true;
+                });
+
+                android.util.Log.d("MessageAdapter", "Showing popup menu");
+                menu.show();
             });
         } else {
+            // No reactions - hide the reactions view
+            android.util.Log.d("MessageAdapter", "No reactions on this message");
             h.reactions.setVisibility(View.GONE);
         }
-        h.itemView.setOnLongClickListener(v -> {
-            if (listener == null) return true;
 
-            PopupMenu menu = new PopupMenu(v.getContext(), v);
+        // Handle long press on message to show edit/delete/react menu
+        // Handle long press on message to show edit/delete/react menu
+        View messageContainer = h.itemView.findViewById(R.id.message_container);
+        if (messageContainer != null) {
+            messageContainer.setOnLongClickListener(v -> {
+                if (listener == null) return true;
 
-            // Do not allow editing deleted messages
-            if (!m.isDeleted()) {
-                if (m.getSenderId() == me) menu.getMenu().add("Edit");
-                if (m.getSenderId() == me) menu.getMenu().add("Delete");
-            }
+                PopupMenu menu = new PopupMenu(v.getContext(), v);
 
-            // Always allow react
-            menu.getMenu().add("React");
-
-            menu.setOnMenuItemClickListener(item -> {
-                String title = item.getTitle().toString();
-                switch (title) {
-                    case "Edit": listener.onEdit(m); break;
-                    case "Delete": listener.onDelete(m); break;
-                    case "React": listener.onReact(m); break;
+                // Only allow editing/deleting your own messages if not deleted
+                if (!m.isDeleted()) {
+                    if (m.getSenderId() == me) menu.getMenu().add("Edit");
+                    if (m.getSenderId() == me) menu.getMenu().add("Delete");
                 }
+
+                // Anyone can react to any message
+                menu.getMenu().add("React");
+
+                // Handle menu item selection
+                menu.setOnMenuItemClickListener(item -> {
+                    String title = item.getTitle().toString();
+                    switch (title) {
+                        case "Edit":
+                            listener.onEdit(m);
+                            break;
+                        case "Delete":
+                            listener.onDelete(m);
+                            break;
+                        case "React":
+                            listener.onReact(m);
+                            break;
+                    }
+                    return true;
+                });
+
+                menu.show();
                 return true;
             });
-
-            menu.show();
-            return true;
-        });
+        }
     }
-
     // convert iso timestamp to hh:mm
     private String formatTimestamp(String iso) {
         if (iso == null) return "";
