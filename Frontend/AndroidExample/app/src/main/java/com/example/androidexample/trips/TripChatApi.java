@@ -128,14 +128,34 @@ public class TripChatApi {
         queue.add(req);
     }
 
-
-    // DELETE /api/v9/trips/{messageId}/reactions/{emoji}
+    // DELETE /api/v9/trips/{tripId}/messages/{messageId}/reactions/{emoji}
     public void unreact(long me, long tripId, long messageId, String emoji,
                         Callback<Map<String, Integer>> cb) {
-        String url = baseUrl + "/api/v9/trips/" + tripId + "/messages/" + messageId + "/reactions/" + emoji;
-        JsonObjectRequest req = new JsonObjectRequest(Request.Method.DELETE, url, null,
-                response -> cb.onSuccess(jsonObjectToMap(response)),
-                error -> cb.onError(error)) {
+        // Encode the emoji for URL path
+        String encodedEmoji = Uri.encode(emoji);
+
+        // Build URL with emoji in the path AND as query parameter
+        Uri url = Uri.parse(baseUrl + "/api/v9/trips/" + tripId + "/messages/" + messageId + "/reactions/" + encodedEmoji)
+                .buildUpon()
+                .appendQueryParameter("emoji", emoji)
+                .build();
+
+        android.util.Log.d("TripChatApi", "Unreact URL: " + url.toString());
+        android.util.Log.d("TripChatApi", "Emoji: " + emoji);
+
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.DELETE, url.toString(), null,
+                response -> {
+                    android.util.Log.d("TripChatApi", "Unreact success: " + response.toString());
+                    cb.onSuccess(jsonObjectToMap(response));
+                },
+                error -> {
+                    android.util.Log.e("TripChatApi", "Unreact error: " + error.toString());
+                    if (error.networkResponse != null) {
+                        android.util.Log.e("TripChatApi", "Status code: " + error.networkResponse.statusCode);
+                        android.util.Log.e("TripChatApi", "Response: " + new String(error.networkResponse.data));
+                    }
+                    cb.onError(error);
+                }) {
             @Override public Map<String, String> getHeaders() { return headers(me); }
         };
         queue.add(req);
