@@ -1,0 +1,422 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMemberController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.tripmember.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMemberController (com.questbuddy.tripmember.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripMemberController</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (6/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (1/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    73.7%
+  </span>
+  <span class="absValue">
+    (14/19)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TripMemberController$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (6/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    25%
+  </span>
+  <span class="absValue">
+    (1/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    73.7%
+  </span>
+  <span class="absValue">
+    (14/19)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.tripmember.controller;
+&nbsp;
+&nbsp;import com.questbuddy.tripmember.dto.InviteDTO;
+&nbsp;import com.questbuddy.tripmember.dto.UpdateStatusDTO;
+&nbsp;import com.questbuddy.tripmember.dto.UserSummaryDTO;
+&nbsp;import com.questbuddy.tripmember.service.TripMembershipService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.validation.annotation.Validated;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@Validated
+&nbsp;@RequestMapping(&quot;/api/v12/trips/{tripId}/members&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Trip Members&quot;,
+&nbsp;        description = &quot;Manage trip membership: list members, invite, approve/decline invites, and remove/leave trips.&quot;
+&nbsp;)
+&nbsp;public class TripMemberController {
+&nbsp;
+&nbsp;    private final TripMembershipService svc;
+&nbsp;
+<b class="fc">&nbsp;    public TripMemberController(TripMembershipService svc) {</b>
+<b class="fc">&nbsp;        this.svc = svc;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Invitee approves their pending invite. Body must be { &quot;status&quot;: &quot;ACCEPTED&quot; }. */
+&nbsp;    @PutMapping(&quot;/approve&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Approve a trip invitation&quot;,
+&nbsp;            description = &quot;The invitee approves their pending invite to a trip. &quot;
+&nbsp;                    + &quot;The request body must be { \&quot;status\&quot;: \&quot;ACCEPTED\&quot; }.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;204&quot;,
+&nbsp;                    description = &quot;Invite approved successfully (no content)&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Status was not ACCEPTED&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not the invitee or not allowed to approve this invite&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or invite not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;Void&gt; approve(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user approving the invite&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip the user is joining&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Valid @RequestBody UpdateStatusDTO body) {
+<b class="pc">&nbsp;        if (!&quot;ACCEPTED&quot;.equals(body.status())) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;status must be ACCEPTED&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        svc.approve(me, tripId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Invitee declines their pending invite. Body must be { &quot;status&quot;: &quot;DECLINED&quot; }. */
+&nbsp;    @PutMapping(&quot;/decline&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Decline a trip invitation&quot;,
+&nbsp;            description = &quot;The invitee declines their pending invite to a trip. &quot;
+&nbsp;                    + &quot;The request body must be { \&quot;status\&quot;: \&quot;DECLINED\&quot; }.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;204&quot;,
+&nbsp;                    description = &quot;Invite declined successfully (no content)&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Status was not DECLINED&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not the invitee or not allowed to decline this invite&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or invite not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;Void&gt; decline(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user declining the invite&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip the user is declining&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Valid @RequestBody UpdateStatusDTO body) {
+<b class="nc">&nbsp;        if (!&quot;DECLINED&quot;.equals(body.status())) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;status must be DECLINED&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        svc.decline(me, tripId);</b>
+<b class="nc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Owner invites a user to the trip. */
+&nbsp;    @PostMapping(&quot;/invite&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Invite a user to a trip&quot;,
+&nbsp;            description = &quot;Trip owner invites another user to join the trip. &quot;
+&nbsp;                    + &quot;The body contains the userId of the invitee.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;201&quot;,
+&nbsp;                    description = &quot;Invite created successfully (no body)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;Caller is not the trip owner&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or target user not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;Void&gt; invite(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user sending the invite (must be trip owner)&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip for which the invite is being sent&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Valid @RequestBody InviteDTO body) {
+<b class="fc">&nbsp;        svc.invite(me, tripId, body.userId());</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** List accepted members (requester must be a member). */
+&nbsp;    @GetMapping
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List accepted members of a trip&quot;,
+&nbsp;            description = &quot;Returns the list of accepted members for a trip. &quot;
+&nbsp;                    + &quot;The caller must be a member of the trip.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Members returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserSummaryDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;Caller is not a member of this trip&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public List&lt;UserSummaryDTO&gt; list(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip whose members are being listed&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId) {
+<b class="fc">&nbsp;        return svc.listAccepted(me, tripId).stream()</b>
+<b class="fc">&nbsp;                .map(UserSummaryDTO::from)</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Remove a member. Owner can remove anyone; a user can remove themself (leave). */
+&nbsp;    @DeleteMapping(&quot;/{userId}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Remove a member from a trip&quot;,
+&nbsp;            description = &quot;Trip owner can remove any member; a user can remove themself (leave the trip).&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;204&quot;,
+&nbsp;                    description = &quot;Member removed successfully (no content)&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;Caller is not allowed to remove this member&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or user not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;Void&gt; remove(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user to remove from the trip&quot;,
+&nbsp;                    example = &quot;20&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long userId) {
+<b class="fc">&nbsp;        svc.remove(me, tripId, userId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Convenience: leave the trip (same as DELETE /{me}). */
+&nbsp;    @DeleteMapping(&quot;/me&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Leave a trip&quot;,
+&nbsp;            description = &quot;Convenience endpoint for the current user to leave the trip &quot;
+&nbsp;                    + &quot;(equivalent to DELETE /{userId} with userId = X-User-Id).&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;204&quot;,
+&nbsp;                    description = &quot;User left the trip successfully (no content)&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or user not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;Void&gt; leave(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user leaving the trip&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip the user is leaving&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId) {
+<b class="fc">&nbsp;        svc.remove(me, tripId, me);</b>
+<b class="fc">&nbsp;        return ResponseEntity.noContent().build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

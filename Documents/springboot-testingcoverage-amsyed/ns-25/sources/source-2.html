@@ -1,0 +1,399 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DirectChatEndpoint</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.ws</a>
+</div>
+
+<h1>Coverage Summary for Class: DirectChatEndpoint (com.questbuddy.messages.ws)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DirectChatEndpoint</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/52)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/96)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.ws;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.questbuddy.config.SpringContext;
+&nbsp;import com.questbuddy.messages.direct.dto.DirectMessageCreateDTO;
+&nbsp;import com.questbuddy.messages.direct.dto.DirectMessageEditDTO;
+&nbsp;import com.questbuddy.messages.direct.dto.DirectMessageResponseDTO;
+&nbsp;import com.questbuddy.messages.direct.service.DirectMessageService;
+&nbsp;import jakarta.websocket.*;
+&nbsp;import jakarta.websocket.server.PathParam;
+&nbsp;import jakarta.websocket.server.ServerEndpoint;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.concurrent.ConcurrentHashMap;
+&nbsp;
+&nbsp;/**
+&nbsp; * Two-way Direct Message WebSocket endpoint.
+&nbsp; * Connect to: ws://&lt;host&gt;/ws/messages/dm/{pairKey}/{userId} where pairKey = &quot;&lt;minUserId&gt;:&lt;maxUserId&gt;&quot;
+&nbsp; *
+&nbsp; * This endpoint takes into account for creating messages, editing and deleting them,
+&nbsp; * reacting and toggling reactions to a message, and &quot;is typing&quot;.
+&nbsp; */
+&nbsp;@Component
+&nbsp;@ServerEndpoint(&quot;/ws/messages/dm/{pairKey}/{userId}&quot;)
+<b class="nc">&nbsp;public class DirectChatEndpoint {</b>
+&nbsp;
+<b class="nc">&nbsp;    private static final Map&lt;String, Set&lt;Session&gt;&gt; BY_PAIR = new ConcurrentHashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;    private static final ObjectMapper OM = new ObjectMapper();</b>
+&nbsp;
+<b class="nc">&nbsp;    private DirectMessageService directSvc() { return SpringContext.getBean(DirectMessageService.class); }</b>
+&nbsp;
+&nbsp;    @OnOpen
+&nbsp;    public void onOpen(Session session,
+&nbsp;                       @PathParam(&quot;pairKey&quot;) String pairKey,
+&nbsp;                       @PathParam(&quot;userId&quot;) Long userId) {
+&nbsp;        // minimal sanity: ensure userId is part of pairKey
+<b class="nc">&nbsp;        long[] ab = parsePairKey(pairKey);</b>
+<b class="nc">&nbsp;        if (ab == null || (userId != ab[0] &amp;&amp; userId != ab[1])) {</b>
+<b class="nc">&nbsp;            try { session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, &quot;user not in pairKey&quot;)); } catch (Exception ignored) {}</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        BY_PAIR.computeIfAbsent(pairKey, k -&gt; ConcurrentHashMap.newKeySet()).add(session);</b>
+<b class="nc">&nbsp;        sendSafe(session, json(Map.of(</b>
+&nbsp;                &quot;event&quot;, &quot;HELLO&quot;,
+&nbsp;                &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                &quot;channelId&quot;, pairKey,
+<b class="nc">&nbsp;                &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;        )));
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnMessage
+&nbsp;    public void onMessage(String msg,
+&nbsp;                          Session session,
+&nbsp;                          @PathParam(&quot;pairKey&quot;) String pairKey,
+&nbsp;                          @PathParam(&quot;userId&quot;) Long me) {
+&nbsp;        // large message case
+<b class="nc">&nbsp;        if (msg != null &amp;&amp; msg.length() &gt; 64_000) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;payload too large&quot;)));</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;        try {
+<b class="nc">&nbsp;            JsonNode root = OM.readTree(msg);</b>
+<b class="nc">&nbsp;            String event = optText(root, &quot;event&quot;);</b>
+<b class="nc">&nbsp;            String clientMsgId = optText(root, &quot;clientMsgId&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (&quot;PING&quot;.equalsIgnoreCase(event)) { sendSafe(session, json(Map.of(&quot;event&quot;, &quot;PONG&quot;))); return; }</b>
+&nbsp;
+<b class="nc">&nbsp;            long[] ab = parsePairKey(pairKey);</b>
+<b class="nc">&nbsp;            if (ab == null) { sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;bad pairKey&quot;))); return; }</b>
+<b class="nc">&nbsp;            long other = (me.equals(ab[0])) ? ab[1] : ab[0];</b>
+&nbsp;
+<b class="nc">&nbsp;            switch (event) {</b>
+&nbsp;                case &quot;MESSAGE_NEW&quot;:
+<b class="nc">&nbsp;                    handleCreate(session, me, other, pairKey, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;EDIT&quot;:
+<b class="nc">&nbsp;                    handleEdit(session, me, other, pairKey, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;DELETE&quot;:
+<b class="nc">&nbsp;                    handleDelete(session, me, other, pairKey, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;REACTION_ADD&quot;:
+&nbsp;                case &quot;REACTION_REMOVE&quot;:
+<b class="nc">&nbsp;                    handleReaction(session, me, other, pairKey, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;READ_RECEIPT&quot;:
+<b class="nc">&nbsp;                    handleReadReceipt(session, me, other, pairKey, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;TYPING_START&quot;:
+&nbsp;                case &quot;TYPING_STOP&quot;:
+<b class="nc">&nbsp;                    handleTyping(other, pairKey, event);</b>
+&nbsp;                    break;
+&nbsp;                default:
+<b class="nc">&nbsp;                    sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;unknown event&quot;)));</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;bad JSON&quot;)));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnClose
+&nbsp;    public void onClose(Session session,
+&nbsp;                        @PathParam(&quot;pairKey&quot;) String pairKey,
+&nbsp;                        @PathParam(&quot;userId&quot;) Long userId) {
+<b class="nc">&nbsp;        var set = BY_PAIR.get(pairKey);</b>
+<b class="nc">&nbsp;        if (set != null) {</b>
+<b class="nc">&nbsp;            set.remove(session);</b>
+<b class="nc">&nbsp;            if (set.isEmpty()) BY_PAIR.remove(pairKey);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnError
+&nbsp;    public void onError(Session session, Throwable t,
+&nbsp;                        @PathParam(&quot;pairKey&quot;) String pairKey,
+&nbsp;                        @PathParam(&quot;userId&quot;) Long userId) {
+<b class="nc">&nbsp;        onClose(session, pairKey, userId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // functions to handle create, edit and deleting of a trip message
+&nbsp;
+&nbsp;    private void handleCreate(Session session, Long me, Long other, String pairKey, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            DirectMessageCreateDTO in = new DirectMessageCreateDTO(</b>
+<b class="nc">&nbsp;                    textOrNull(p, &quot;content&quot;),</b>
+<b class="nc">&nbsp;                    longOrNull(p, &quot;parentMessageId&quot;),</b>
+<b class="nc">&nbsp;                    longOrNull(p, &quot;forwardFromMessageId&quot;),</b>
+<b class="nc">&nbsp;                    textOrNull(p, &quot;clientMessageId&quot;) != null ? textOrNull(p, &quot;clientMessageId&quot;) : clientMsgId,</b>
+<b class="nc">&nbsp;                    instantOrNull(p, &quot;sentAt&quot;)</b>
+&nbsp;            );
+<b class="nc">&nbsp;            DirectMessageResponseDTO saved = directSvc().post(me, other, in);</b>
+&nbsp;
+&nbsp;            // ACK only; service will broadcast to both peers via ChatBroadcaster
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                    &quot;channelId&quot;, pairKey,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+<b class="nc">&nbsp;                    &quot;serverMsgId&quot;, saved.id()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleEdit(Session session, Long me, Long other, String pairKey, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);</b>
+<b class="nc">&nbsp;            DirectMessageEditDTO in = new DirectMessageEditDTO(</b>
+<b class="nc">&nbsp;                    textOrNull(p, &quot;content&quot;),</b>
+<b class="nc">&nbsp;                    longOrNull(p, &quot;version&quot;)</b>
+&nbsp;            );
+<b class="nc">&nbsp;            DirectMessageResponseDTO updated = directSvc().edit(me, other, messageId, in);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                    &quot;channelId&quot;, pairKey,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+<b class="nc">&nbsp;                    &quot;serverMsgId&quot;, updated.id()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleDelete(Session session, Long me, Long other, String pairKey, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);   // DM delete does NOT require version</b>
+<b class="nc">&nbsp;            directSvc().delete(me, other, messageId);</b>
+&nbsp;
+&nbsp;            // ACK only; DM service will broadcast the DELETE event
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                    &quot;channelId&quot;, pairKey,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+&nbsp;                    &quot;serverMsgId&quot;, messageId
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleReaction(Session session, Long me, Long other, String pairKey, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);</b>
+<b class="nc">&nbsp;            String emoji   = textOrNull(p, &quot;emoji&quot;);</b>
+<b class="nc">&nbsp;            directSvc().toggleReaction(me, other, messageId, emoji);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                    &quot;channelId&quot;, pairKey,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+&nbsp;                    &quot;serverMsgId&quot;, messageId
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleReadReceipt(Session session, Long me, Long other, String pairKey, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);</b>
+&nbsp;            // call your existing markRead; its signature may be (me, other, messageId) or similar
+<b class="nc">&nbsp;            directSvc().markRead(me, other, messageId);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                    &quot;channelId&quot;, pairKey,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+&nbsp;                    &quot;serverMsgId&quot;, messageId
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleTyping(Long other, String pairKey, String event) {
+&nbsp;        // Ephemeral broadcast to the pair; no DB.
+<b class="nc">&nbsp;        sendToPair(pairKey, json(Map.of(</b>
+&nbsp;                &quot;event&quot;, event,
+&nbsp;                &quot;channelType&quot;, &quot;DM&quot;,
+&nbsp;                &quot;channelId&quot;, pairKey,
+<b class="nc">&nbsp;                &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;        )));
+&nbsp;    }
+&nbsp;
+&nbsp;    // --- utilities ---
+&nbsp;
+&nbsp;    /** Canonical key helper */
+&nbsp;    public static String canonicalPairKey(long u1, long u2) {
+<b class="nc">&nbsp;        long a = Math.min(u1, u2);</b>
+<b class="nc">&nbsp;        long b = Math.max(u1, u2);</b>
+<b class="nc">&nbsp;        return a + &quot;:&quot; + b;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static long[] parsePairKey(String key) {
+&nbsp;        try {
+<b class="nc">&nbsp;            String[] p = key.split(&quot;:&quot;, 2);</b>
+<b class="nc">&nbsp;            long a = Long.parseLong(p[0]);</b>
+<b class="nc">&nbsp;            long b = Long.parseLong(p[1]);</b>
+<b class="nc">&nbsp;            return new long[]{Math.min(a,b), Math.max(a,b)};</b>
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static void sendToPair(String pairKey, String json) {
+<b class="nc">&nbsp;        var set = BY_PAIR.get(pairKey);</b>
+<b class="nc">&nbsp;        if (set == null) return;</b>
+<b class="nc">&nbsp;        for (Session s : set) {</b>
+<b class="nc">&nbsp;            if (s.isOpen()) sendSafe(s, json);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void sendSafe(Session s, String json) {
+<b class="nc">&nbsp;        if (s == null || json == null) return;</b>
+<b class="nc">&nbsp;        try { s.getBasicRemote().sendText(json); } catch (Exception ignored) {}</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String json(Map&lt;String, Object&gt; map) {
+<b class="nc">&nbsp;        try { return OM.writeValueAsString(map); } catch (Exception e) { return null; }</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private static String optText(JsonNode n, String field) { return n.hasNonNull(field) ? n.get(field).asText() : null; }</b>
+<b class="nc">&nbsp;    private static String textOrNull(JsonNode n, String field) { return optText(n, field); }</b>
+<b class="nc">&nbsp;    private static Long longOrNull(JsonNode n, String field) { return n.hasNonNull(field) ? n.get(field).asLong() : null; }</b>
+&nbsp;    private static Instant instantOrNull(JsonNode n, String field) {
+<b class="nc">&nbsp;        String t = textOrNull(n, field);</b>
+<b class="nc">&nbsp;        try { return (t != null) ? Instant.parse(t) : null; } catch (Exception e) { return null; }</b>
+&nbsp;    }
+&nbsp;    private static String safeReason(Exception e) {
+<b class="nc">&nbsp;        String m = e.getMessage();</b>
+<b class="nc">&nbsp;        if (m == null || m.isBlank()) return &quot;server error&quot;;</b>
+<b class="nc">&nbsp;        return m.length() &gt; 256 ? m.substring(0, 256) : m;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

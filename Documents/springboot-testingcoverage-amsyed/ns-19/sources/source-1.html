@@ -1,0 +1,173 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Label</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.label.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Label (com.questbuddy.label.model)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Label</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.label.model;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import jakarta.persistence.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class represents a user-owned label/tag used to categorize items in QuestBuddy (e.g., tasks).
+&nbsp; *
+&nbsp; *  - Each label belongs to exactly one user and its name is unique per user
+&nbsp; *  - Enables filtering, grouping, and color-coded UI chips (e.g., “show all tasks with label Travel”)
+&nbsp; *    without bloating the Task table
+&nbsp; *  - The dedicated table and the (user_id, name) uniqueness constraint preserve data integrity,
+&nbsp; *    ensure labels can’t exist without an owning user, and keep lookups efficient as data grows.
+&nbsp; */
+&nbsp;
+&nbsp;/**
+&nbsp; * User-owned label/tag entity.
+&nbsp; *
+&nbsp; * Uniqueness: a user cannot have two labels with the same name (enforced via the composite UNIQUE constraint on (user_id, name)).
+&nbsp; *
+&nbsp; */
+&nbsp;@Entity
+&nbsp;@Table(
+&nbsp;        name = &quot;labels&quot;,
+&nbsp;        uniqueConstraints = @UniqueConstraint(
+&nbsp;                name = &quot;uq_label_user_name&quot;,
+&nbsp;                columnNames = {&quot;user_id&quot;, &quot;name&quot;}
+&nbsp;        )
+&nbsp;)
+<b class="nc">&nbsp;public class Label {</b>
+&nbsp;
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    private Long id;
+&nbsp;
+&nbsp;    // Owner of the label. Non-null by design
+&nbsp;    @ManyToOne(optional = false)
+&nbsp;    @JoinColumn(name = &quot;user_id&quot;, nullable = false)
+&nbsp;    private User user;
+&nbsp;
+&nbsp;    // Length capped to 40 to keep UI concise and indexes small and to make it human readable
+&nbsp;    @Column(nullable = false, length = 40)
+&nbsp;    private String name;
+&nbsp;
+&nbsp;    // Length 16 provides room for prefixes and 8-digit hex
+&nbsp;    @Column(length = 16)
+&nbsp;    private String color;
+&nbsp;
+&nbsp;    public Long getId() {
+<b class="nc">&nbsp;        return id; }</b>
+&nbsp;
+&nbsp;    public User getUser() {
+<b class="nc">&nbsp;        return user; }</b>
+&nbsp;
+&nbsp;    public void setUser(User user) {
+<b class="nc">&nbsp;        this.user = user; }</b>
+&nbsp;
+&nbsp;    public String getName() {
+<b class="nc">&nbsp;        return name; }</b>
+&nbsp;
+&nbsp;    public void setName(String name) {
+<b class="nc">&nbsp;        this.name = name; }</b>
+&nbsp;
+&nbsp;    public String getColor() {
+<b class="nc">&nbsp;        return color; }</b>
+&nbsp;
+&nbsp;    public void setColor(String color) {
+<b class="nc">&nbsp;        this.color = color; }</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

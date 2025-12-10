@@ -1,0 +1,161 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMembershipGateJPA</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.tripmember.security</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMembershipGateJPA (com.questbuddy.tripmember.security)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripMembershipGateJPA</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/14)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.tripmember.security;
+&nbsp;
+&nbsp;import com.questbuddy.tripmember.model.TripMember;
+&nbsp;import com.questbuddy.tripmember.repository.TripMemberRepository;
+&nbsp;import org.springframework.context.annotation.Primary;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;// v12 fallback to trip owner when no join-row exists
+&nbsp;import com.questbuddy.trip.TripRepository;
+&nbsp;
+&nbsp;@Component
+&nbsp;@Primary
+&nbsp;public class TripMembershipGateJPA implements TripMembershipGate {
+&nbsp;    private final TripMemberRepository repo;
+&nbsp;    private final TripRepository trips;
+&nbsp;
+<b class="nc">&nbsp;    public TripMembershipGateJPA(TripMemberRepository repo, TripRepository trips) {</b>
+<b class="nc">&nbsp;        this.repo = repo;</b>
+<b class="nc">&nbsp;        this.trips = trips;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isMember(Long tripId, Long userId) {
+&nbsp;        // accepted member OR the owner counts as a member
+<b class="nc">&nbsp;        return repo.existsByTrip_IdAndUser_IdAndStatus(tripId, userId, TripMember.Status.ACCEPTED)</b>
+<b class="nc">&nbsp;                || isOwner(tripId, userId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isOwner(Long tripId, Long userId) {
+&nbsp;        // Prefer join-table truth (role + status)
+<b class="nc">&nbsp;        boolean viaJoin = repo.findByTrip_IdAndUser_Id(tripId, userId)</b>
+<b class="nc">&nbsp;                .map(m -&gt; m.getStatus() == TripMember.Status.ACCEPTED &amp;&amp; m.getRole() == TripMember.Role.OWNER)</b>
+<b class="nc">&nbsp;                .orElse(false);</b>
+<b class="nc">&nbsp;        if (viaJoin) return true;</b>
+&nbsp;
+&nbsp;        // Fallback for legacy trips: compare against trips.owner_id
+<b class="nc">&nbsp;        return trips.findById(tripId)</b>
+<b class="nc">&nbsp;                .map(t -&gt; {</b>
+<b class="nc">&nbsp;                    Long ownerId = t.getOwnerId();</b>
+<b class="nc">&nbsp;                    return ownerId != null &amp;&amp; ownerId.equals(userId);</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .orElse(false);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

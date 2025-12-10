@@ -1,0 +1,338 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserSignupDeleteController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.user.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: UserSignupDeleteController (com.questbuddy.user.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserSignupDeleteController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (22/22)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">UserSignupDeleteController$UserDto</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (23/23)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.user.controller;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.List;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;/**
+&nbsp; * Handles basic signup, delete, and CRUD operations for testing/demo purposes.
+&nbsp; */
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v2/users&quot;) // separate base path to avoid conflicts with /api/v1 auth/profile routes
+&nbsp;@Tag(
+&nbsp;        name = &quot;Users Admin&quot;,
+&nbsp;        description = &quot;Admin/test endpoints for listing and deleting users (no passwords exposed).&quot;
+&nbsp;)
+&nbsp;public class UserSignupDeleteController {
+&nbsp;
+&nbsp;    private final UserRepository userRepo;
+&nbsp;    private final PasswordEncoder encoder; // this is to properly encypt passwrd
+&nbsp;
+<b class="fc">&nbsp;    public UserSignupDeleteController(UserRepository userRepo, PasswordEncoder encoder) {</b>
+<b class="fc">&nbsp;        this.userRepo = userRepo;</b>
+<b class="fc">&nbsp;        this.encoder = encoder;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Data Transfer Object - hides raw password from being transferred
+<b class="fc">&nbsp;    public record UserDto(</b>
+&nbsp;            Long id, String email, String username,
+&nbsp;            String firstName, String lastName, String avatarUrl,
+&nbsp;            String role, boolean active, Instant createdAt, Instant updatedAt
+&nbsp;    ) {}
+&nbsp;
+&nbsp;    // Centralized mapping from entity, goes to DTO (keeps controller responses consistent)
+&nbsp;    private static UserDto toDto(User u) {
+<b class="fc">&nbsp;        return new UserDto(</b>
+<b class="fc">&nbsp;                u.getId(), u.getEmail(), u.getUsername(),</b>
+<b class="fc">&nbsp;                u.getFirstName(), u.getLastName(), u.getAvatarUrl(),</b>
+<b class="pc">&nbsp;                u.getRole() == null ? null : u.getRole().name(),</b>
+<b class="fc">&nbsp;                Boolean.TRUE.equals(u.isActive()),</b>
+<b class="fc">&nbsp;                u.getCreatedAt(), u.getUpdatedAt()</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST - Signup user - refer to AuthController.java. // POST /api/v1/auth/signup
+&nbsp;
+&nbsp;    // GET - All users
+&nbsp;    @GetMapping
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List all users&quot;,
+&nbsp;            description = &quot;Returns a list of all users, mapped to a safe DTO that does not expose passwords.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Users returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; getAllUsers() {
+&nbsp;        // List users w/o leaking their passwords
+<b class="fc">&nbsp;        List&lt;UserDto&gt; out = userRepo.findAll().stream().map(UserSignupDeleteController::toDto).collect(Collectors.toList());</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET - User by ID
+&nbsp;    @GetMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get user by ID (admin/test)&quot;,
+&nbsp;            description = &quot;Returns a single user by ID as a DTO. Intended for testing/demo and admin-style operations.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; getUserById(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user to fetch&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id) {
+&nbsp;        // Get just the user as a DTO
+<b class="fc">&nbsp;        return userRepo.findById(id).map(UserSignupDeleteController::toDto)</b>
+<b class="fc">&nbsp;                .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET - User by username
+&nbsp;    @GetMapping(&quot;/by-username/{username}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get user by username&quot;,
+&nbsp;            description = &quot;Returns a single user by username (case-insensitive) as a DTO.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; getByUsername(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username to search for (case-insensitive)&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String username) {
+<b class="fc">&nbsp;        return userRepo.findByUsernameIgnoreCase(username)</b>
+<b class="fc">&nbsp;                .map(UserSignupDeleteController::toDto)</b>
+<b class="fc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="fc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Health/test check to make sure that the file is being read
+&nbsp;    @GetMapping(&quot;/ping&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;User admin service health check&quot;,
+&nbsp;            description = &quot;Simple endpoint to verify that UserSignupDeleteController is alive and reachable.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Controller is alive&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public String ping() {
+<b class="fc">&nbsp;        return &quot;UserSignupDeleteController is alive!&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // DELETE - Delete user
+&nbsp;    @DeleteMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete user by ID&quot;,
+&nbsp;            description = &quot;Deletes a user by ID if they exist. Intended for testing/demo/admin purposes.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User deleted successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = String.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; deleteUser(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user to delete&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id) {
+<b class="fc">&nbsp;        if (!userRepo.existsById(id)) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        userRepo.deleteById(id);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(&quot;User deleted successfully!&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

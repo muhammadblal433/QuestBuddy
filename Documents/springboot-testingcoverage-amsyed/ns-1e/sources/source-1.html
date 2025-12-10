@@ -1,0 +1,374 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DirectMessageService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.direct.service</a>
+</div>
+
+<h1>Coverage Summary for Class: DirectMessageService (com.questbuddy.messages.direct.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DirectMessageService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    52.9%
+  </span>
+  <span class="absValue">
+    (37/70)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.7%
+  </span>
+  <span class="absValue">
+    (96/119)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.direct.service;
+&nbsp;
+&nbsp;import com.questbuddy.messages.direct.dto.DirectMessageCreateDTO;
+&nbsp;import com.questbuddy.messages.direct.dto.DirectMessageEditDTO;
+&nbsp;import com.questbuddy.messages.direct.dto.DirectMessageResponseDTO;
+&nbsp;import com.questbuddy.messages.direct.mapper.DirectMessageMapper;
+&nbsp;import com.questbuddy.messages.direct.model.DirectMessage;
+&nbsp;import com.questbuddy.messages.direct.model.DirectMessageReaction;
+&nbsp;import com.questbuddy.messages.direct.repository.DirectMessageReactionRepository;
+&nbsp;import com.questbuddy.messages.direct.repository.DirectMessageRepository;
+&nbsp;import com.questbuddy.messages.guard.DirectMessagingGate;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import org.springframework.data.domain.PageRequest;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.*;
+&nbsp;import java.util.Collections;
+&nbsp;
+&nbsp;import com.questbuddy.messages.ws.ChatBroadcaster; //add for websocket
+&nbsp;
+&nbsp;/**
+&nbsp; * This class handles the main logic of direct messaging.
+&nbsp; */
+&nbsp;@Service
+&nbsp;public class DirectMessageService {
+&nbsp;
+&nbsp;    private final DirectMessageRepository messages;
+&nbsp;    private final DirectMessageReactionRepository reactions;
+&nbsp;    private final UserRepository users;
+&nbsp;    private final DirectMessagingGate dmGate;
+&nbsp;    private final DirectMessageMapper mapper;
+&nbsp;
+&nbsp;    private final ChatBroadcaster chatBroadcaster;
+&nbsp;
+&nbsp;    public DirectMessageService(DirectMessageRepository messages,
+&nbsp;                                DirectMessageReactionRepository reactions,
+&nbsp;                                UserRepository users,
+&nbsp;                                DirectMessagingGate dmGate,
+&nbsp;                                DirectMessageMapper mapper,
+<b class="fc">&nbsp;                                ChatBroadcaster chatBroadcaster) {</b>
+<b class="fc">&nbsp;        this.messages = messages;</b>
+<b class="fc">&nbsp;        this.reactions = reactions;</b>
+<b class="fc">&nbsp;        this.users = users;</b>
+<b class="fc">&nbsp;        this.dmGate = dmGate;</b>
+<b class="fc">&nbsp;        this.mapper = mapper;</b>
+<b class="fc">&nbsp;        this.chatBroadcaster = chatBroadcaster;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // helper func to check basic stuff (is DM allowed? does User exist?)
+&nbsp;    private void ensureCanDM(Long me, Long peerId) {
+<b class="pc">&nbsp;        if (!dmGate.canDM(me, peerId)) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;DM not allowed&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (peerId == null || !users.existsById(peerId)) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Peer user not found&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // list &quot;limit&quot; number of most recent messages between two users
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;DirectMessageResponseDTO&gt; list(Long me, Long peerId, Long beforeId, int limit) {
+<b class="fc">&nbsp;        ensureCanDM(me, peerId);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;DirectMessage&gt; page = messages.pageConversation(me, peerId, beforeId, PageRequest.of(0, limit));</b>
+<b class="pc">&nbsp;        if (page.isEmpty()) return Collections.emptyList();</b>
+&nbsp;
+&nbsp;        // Batch-load reactions for this page
+<b class="fc">&nbsp;        List&lt;Long&gt; ids = new ArrayList&lt;&gt;(page.size());</b>
+<b class="fc">&nbsp;        for (DirectMessage m : page) ids.add(m.getId());</b>
+<b class="fc">&nbsp;        List&lt;DirectMessageReaction&gt; rxnList = reactions.findByMessageIdIn(ids);</b>
+&nbsp;
+<b class="fc">&nbsp;        Map&lt;Long, Map&lt;String, Integer&gt;&gt; counts = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        Map&lt;Long, Set&lt;String&gt;&gt; mine = new HashMap&lt;&gt;();</b>
+&nbsp;
+<b class="pc">&nbsp;        for (DirectMessageReaction r : rxnList) {</b>
+<b class="nc">&nbsp;            counts.computeIfAbsent(r.getMessageId(), k -&gt; new HashMap&lt;&gt;())</b>
+<b class="nc">&nbsp;                    .merge(r.getEmoji(), 1, Integer::sum);</b>
+<b class="nc">&nbsp;            if (r.getUserId() != null &amp;&amp; r.getUserId().equals(me)) {</b>
+<b class="nc">&nbsp;                mine.computeIfAbsent(r.getMessageId(), k -&gt; new HashSet&lt;&gt;()).add(r.getEmoji());</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return mapper.toResponses(page, counts, mine);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // sends a new dm from &quot;me&quot; to &quot;peerId&quot;
+&nbsp;    @Transactional
+&nbsp;    public DirectMessageResponseDTO post(Long me, Long peerId, DirectMessageCreateDTO in) {
+<b class="fc">&nbsp;        ensureCanDM(me, peerId);</b>
+<b class="pc">&nbsp;        if (in == null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Body is required&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (in.content() == null || in.content().trim().isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;content is required&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (in.clientMessageId() == null || in.clientMessageId().trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;clientMessageId is required&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // same sender + clientMessageId returns existing
+<b class="fc">&nbsp;        Optional&lt;DirectMessage&gt; existing = messages.findBySenderIdAndClientMessageId(me, in.clientMessageId());</b>
+<b class="pc">&nbsp;        if (existing.isPresent()) {</b>
+<b class="nc">&nbsp;            DirectMessage e = existing.get();</b>
+<b class="nc">&nbsp;            return mapper.toResponse(e, recountFor(e.getId()), myReactionsFor(e.getId(), me));</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (in.parentMessageId() != null) {</b>
+<b class="nc">&nbsp;            boolean ok = messages.findByIdInConversation(in.parentMessageId(), me, peerId).isPresent();</b>
+<b class="nc">&nbsp;            if (!ok) {</b>
+<b class="nc">&nbsp;                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;parentMessageId not in this conversation&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="pc">&nbsp;        if (in.forwardFromMessageId() != null) {</b>
+<b class="nc">&nbsp;            boolean ok = messages.findByIdInConversation(in.forwardFromMessageId(), me, peerId).isPresent();</b>
+<b class="nc">&nbsp;            if (!ok) {</b>
+<b class="nc">&nbsp;                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;forwardFromMessageId not in this conversation&quot;);</b>
+&nbsp;                }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        DirectMessage entity = mapper.toEntity(me, peerId, in, Instant.now());</b>
+<b class="fc">&nbsp;        DirectMessage saved = messages.save(entity);</b>
+<b class="fc">&nbsp;        DirectMessageResponseDTO out = mapper.toResponse(saved, java.util.Collections.emptyMap(), java.util.Collections.emptySet());</b>
+<b class="fc">&nbsp;        chatBroadcaster.dmMessageNew(me, peerId, out); // for ws</b>
+<b class="fc">&nbsp;        return out;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // edit a message between &quot;me&quot; and &quot;peerId&quot;
+&nbsp;    @Transactional
+&nbsp;    public DirectMessageResponseDTO edit(Long me, Long peerId, Long messageId, DirectMessageEditDTO in) {
+<b class="fc">&nbsp;        ensureCanDM(me, peerId);</b>
+<b class="pc">&nbsp;        if (in == null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Body is required&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        DirectMessage m = messages.findByIdInConversation(messageId, me, peerId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Message not found in this DM&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!m.getSenderId().equals(me)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;Only sender can edit&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (in.version() == null || !in.version().equals(m.getVersion())) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Version mismatch&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        mapper.applyEdit(m, in, Instant.now());</b>
+<b class="fc">&nbsp;        DirectMessage saved = messages.save(m);</b>
+<b class="fc">&nbsp;        var counts = recountFor(saved.getId());</b>
+<b class="fc">&nbsp;        var mine   = myReactionsFor(saved.getId(), me);</b>
+<b class="fc">&nbsp;        DirectMessageResponseDTO out = mapper.toResponse(saved, counts, mine);</b>
+<b class="fc">&nbsp;        chatBroadcaster.dmEdit(me, peerId, out); // for ws</b>
+<b class="fc">&nbsp;        return out;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // delete a message
+&nbsp;    @Transactional
+&nbsp;    public void delete(Long me, Long peerId, Long messageId) {
+<b class="fc">&nbsp;        ensureCanDM(me, peerId);</b>
+<b class="fc">&nbsp;        DirectMessage m = messages.findByIdInConversation(messageId, me, peerId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Message not found in this DM&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!m.getSenderId().equals(me)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;Only sender can delete&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (Boolean.TRUE.equals(m.isDeleted())) {</b>
+&nbsp;            return; // no broadcast
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        m.setDeleted(true);</b>
+<b class="fc">&nbsp;        m.setDeletedAt(Instant.now());</b>
+<b class="fc">&nbsp;        m.setDeletedBy(me);</b>
+<b class="fc">&nbsp;        DirectMessage saved = messages.save(m);</b>
+&nbsp;
+&nbsp;        // Build a minimal DTO for clients (counts/myReactions empty after delete)
+<b class="fc">&nbsp;        DirectMessageResponseDTO out = mapper.toResponse(</b>
+&nbsp;                saved,
+<b class="fc">&nbsp;                Collections.emptyMap(),</b>
+<b class="fc">&nbsp;                Collections.emptySet()</b>
+&nbsp;        );
+&nbsp;
+&nbsp;        // Broadcast to both peers
+<b class="fc">&nbsp;        chatBroadcaster.dmDelete(me, peerId, out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // react to a message
+&nbsp;    @Transactional
+&nbsp;    public Map&lt;String, Integer&gt; toggleReaction(Long me, Long peerId, Long messageId, String emoji) {
+<b class="fc">&nbsp;        ensureCanDM(me, peerId);</b>
+<b class="pc">&nbsp;        if (emoji == null || emoji.trim().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;emoji is required&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        String trimmed = emoji.trim();</b>
+&nbsp;
+<b class="fc">&nbsp;        DirectMessage m = messages.findByIdInConversation(messageId, me, peerId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Message not found in this DM&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;DirectMessageReaction&gt; ex = reactions.findByMessageIdAndUserIdAndEmoji(messageId, me, trimmed);</b>
+<b class="fc">&nbsp;        if (ex.isPresent()) {</b>
+<b class="fc">&nbsp;            reactions.delete(ex.get());</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            DirectMessageReaction r = new DirectMessageReaction();</b>
+<b class="fc">&nbsp;            r.setMessageId(messageId);</b>
+<b class="fc">&nbsp;            r.setUserId(me);</b>
+<b class="fc">&nbsp;            r.setEmoji(trimmed);</b>
+<b class="fc">&nbsp;            r.setReactedAt(Instant.now());</b>
+<b class="fc">&nbsp;            reactions.save(r);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        chatBroadcaster.dmReactionToggle(me, peerId, messageId, trimmed); // for ws</b>
+<b class="fc">&nbsp;        return recountFor(messageId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // mark a message as read
+&nbsp;    @Transactional
+&nbsp;    public void markRead(Long me, Long peerId, Long messageId) {
+<b class="fc">&nbsp;        ensureCanDM(me, peerId);</b>
+<b class="fc">&nbsp;        DirectMessage m = messages.findByIdInConversation(messageId, me, peerId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Message not found in this DM&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!m.getRecipientId().equals(me)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;Only recipient can mark read&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (m.getReadAt() == null) {</b>
+<b class="fc">&nbsp;            m.setReadAt(Instant.now());</b>
+<b class="fc">&nbsp;            m.setReadByUserId(me);</b>
+<b class="fc">&nbsp;            messages.save(m);</b>
+&nbsp;
+&nbsp;            // Broadcast read receipt (unreadCount not computed here → null)
+<b class="fc">&nbsp;            chatBroadcaster.dmReadReceipt(me, peerId, messageId, me, null);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    //helpers
+&nbsp;
+&nbsp;    private Map&lt;String, Integer&gt; recountFor(Long messageId) {
+<b class="fc">&nbsp;        List&lt;DirectMessageReaction&gt; list = reactions.findByMessageId(messageId);</b>
+<b class="fc">&nbsp;        if (list.isEmpty()) return Collections.emptyMap();</b>
+<b class="fc">&nbsp;        Map&lt;String, Integer&gt; out = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (DirectMessageReaction r : list) {</b>
+<b class="fc">&nbsp;            out.merge(r.getEmoji(), 1, Integer::sum);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return Collections.unmodifiableMap(out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Set&lt;String&gt; myReactionsFor(Long messageId, Long me) {
+<b class="fc">&nbsp;        List&lt;DirectMessageReaction&gt; list = reactions.findByMessageId(messageId);</b>
+<b class="pc">&nbsp;        if (list.isEmpty()) return Collections.emptySet();</b>
+<b class="nc">&nbsp;        Set&lt;String&gt; mine = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (DirectMessageReaction r : list) {</b>
+<b class="nc">&nbsp;            if (r.getUserId() != null &amp;&amp; r.getUserId().equals(me)) {</b>
+<b class="nc">&nbsp;                mine.add(r.getEmoji());</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        return Collections.unmodifiableSet(mine);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

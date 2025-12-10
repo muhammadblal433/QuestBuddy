@@ -1,0 +1,361 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NotificationController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.notification</a>
+</div>
+
+<h1>Coverage Summary for Class: NotificationController (com.questbuddy.notification)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NotificationController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (7/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.3%
+  </span>
+  <span class="absValue">
+    (33/35)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.notification;
+&nbsp;
+&nbsp;import com.questbuddy.notification.dto.NotificationCreateDTO;
+&nbsp;import com.questbuddy.notification.dto.NotificationResponseDTO;
+&nbsp;import com.questbuddy.notification.NotificationMapper;
+&nbsp;import com.questbuddy.notification.NotificationService;
+&nbsp;import com.questbuddy.notification.Notification;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v7/notifications&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Notifications&quot;,
+&nbsp;        description = &quot;Create, list, mark as read, and delete user notifications.&quot;
+&nbsp;)
+&nbsp;public class NotificationController {
+&nbsp;
+&nbsp;    private final NotificationService notifications;
+&nbsp;    private final NotificationMapper mapper;
+&nbsp;
+<b class="fc">&nbsp;    public NotificationController(NotificationService notifications, NotificationMapper mapper) {</b>
+<b class="fc">&nbsp;        this.notifications = notifications;</b>
+<b class="fc">&nbsp;        this.mapper = mapper;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * PUT - update read status
+&nbsp;     */
+&nbsp;    @PutMapping(&quot;/{id}/read&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Mark a notification as read&quot;,
+&nbsp;            description = &quot;Marks a notification as read for the given user (X-User-Id). &quot;
+&nbsp;                    + &quot;Only the recipient can mark their notifications as read.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Notification marked as read successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = NotificationResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Bad request (invalid ID or other bad input)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to modify this notification (wrong owner)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Notification not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;NotificationResponseDTO&gt; markRead(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the notification to mark as read&quot;,
+&nbsp;                    example = &quot;123&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user marking the notification as read&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me
+&nbsp;    ) {
+&nbsp;        try {
+<b class="fc">&nbsp;            Notification n = notifications.markRead(id, me);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(mapper.toResponse(n));</b>
+<b class="fc">&nbsp;        } catch (IllegalArgumentException ex) {</b>
+<b class="fc">&nbsp;            if (&quot;notification_not_found&quot;.equals(ex.getMessage())) {</b>
+<b class="fc">&nbsp;                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().build(); // 400 for other bad input</b>
+<b class="fc">&nbsp;        } catch (SecurityException se) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 wrong owner</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * POST - create a notification
+&nbsp;     *
+&nbsp;     * Create a notification for a recipient (IDs in body).
+&nbsp;     */
+&nbsp;    @PostMapping
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Create a notification&quot;,
+&nbsp;            description = &quot;Creates a notification for the given recipient and optional trip/event/task references. &quot;
+&nbsp;                    + &quot;The referenced entities are resolved and validated by the service.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;201&quot;,
+&nbsp;                    description = &quot;Notification created successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = NotificationResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Bad request (recipient or referenced entities not found, or invalid payload)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;NotificationResponseDTO&gt; create(
+&nbsp;            @Valid @RequestBody NotificationCreateDTO dto) {
+&nbsp;        try {
+<b class="fc">&nbsp;            Notification n = notifications.create(dto); // service resolves/validates refs</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(n));</b>
+<b class="fc">&nbsp;        } catch (IllegalArgumentException ex) {</b>
+<b class="fc">&nbsp;            String msg = ex.getMessage();</b>
+<b class="pc">&nbsp;            if (&quot;recipient_not_found&quot;.equals(msg) || &quot;trip_not_found&quot;.equals(msg)</b>
+<b class="pc">&nbsp;                    || &quot;event_not_found&quot;.equals(msg) || &quot;task_not_found&quot;.equals(msg)</b>
+<b class="nc">&nbsp;                    || &quot;bad_reference&quot;.equals(msg)) {</b>
+<b class="fc">&nbsp;                return ResponseEntity.badRequest().body(null); // 400</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Simple health check for Notifications controller */
+&nbsp;    @GetMapping(&quot;/ping&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Notification service health check&quot;,
+&nbsp;            description = &quot;Simple endpoint to verify that NotificationController v7 is alive and reachable.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Controller is alive&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public String ping() {
+<b class="fc">&nbsp;        return &quot;NotificationController v7 is alive!&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     *  GET - List notifications (filter can be toggled)
+&nbsp;     */
+&nbsp;    @GetMapping
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List notifications for a user&quot;,
+&nbsp;            description = &quot;Lists notifications for the user identified by X-User-Id. &quot;
+&nbsp;                    + &quot;Optionally filters by unread=true/false.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Notifications returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = NotificationResponseDTO.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;List&lt;NotificationResponseDTO&gt;&gt; list(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user whose notifications are being listed&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;If true, only unread notifications are returned; if false, only read; if null, all.&quot;,
+&nbsp;                    example = &quot;true&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestParam(name = &quot;unread&quot;, required = false) Boolean unread
+&nbsp;    ) {
+<b class="fc">&nbsp;        List&lt;NotificationResponseDTO&gt; out = notifications</b>
+<b class="fc">&nbsp;                .listForUser(me, unread)</b>
+<b class="fc">&nbsp;                .stream()</b>
+<b class="fc">&nbsp;                .map(mapper::toResponse)</b>
+<b class="fc">&nbsp;                .toList();</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * DELETE - a notification for a user
+&nbsp;     */
+&nbsp;    @DeleteMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a notification for a user&quot;,
+&nbsp;            description = &quot;Deletes a notification for the user identified by X-User-Id. &quot;
+&nbsp;                    + &quot;Only the recipient can delete their own notifications.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;204&quot;,
+&nbsp;                    description = &quot;Notification deleted successfully (no content)&quot;
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Bad request (invalid ID or other bad input)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to delete this notification&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Notification not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;Void&gt; delete(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the notification to delete&quot;,
+&nbsp;                    example = &quot;123&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user requesting deletion&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me
+&nbsp;    ) {
+&nbsp;        try {
+<b class="fc">&nbsp;            notifications.deleteForOwner(id, me); // throws if not owner or not found</b>
+<b class="fc">&nbsp;            return ResponseEntity.noContent().build();     // 204</b>
+<b class="fc">&nbsp;        } catch (IllegalArgumentException ex) {</b>
+<b class="fc">&nbsp;            if (&quot;notification_not_found&quot;.equals(ex.getMessage())) {</b>
+<b class="fc">&nbsp;                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404</b>
+&nbsp;            }
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().build(); // 400 (bad ids, etc.)</b>
+<b class="fc">&nbsp;        } catch (SecurityException se) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 (not recipient&#39;s notif)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

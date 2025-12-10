@@ -1,0 +1,174 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BudgetMapper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.budget</a>
+</div>
+
+<h1>Coverage Summary for Class: BudgetMapper (com.questbuddy.budget)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BudgetMapper</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/27)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.budget;
+&nbsp;
+&nbsp;import com.questbuddy.budget.dto.*;
+&nbsp;import com.questbuddy.budget.model.Budget;
+&nbsp;import com.questbuddy.budget.model.BudgetSplit;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="nc">&nbsp;public class BudgetMapper {</b>
+&nbsp;
+&nbsp;    public BudgetResponseDTO toResponse(Budget b) {
+<b class="nc">&nbsp;        BigDecimal totalShare = BigDecimal.ZERO;</b>
+<b class="nc">&nbsp;        BigDecimal totalPaid  = BigDecimal.ZERO;</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;BudgetSplitDTO&gt; splitDtos = b.getSplits().stream().map(s -&gt; {</b>
+<b class="nc">&nbsp;            BigDecimal share = nz(s.getShareAmount());</b>
+<b class="nc">&nbsp;            BigDecimal paid  = nz(s.getPaidAmount());</b>
+<b class="nc">&nbsp;            return new BudgetSplitDTO(</b>
+<b class="nc">&nbsp;                    s.getUser().getId(),</b>
+<b class="nc">&nbsp;                    s.getUser().getUsername(),</b>
+&nbsp;                    share,
+&nbsp;                    paid,
+<b class="nc">&nbsp;                    paid.subtract(share)</b>
+&nbsp;            );
+<b class="nc">&nbsp;        }).toList();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (BudgetSplitDTO s : splitDtos) {</b>
+<b class="nc">&nbsp;            totalShare = totalShare.add(nz(s.shareAmount()));</b>
+<b class="nc">&nbsp;            totalPaid  = totalPaid.add(nz(s.paidAmount()));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return new BudgetResponseDTO(</b>
+<b class="nc">&nbsp;                b.getId(),</b>
+<b class="nc">&nbsp;                b.getName(),</b>
+<b class="nc">&nbsp;                b.getOwner().getId(),</b>
+<b class="nc">&nbsp;                b.getOwner().getUsername(),</b>
+&nbsp;                totalShare,
+&nbsp;                totalPaid,
+<b class="nc">&nbsp;                b.getCreatedAt(),</b>
+&nbsp;                splitDtos
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;BudgetBalanceDTO&gt; toBalances(Budget b) {
+<b class="nc">&nbsp;        return b.getSplits().stream()</b>
+<b class="nc">&nbsp;                .map(s -&gt; new BudgetBalanceDTO(</b>
+<b class="nc">&nbsp;                        s.getUser().getId(),</b>
+<b class="nc">&nbsp;                        s.getUser().getUsername(),</b>
+<b class="nc">&nbsp;                        nz(s.getPaidAmount()).subtract(nz(s.getShareAmount()))</b>
+&nbsp;                ))
+<b class="nc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static java.math.BigDecimal nz(java.math.BigDecimal x) {
+<b class="nc">&nbsp;        return x == null ? java.math.BigDecimal.ZERO : x;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

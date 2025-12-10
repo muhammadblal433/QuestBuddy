@@ -1,0 +1,142 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripResponseDTO</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.trip</a>
+</div>
+
+<h1>Coverage Summary for Class: TripResponseDTO (com.questbuddy.trip)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripResponseDTO</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.trip;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.time.LocalDate;
+&nbsp;
+&nbsp;/**
+&nbsp; * Data Transfer Objects for Trips - unlike the User and Event class, there is no varable we need to hide (for security) when we transfer data. Creating DTO for consistency between classes.
+&nbsp; *
+&nbsp; * Similar to TripCreateDTO.java -&gt; but more params
+&nbsp; *
+&nbsp; * @param id - id of user
+&nbsp; * @param ownerId - id of event
+&nbsp; * @param name - name of trip set by user
+&nbsp; * @param destination
+&nbsp; * @param startLocationName
+&nbsp; * @param startLat -&gt; -90.0 &lt;= startLat &lt;= 90.0 -&gt; implicitly true when create
+&nbsp; * @param startLon -&gt; -90.0 &lt;= startLon &lt;= 90.0 -&gt; implicitly true when create
+&nbsp; * @param startDate
+&nbsp; * @param endDate
+&nbsp; * @param createdAt
+&nbsp; * @param updatedAt
+&nbsp; */
+<b class="fc">&nbsp;public record TripResponseDTO(</b>
+&nbsp;        Long id,
+&nbsp;        Long ownerId,
+&nbsp;        String name,
+&nbsp;        String destination,
+&nbsp;
+&nbsp;        // can be null start pt
+&nbsp;        String startLocationName,
+&nbsp;        Double startLat,
+&nbsp;        Double startLon,
+&nbsp;
+&nbsp;        LocalDate startDate,
+&nbsp;        LocalDate endDate,
+&nbsp;        Instant createdAt,
+&nbsp;        Instant updatedAt
+&nbsp;) {}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

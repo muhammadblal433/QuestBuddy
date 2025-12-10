@@ -1,0 +1,137 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > FriendshipRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.friends.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: FriendshipRepository (com.questbuddy.friends.repository)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">FriendshipRepository</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.friends.repository;
+&nbsp;
+&nbsp;import com.questbuddy.friends.model.Friendship;
+&nbsp;import com.questbuddy.friends.model.FriendshipStatus;
+&nbsp;import org.springframework.data.jpa.repository.*;
+&nbsp;import org.springframework.data.repository.query.Param;
+&nbsp;
+&nbsp;import java.util.Collection;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface FriendshipRepository extends JpaRepository&lt;Friendship, Long&gt; {
+&nbsp;
+&nbsp;    Optional&lt;Friendship&gt; findByUser_IdAndFriend_Id(Long userId, Long friendId);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select f from Friendship f
+&nbsp;           where (f.user.id = :userId or f.friend.id = :userId)
+&nbsp;             and f.status = &#39;ACCEPTED&#39;
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    List&lt;Friendship&gt; findAllAcceptedForUser(@Param(&quot;userId&quot;) Long userId);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select f from Friendship f
+&nbsp;           where f.friend.id = :userId and f.status = &#39;PENDING&#39;
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    List&lt;Friendship&gt; findIncomingRequests(@Param(&quot;userId&quot;) Long userId);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select f from Friendship f
+&nbsp;           where f.user.id = :userId and f.status = &#39;PENDING&#39;
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    List&lt;Friendship&gt; findOutgoingRequests(@Param(&quot;userId&quot;) Long userId);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select f from Friendship f
+&nbsp;           where (f.user.id = :a and f.friend.id = :b)
+&nbsp;              or (f.user.id = :b and f.friend.id = :a)
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    Optional&lt;Friendship&gt; findEitherDirection(@Param(&quot;a&quot;) Long a, @Param(&quot;b&quot;) Long b);
+&nbsp;
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select case when count(f) &gt; 0 then true else false end
+&nbsp;           from Friendship f
+&nbsp;           where ((f.user.id = :a and f.friend.id = :b)
+&nbsp;               or (f.user.id = :b and f.friend.id = :a))
+&nbsp;             and f.status = &#39;BLOCKED&#39;
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    boolean existsBlockedEitherDirection(@Param(&quot;a&quot;) Long a, @Param(&quot;b&quot;) Long b);
+&nbsp;
+&nbsp;    List&lt;Friendship&gt; findByUser_IdInAndStatus(Collection&lt;Long&gt; userIds, FriendshipStatus status);
+&nbsp;
+&nbsp;    // -------- Added for symmetric suggestions (no hard-coded users) --------
+&nbsp;
+&nbsp;    /** All ACCEPTED friendships where either endpoint is in the provided set (symmetric). */
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select f from Friendship f
+&nbsp;           where (f.user.id in :userIds or f.friend.id in :userIds)
+&nbsp;             and f.status = &#39;ACCEPTED&#39;
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    List&lt;Friendship&gt; findAllAcceptedForUsers(@Param(&quot;userIds&quot;) Collection&lt;Long&gt; userIds);
+&nbsp;
+&nbsp;    /** All relations (ANY status) that involve this user, either direction (used for exclusions). */
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;           select f from Friendship f
+&nbsp;           where (f.user.id = :meId or f.friend.id = :meId)
+&nbsp;           &quot;&quot;&quot;)
+&nbsp;    List&lt;Friendship&gt; findAllRelationsAnyStatus(@Param(&quot;meId&quot;) Long meId);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

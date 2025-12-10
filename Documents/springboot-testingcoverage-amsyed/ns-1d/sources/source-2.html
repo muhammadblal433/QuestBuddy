@@ -1,0 +1,155 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DirectMessageReaction</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.direct.model</a>
+</div>
+
+<h1>Coverage Summary for Class: DirectMessageReaction (com.questbuddy.messages.direct.model)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DirectMessageReaction</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    60%
+  </span>
+  <span class="absValue">
+    (6/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66.7%
+  </span>
+  <span class="absValue">
+    (8/12)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.direct.model;
+&nbsp;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import java.time.Instant;
+&nbsp;
+&nbsp;/**
+&nbsp; * A message reaction is like when you hold down on a message in Whatsapp/Telegram and you click an emoji
+&nbsp; */
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;direct_message_reactions&quot;,
+&nbsp;        uniqueConstraints = @UniqueConstraint(
+&nbsp;                name = &quot;uq_dm_reaction_one_per_user&quot;,
+&nbsp;                columnNames = {&quot;message_id&quot;, &quot;user_id&quot;, &quot;emoji&quot;}
+&nbsp;        ),
+&nbsp;        indexes = {
+&nbsp;                @Index(name = &quot;idx_dm_reaction_message&quot;, columnList = &quot;message_id&quot;),
+&nbsp;                @Index(name = &quot;idx_dm_reaction_user&quot;, columnList = &quot;user_id&quot;)
+&nbsp;        })
+<b class="fc">&nbsp;public class DirectMessageReaction {</b>
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    private Long id;
+&nbsp;
+&nbsp;
+&nbsp;    @Column(name = &quot;message_id&quot;, nullable = false)
+&nbsp;    private Long messageId;
+&nbsp;
+&nbsp;
+&nbsp;    @Column(name = &quot;user_id&quot;, nullable = false)
+&nbsp;    private Long userId;
+&nbsp;
+&nbsp;
+&nbsp;    @Column(name = &quot;emoji&quot;, nullable = false, length = 32)
+&nbsp;    private String emoji;
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;    @Column(name = &quot;reacted_at&quot;, nullable = false)</b>
+<b class="fc">&nbsp;    private Instant reactedAt = Instant.now();</b>
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;    public Long getId() { return id; }</b>
+<b class="nc">&nbsp;    public Long getMessageId() { return messageId; }</b>
+<b class="fc">&nbsp;    public void setMessageId(Long messageId) { this.messageId = messageId; }</b>
+<b class="nc">&nbsp;    public Long getUserId() { return userId; }</b>
+<b class="fc">&nbsp;    public void setUserId(Long userId) { this.userId = userId; }</b>
+<b class="fc">&nbsp;    public String getEmoji() { return emoji; }</b>
+<b class="fc">&nbsp;    public void setEmoji(String emoji) { this.emoji = emoji; }</b>
+<b class="nc">&nbsp;    public Instant getReactedAt() { return reactedAt; }</b>
+<b class="fc">&nbsp;    public void setReactedAt(Instant reactedAt) { this.reactedAt = reactedAt; }</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

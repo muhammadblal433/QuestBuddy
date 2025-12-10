@@ -1,0 +1,161 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > EventMapper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.calendar</a>
+</div>
+
+<h1>Coverage Summary for Class: EventMapper (com.questbuddy.calendar)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EventMapper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (12/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (21/21)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.calendar;
+&nbsp;
+&nbsp;import com.questbuddy.calendar.dto.*;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class is for 3 things:
+&nbsp; *
+&nbsp; * 1. Create an event from a create DTO
+&nbsp; * 2. Update an event from an update DTO
+&nbsp; * 3. Create a response DTO based on an event
+&nbsp; */
+&nbsp;@Component
+<b class="fc">&nbsp;public class EventMapper {</b>
+&nbsp;    public Event toEntity(Long userId, EventCreateDTO dto) {
+<b class="fc">&nbsp;        Event e = new Event();</b>
+<b class="fc">&nbsp;        e.setUserId(userId);</b>
+<b class="fc">&nbsp;        e.setTitle(dto.title());</b>
+<b class="fc">&nbsp;        e.setDescription(dto.description());</b>
+<b class="fc">&nbsp;        e.setStartAt(dto.startAt());</b>
+<b class="fc">&nbsp;        e.setEndAt(dto.endAt());</b>
+<b class="fc">&nbsp;        e.setLocation(dto.location());</b>
+<b class="fc">&nbsp;        e.setAllDay(dto.allDay());</b>
+<b class="fc">&nbsp;        return e;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Note: check for nullity of params - handles null case to allow for partial updates
+&nbsp;    public void applyUpdate(Event e, EventUpdateDTO dto) {
+<b class="fc">&nbsp;        if (dto.title() != null) e.setTitle(dto.title());</b>
+<b class="fc">&nbsp;        if (dto.description() != null) e.setDescription(dto.description());</b>
+<b class="fc">&nbsp;        if (dto.startAt() != null) e.setStartAt(dto.startAt());</b>
+<b class="fc">&nbsp;        if (dto.endAt() != null) e.setEndAt(dto.endAt());</b>
+<b class="fc">&nbsp;        if (dto.location() != null) e.setLocation(dto.location());</b>
+<b class="fc">&nbsp;        if (dto.allDay() != null) e.setAllDay(dto.allDay());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public EventResponseDTO toDto(Event e) {
+<b class="fc">&nbsp;        return new EventResponseDTO(</b>
+<b class="fc">&nbsp;                e.getId(), e.getTitle(), e.getDescription(),</b>
+<b class="fc">&nbsp;                e.getStartAt(), e.getEndAt(),</b>
+<b class="fc">&nbsp;                e.getLocation(), e.isAllDay(),</b>
+<b class="fc">&nbsp;                e.getCreatedAt(), e.getUpdatedAt()</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

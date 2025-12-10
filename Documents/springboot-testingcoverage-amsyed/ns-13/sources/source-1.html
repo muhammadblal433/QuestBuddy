@@ -1,0 +1,294 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripEventService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.events.trip.service</a>
+</div>
+
+<h1>Coverage Summary for Class: TripEventService (com.questbuddy.events.trip.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripEventService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    56.7%
+  </span>
+  <span class="absValue">
+    (17/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75.8%
+  </span>
+  <span class="absValue">
+    (47/62)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;
+&nbsp;package com.questbuddy.events.trip.service;
+&nbsp;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventCreateDTO;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventEditDTO;
+&nbsp;import com.questbuddy.events.trip.mapper.TripEventMapper;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventResponseDTO;
+&nbsp;import com.questbuddy.events.trip.model.TripEvent;
+&nbsp;import com.questbuddy.events.trip.repository.TripEventRepository;
+&nbsp;import com.questbuddy.tripmember.service.TripMembershipService;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.PageRequest;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;
+&nbsp;import com.questbuddy.notification.NotificationService;
+&nbsp;import com.questbuddy.notification.NotificationType;
+&nbsp;import com.questbuddy.notification.dto.NotificationCreateDTO;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;
+&nbsp;import com.questbuddy.calendar.EventService;
+&nbsp;import com.questbuddy.calendar.dto.EventCreateDTO;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class TripEventService {
+&nbsp;
+&nbsp;    private final TripEventRepository repo;
+&nbsp;    private final TripMembershipService membership; // &lt;-- real bean
+&nbsp;
+&nbsp;    private final NotificationService notifications;
+&nbsp;
+&nbsp;    // calendar service to mirror trip events into user calendars
+&nbsp;    private final EventService eventService;
+&nbsp;
+&nbsp;    public TripEventService(TripEventRepository repo,
+&nbsp;                            TripMembershipService membership,
+&nbsp;                            NotificationService notifications,
+<b class="fc">&nbsp;                            EventService eventService) {</b>
+<b class="fc">&nbsp;        this.repo = repo;</b>
+<b class="fc">&nbsp;        this.membership = membership;</b>
+<b class="fc">&nbsp;        this.notifications = notifications;</b>
+<b class="fc">&nbsp;        this.eventService = eventService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // helper for notis
+&nbsp;    private void notifyTripMembers(Long actorId, Long tripId, Long eventId,
+&nbsp;                                   String title, String message, NotificationType type) {
+&nbsp;        try {
+<b class="fc">&nbsp;            for (User u : membership.listAccepted(actorId, tripId)) {</b>
+<b class="pc">&nbsp;                if (u.getId().equals(actorId)) continue; // don&#39;t notify self</b>
+<b class="fc">&nbsp;                notifications.create(new NotificationCreateDTO(</b>
+<b class="fc">&nbsp;                        u.getId(), title, message, type, eventId, tripId, null</b>
+&nbsp;                ));
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            System.err.println(&quot;[TripEventService] notify failed: &quot; + ex.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String shortIso(java.time.Instant t) {
+<b class="pc">&nbsp;        return t == null ? &quot;&quot; : t.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Page&lt;TripEventResponseDTO&gt; list(Long me, Long tripId, Instant from, Instant to, int page, int size) {
+<b class="fc">&nbsp;        membership.ensureMember(me, tripId);</b>
+<b class="fc">&nbsp;        Pageable pageable = PageRequest.of(page, size);</b>
+&nbsp;
+<b class="pc">&nbsp;        Page&lt;TripEvent&gt; p = (from != null &amp;&amp; to != null)</b>
+<b class="fc">&nbsp;                ? repo.findByTripIdAndDeletedAtIsNullAndStartsAtBetweenOrderByStartsAtAscIdAsc(tripId, from, to, pageable)</b>
+<b class="fc">&nbsp;                : repo.findByTripIdAndDeletedAtIsNullOrderByStartsAtAscIdAsc(tripId, pageable);</b>
+&nbsp;
+<b class="fc">&nbsp;        return p.map(TripEventMapper::toDTO);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public TripEventResponseDTO create(Long me, Long tripId, TripEventCreateDTO in) {
+<b class="fc">&nbsp;        membership.ensureMember(me, tripId);</b>
+<b class="fc">&nbsp;        validateDates(in.startsAt(), in.endsAt());</b>
+&nbsp;
+<b class="fc">&nbsp;        TripEvent e = TripEventMapper.fromCreate(tripId, me, in);</b>
+<b class="fc">&nbsp;        TripEvent saved = repo.save(e);</b>
+&nbsp;
+&nbsp;        // mirror this trip event into the calendar for the creator AND all accepted trip members
+<b class="fc">&nbsp;        mirrorTripEventToCalendars(me, tripId, saved);</b>
+&nbsp;
+<b class="fc">&nbsp;        notifyTripMembers(me, tripId, saved.getId(),</b>
+&nbsp;                &quot;New itinerary event&quot;,
+<b class="fc">&nbsp;                saved.getName() + &quot; • &quot; + shortIso(saved.getStartsAt()),</b>
+&nbsp;                NotificationType.EVENT_CREATED);
+&nbsp;
+<b class="fc">&nbsp;        return TripEventMapper.toDTO(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public TripEventResponseDTO edit(Long me, Long tripId, Long eventId, TripEventEditDTO in) {
+<b class="fc">&nbsp;        membership.ensureMember(me, tripId);</b>
+&nbsp;
+<b class="fc">&nbsp;        TripEvent e = repo.findByIdAndTripIdAndDeletedAtIsNull(eventId, tripId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;event&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        ensureOwnerOrCreator(me, tripId, e);</b>
+&nbsp;
+<b class="fc">&nbsp;        TripEventMapper.applyEdit(e, in);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (e.getStartsAt() != null &amp;&amp; e.getEndsAt() != null) {</b>
+<b class="fc">&nbsp;            validateDates(e.getStartsAt(), e.getEndsAt());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        notifyTripMembers(me, tripId, e.getId(),</b>
+&nbsp;                &quot;Itinerary updated&quot;,
+<b class="fc">&nbsp;                e.getName() + &quot; • &quot; + shortIso(e.getStartsAt()),</b>
+&nbsp;                NotificationType.EVENT_UPDATED);
+&nbsp;
+<b class="fc">&nbsp;        return TripEventMapper.toDTO(e);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public void delete(Long me, Long tripId, Long eventId) {
+<b class="fc">&nbsp;        membership.ensureMember(me, tripId);</b>
+&nbsp;
+<b class="fc">&nbsp;        TripEvent e = repo.findByIdAndTripIdAndDeletedAtIsNull(eventId, tripId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;event&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        ensureOwnerOrCreator(me, tripId, e);</b>
+&nbsp;
+<b class="fc">&nbsp;        e.setDeletedAt(Instant.now());</b>
+&nbsp;
+<b class="fc">&nbsp;        notifyTripMembers(me, tripId, e.getId(),</b>
+&nbsp;                &quot;Itinerary removed&quot;,
+<b class="fc">&nbsp;                e.getName(),</b>
+&nbsp;                NotificationType.EVENT_CANCELLED);
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateDates(Instant start, Instant end) {
+<b class="fc">&nbsp;        if (end.isBefore(start)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;endsAt must be &gt;= startsAt&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void ensureOwnerOrCreator(Long me, Long tripId, TripEvent e) {
+<b class="pc">&nbsp;        if (e.getCreatorId() != null &amp;&amp; e.getCreatorId().equals(me)) return;</b>
+<b class="fc">&nbsp;        if (membership.isOwner(me, tripId)) return;</b>
+<b class="fc">&nbsp;        throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;only owner or creator can modify&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // helper to create matching calendar events for creator + all accepted trip members
+&nbsp;    private void mirrorTripEventToCalendars(Long actorId, Long tripId, TripEvent saved) {
+<b class="pc">&nbsp;        if (eventService == null) return; // defensive, though it should be injected</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            EventCreateDTO dto = new EventCreateDTO(</b>
+<b class="nc">&nbsp;                    saved.getName(),</b>
+<b class="nc">&nbsp;                    saved.getNotes(),     // use notes as description (can be null)</b>
+<b class="nc">&nbsp;                    saved.getStartsAt(),</b>
+<b class="nc">&nbsp;                    saved.getEndsAt(),</b>
+<b class="nc">&nbsp;                    saved.getLocation(),  // can be null</b>
+&nbsp;                    false                 // not an all-day event
+&nbsp;            );
+&nbsp;
+&nbsp;            // ensure creator gets a calendar event
+<b class="nc">&nbsp;            eventService.create(actorId, dto);</b>
+&nbsp;
+&nbsp;            // also add to all accepted trip members (except creator to avoid duplicates)
+<b class="nc">&nbsp;            for (User u : membership.listAccepted(actorId, tripId)) {</b>
+<b class="nc">&nbsp;                if (u.getId() == null) continue;</b>
+<b class="nc">&nbsp;                if (u.getId().equals(actorId)) continue;</b>
+<b class="nc">&nbsp;                eventService.create(u.getId(), dto);</b>
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            System.err.println(&quot;[TripEventService] calendar sync failed: &quot; + ex.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

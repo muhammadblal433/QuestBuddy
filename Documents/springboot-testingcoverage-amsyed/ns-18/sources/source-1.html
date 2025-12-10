@@ -1,0 +1,359 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > LabelController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.label.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: LabelController (com.questbuddy.label.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LabelController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">LabelController$CreateLabelReq</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LabelController$LabelRes</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/26)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.label.controller;
+&nbsp;
+&nbsp;import com.questbuddy.label.model.Label;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.label.repository.LabelRepository;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.NoSuchElementException;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v5/labels&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Labels&quot;,
+&nbsp;        description = &quot;Endpoints for creating, listing, and deleting labels associated with users.&quot;
+&nbsp;)
+&nbsp;public class LabelController {
+&nbsp;
+&nbsp;    private final LabelRepository labels;
+&nbsp;    private final UserRepository users;
+&nbsp;
+<b class="nc">&nbsp;    public LabelController(LabelRepository labels, UserRepository users) {</b>
+<b class="nc">&nbsp;        this.labels = labels;</b>
+<b class="nc">&nbsp;        this.users = users;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Uses small DTOs to avoid leaking user passwords/personally identifiable information.
+<b class="nc">&nbsp;    public record CreateLabelReq(Long userId, String name, String color) {}</b>
+<b class="nc">&nbsp;    public record LabelRes(Long id, Long userId, String name, String color) {}</b>
+&nbsp;
+&nbsp;    // Maps a Label entity to the outward-facing DTO
+&nbsp;    private LabelRes toRes(Label l) {
+<b class="nc">&nbsp;        return new LabelRes(l.getId(), l.getUser().getId(), l.getName(), l.getColor());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private User requireUser(Long id) {
+<b class="nc">&nbsp;        return users.findById(id).orElseThrow(() -&gt; new NoSuchElementException(&quot;User not found&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST request that validates input, ensures the user exists, and prevents duplicate names per user (case-insensitive).
+&nbsp;    // Returns 201 with the created label DTO.
+&nbsp;    // Error cases are 400: missing userId/name, 404: user not found, 409: label with same name already exists for that user
+&nbsp;    @PostMapping(consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Create a label&quot;,
+&nbsp;            description = &quot;Validates input, ensures the user exists, and creates a new label for that user. &quot;
+&nbsp;                    + &quot;Prevents duplicate label names per user (case-insensitive).&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;201&quot;,
+&nbsp;                    description = &quot;Label created successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = LabelRes.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Missing or invalid fields in request body&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;409&quot;,
+&nbsp;                    description = &quot;Label with same name already exists for that user&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; create(@RequestBody CreateLabelReq body) {
+<b class="nc">&nbsp;        if (body == null || body.userId() == null || body.name() == null || body.name().isBlank()) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;missing_fields&quot;));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        var user = requireUser(body.userId());</b>
+&nbsp;
+&nbsp;        // prevent duplicate label names per user
+<b class="nc">&nbsp;        if (labels.existsByUser_IdAndNameIgnoreCase(user.getId(), body.name().trim())) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(409).body(Map.of(&quot;error&quot;, &quot;label_exists&quot;));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        var l = new Label();</b>
+<b class="nc">&nbsp;        l.setUser(user);</b>
+<b class="nc">&nbsp;        l.setName(body.name().trim());</b>
+<b class="nc">&nbsp;        l.setColor(body.color());</b>
+<b class="nc">&nbsp;        var saved = labels.save(l);</b>
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.CREATED).body(toRes(saved));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // LIST by user
+&nbsp;    @GetMapping(value = &quot;/user/{userId}&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List labels for a user&quot;,
+&nbsp;            description = &quot;Returns all labels belonging to the specified user. &quot;
+&nbsp;                    + &quot;If the user does not exist, a 404 is returned.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Labels returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = LabelRes.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;List&lt;LabelRes&gt;&gt; listByUser(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user whose labels are being listed&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long userId) {
+&nbsp;        // optional: 404 if user missing
+<b class="nc">&nbsp;        requireUser(userId);</b>
+<b class="nc">&nbsp;        var out = labels.findByUser_Id(userId).stream().map(this::toRes).toList();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // DELETE by id. Returns 404 if it doesn&#39;t exist.
+&nbsp;    @DeleteMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a label by ID&quot;,
+&nbsp;            description = &quot;Deletes a label by its ID. Returns 404 if the label does not exist.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Label deleted successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Label not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; delete(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the label to delete&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id) {
+<b class="nc">&nbsp;        if (!labels.existsById(id)) return ResponseEntity.notFound().build();</b>
+<b class="nc">&nbsp;        labels.deleteById(id);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Label deleted&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Health check just to make sure file is actually being read
+&nbsp;    @GetMapping(&quot;/ping&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Label service health check&quot;,
+&nbsp;            description = &quot;Simple endpoint to verify that LabelController is alive and reachable.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Label controller is alive&quot;
+&nbsp;            )
+&nbsp;    })
+<b class="nc">&nbsp;    public String ping() { return &quot;LabelController is alive!&quot;; }</b>
+&nbsp;
+&nbsp;    // Converts NoSuchElementException thrown inside handlers (e.g., requireUser) into a 404 JSON response.
+&nbsp;    @ExceptionHandler(NoSuchElementException.class)
+&nbsp;    public ResponseEntity&lt;?&gt; notFound(NoSuchElementException e) {
+<b class="nc">&nbsp;        return ResponseEntity.status(404).body(Map.of(&quot;error&quot;, &quot;not_found&quot;, &quot;message&quot;, e.getMessage()));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

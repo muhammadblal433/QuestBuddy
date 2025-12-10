@@ -1,0 +1,499 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.user.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: UserController (com.questbuddy.user.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserController</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.8%
+  </span>
+  <span class="absValue">
+    (21/26)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.8%
+  </span>
+  <span class="absValue">
+    (64/69)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">UserController$SignupRequest</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">UserController$UpdateProfileRequest</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">UserController$UserDto</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    90.9%
+  </span>
+  <span class="absValue">
+    (10/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.8%
+  </span>
+  <span class="absValue">
+    (21/26)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    93.1%
+  </span>
+  <span class="absValue">
+    (67/72)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.user.controller;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.service.UserService;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Optional;
+&nbsp;import java.net.URI;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v1&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Users&quot;,
+&nbsp;        description = &quot;User profile operations, including fetching and updating user information.&quot;
+&nbsp;)
+&nbsp;public class UserController {
+&nbsp;
+&nbsp;    private final UserService users;
+&nbsp;
+<b class="fc">&nbsp;    public UserController(UserService users) {</b>
+<b class="fc">&nbsp;        this.users = users;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Make Data Transfer Object - excluding password (due to security reasons)
+<b class="fc">&nbsp;    public record UserDto(Long id, String email, String username,</b>
+&nbsp;                          String firstName, String lastName, String avatarUrl,
+&nbsp;                          String role, boolean active, boolean premium,
+&nbsp;                          java.time.Instant createdAt, java.time.Instant updatedAt) {}
+&nbsp;
+&nbsp;    private static UserDto toDto(User u) {
+<b class="fc">&nbsp;        return new UserDto(</b>
+<b class="fc">&nbsp;                u.getId(), u.getEmail(), u.getUsername(),</b>
+<b class="fc">&nbsp;                u.getFirstName(), u.getLastName(), u.getAvatarUrl(),</b>
+<b class="fc">&nbsp;                u.getRole().name(), u.isActive(), u.isPremiumUser(),</b>
+<b class="fc">&nbsp;                u.getCreatedAt(), u.getUpdatedAt()</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public record SignupRequest(String email, String username, String password,</b>
+&nbsp;                                String firstName, String lastName) {}
+&nbsp;
+<b class="fc">&nbsp;    public record UpdateProfileRequest(String email, String username,</b>
+&nbsp;                                       String firstName, String lastName,
+&nbsp;                                       String avatarUrl, String newPassword) {}
+&nbsp;
+&nbsp;    // PUT (edit user profile (path version; forbid if header doesn’t match)
+&nbsp;    @PutMapping(value = &quot;/users/{id}&quot;, consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Update a user profile by ID&quot;,
+&nbsp;            description = &quot;Updates the profile of the user identified by the path ID. &quot;
+&nbsp;                    + &quot;The X-User-Id header must match the path ID, otherwise the request is forbidden.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User profile updated successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;401&quot;,
+&nbsp;                    description = &quot;Missing X-User-Id header&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;X-User-Id does not match the path ID&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; update(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user whose profile is being updated&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the currently authenticated user&quot;,
+&nbsp;                    example = &quot;5&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestHeader(value = &quot;X-User-Id&quot;, required = false) Long userId,
+&nbsp;            @RequestBody UpdateProfileRequest body) {
+&nbsp;
+<b class="fc">&nbsp;        if (userId == null) {</b>
+<b class="fc">&nbsp;            Map&lt;String, String&gt; err = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;            err.put(&quot;error&quot;, &quot;missing_user&quot;);</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(401).body(err);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (!id.equals(userId)) {</b>
+<b class="fc">&nbsp;            Map&lt;String, String&gt; err = new HashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;            err.put(&quot;error&quot;, &quot;forbidden&quot;);</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(403).body(err);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        User updated = users.updateProfile(</b>
+&nbsp;                id,
+<b class="fc">&nbsp;                body.email(),</b>
+<b class="fc">&nbsp;                body.username(),</b>
+<b class="fc">&nbsp;                body.firstName(),</b>
+<b class="fc">&nbsp;                body.lastName(),</b>
+<b class="fc">&nbsp;                body.avatarUrl()</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        UserDto dto = toDto(updated);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(dto);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // PUT - update currently logged in profile: header-based auth for mini-assignment
+&nbsp;    @PutMapping(value = &quot;/users/me&quot;, consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Update the current user&#39;s profile&quot;,
+&nbsp;            description = &quot;Updates the profile of the currently authenticated user, identified by the X-User-Id header.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Current user profile updated successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;401&quot;,
+&nbsp;                    description = &quot;Missing X-User-Id header&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; updateMe(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the currently authenticated user&quot;,
+&nbsp;                    example = &quot;5&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestHeader(value = &quot;X-User-Id&quot;, required = false) Long userId,
+&nbsp;            @RequestBody UpdateProfileRequest body) {
+&nbsp;
+<b class="fc">&nbsp;        if (userId == null) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(401).body(Map.of(&quot;error&quot;,&quot;missing_user&quot;));</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        User updated = users.updateProfile(</b>
+&nbsp;                userId,
+<b class="fc">&nbsp;                body.email(),</b>
+<b class="fc">&nbsp;                body.username(),</b>
+<b class="fc">&nbsp;                body.firstName(),</b>
+<b class="fc">&nbsp;                body.lastName(),</b>
+<b class="fc">&nbsp;                body.avatarUrl()</b>
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        UserDto dto = toDto(updated);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(dto);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST - for testing purposes - add users in batches
+&nbsp;    @PostMapping(value = &quot;/auth/signup/batch&quot;, consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Batch signup users (testing)&quot;,
+&nbsp;            description = &quot;Creates multiple users in a single request for testing purposes. &quot;
+&nbsp;                    + &quot;Only entries with all required fields (email, username, password) are created.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;201&quot;,
+&nbsp;                    description = &quot;Users created successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;List&lt;UserDto&gt;&gt; signupBatch(@RequestBody List&lt;SignupRequest&gt; bodies) {
+&nbsp;
+<b class="fc">&nbsp;        List&lt;UserDto&gt; created = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;        for (SignupRequest b : bodies) {</b>
+<b class="pc">&nbsp;            boolean hasRequired = b != null</b>
+<b class="pc">&nbsp;                    &amp;&amp; b.email() != null</b>
+<b class="fc">&nbsp;                    &amp;&amp; b.username() != null</b>
+<b class="pc">&nbsp;                    &amp;&amp; b.password() != null;</b>
+&nbsp;
+<b class="fc">&nbsp;            if (hasRequired) {</b>
+<b class="fc">&nbsp;                User u = users.signup(</b>
+<b class="fc">&nbsp;                        b.email(),</b>
+<b class="fc">&nbsp;                        b.username(),</b>
+<b class="fc">&nbsp;                        b.password(),</b>
+<b class="fc">&nbsp;                        b.firstName(),</b>
+<b class="fc">&nbsp;                        b.lastName()</b>
+&nbsp;                );
+<b class="fc">&nbsp;                UserDto dto = toDto(u);</b>
+<b class="fc">&nbsp;                created.add(dto);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        URI location = URI.create(&quot;/api/v1/users&quot;);</b>
+<b class="fc">&nbsp;        return ResponseEntity.created(location).body(created);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET (Fetch user by id)
+&nbsp;    @GetMapping(value = &quot;/users/{id}&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get user by ID&quot;,
+&nbsp;            description = &quot;Fetches a user&#39;s public profile details by their ID.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;UserDto&gt; get(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user to fetch&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id) {
+<b class="fc">&nbsp;        Optional&lt;User&gt; opt = users.getById(id);</b>
+<b class="fc">&nbsp;        if (opt.isPresent()) {</b>
+<b class="fc">&nbsp;            User u = opt.get();</b>
+<b class="fc">&nbsp;            UserDto dto = toDto(u);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(dto);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET - current profile (that is logged in): header-based auth for mini-assignment
+&nbsp;    @GetMapping(value = &quot;/users/me&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get current user&#39;s profile&quot;,
+&nbsp;            description = &quot;Returns the profile of the currently authenticated user, identified by the X-User-Id header.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Current user found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = UserDto.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;401&quot;,
+&nbsp;                    description = &quot;Missing X-User-Id header&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; me(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the currently authenticated user&quot;,
+&nbsp;                    example = &quot;5&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestHeader(value = &quot;X-User-Id&quot;, required = false) Long userId) {
+&nbsp;
+<b class="fc">&nbsp;        if (userId == null) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(401).body(Map.of(&quot;error&quot;,&quot;missing_user&quot;));</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;User&gt; opt = users.getById(userId);</b>
+<b class="fc">&nbsp;        if (opt.isPresent()) {</b>
+<b class="fc">&nbsp;            User u = opt.get();</b>
+<b class="fc">&nbsp;            UserDto dto = toDto(u);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(dto);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET – list all premium users
+&nbsp;    @GetMapping(value = &quot;/users/premium&quot;, produces = &quot;application/json&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;UserDto&gt;&gt; listPremiumUsers() {
+<b class="nc">&nbsp;        List&lt;User&gt; premiumUsers = users.findPremiumUsers();</b>
+<b class="nc">&nbsp;        List&lt;UserDto&gt; result = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (User u : premiumUsers) {</b>
+<b class="nc">&nbsp;            result.add(toDto(u));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.ok(result);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

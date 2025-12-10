@@ -1,0 +1,115 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DirectMessageRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.direct.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: DirectMessageRepository (com.questbuddy.messages.direct.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">DirectMessageRepository$MockitoMock$h15l5D1N</td>
+  </tr>
+  <tr>
+    <td class="name">DirectMessageRepository$MockitoMock$h15l5D1N$auxiliary$goWVldER</td>
+  </tr>
+  <tr>
+    <td class="name">DirectMessageRepository$MockitoMock$h15l5D1N$auxiliary$OANFBbMN</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.direct.repository;
+&nbsp;
+&nbsp;
+&nbsp;import com.questbuddy.messages.direct.model.DirectMessage;
+&nbsp;import org.springframework.data.domain.Pageable;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.data.jpa.repository.Query;
+&nbsp;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface DirectMessageRepository extends JpaRepository&lt;DirectMessage, Long&gt; {
+&nbsp;
+&nbsp;    // Regular lookup
+&nbsp;    Optional&lt;DirectMessage&gt; findBySenderIdAndClientMessageId(Long senderId, String clientMessageId);
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Below are custom queries made
+&nbsp;     */
+&nbsp;
+&nbsp;    // latest messages between two users in either direction
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;        select m from DirectMessage m
+&nbsp;        where ((m.senderId = :a and m.recipientId = :b) or (m.senderId = :b and m.recipientId = :a))
+&nbsp;        and (:beforeId is null or m.id &lt; :beforeId)
+&nbsp;        order by m.id desc
+&nbsp;        &quot;&quot;&quot;)
+&nbsp;    List&lt;DirectMessage&gt; pageConversation(Long a, Long b, Long beforeId, Pageable pageable);
+&nbsp;
+&nbsp;    // fetch a msg iff it belongs to this conversation
+&nbsp;    @Query(&quot;&quot;&quot;
+&nbsp;        select m from DirectMessage m
+&nbsp;        where m.id = :id and ((m.senderId = :a and m.recipientId = :b) or (m.senderId = :b and m.recipientId = :a))
+&nbsp;        &quot;&quot;&quot;)
+&nbsp;    Optional&lt;DirectMessage&gt; findByIdInConversation(Long id, Long a, Long b);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

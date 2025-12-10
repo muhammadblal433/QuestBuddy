@@ -1,0 +1,103 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMessageRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.trip.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMessageRepository (com.questbuddy.messages.trip.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">TripMessageRepository$MockitoMock$MVBSF2xt</td>
+  </tr>
+  <tr>
+    <td class="name">TripMessageRepository$MockitoMock$MVBSF2xt$auxiliary$DCYpY4kj</td>
+  </tr>
+  <tr>
+    <td class="name">TripMessageRepository$MockitoMock$MVBSF2xt$auxiliary$wyYpe8Lw</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.trip.repository;
+&nbsp;
+&nbsp;import com.questbuddy.messages.trip.model.TripMessage;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface TripMessageRepository extends JpaRepository&lt;TripMessage, Long&gt; {
+&nbsp;
+&nbsp;    // Idempotency lookup
+&nbsp;    Optional&lt;TripMessage&gt; findBySenderIdAndClientMessageId(Long senderId, String clientMessageId);
+&nbsp;
+&nbsp;    // List by Id - most recent 50 messages (as messages grow large in terms o fnumber - nt practical to list more)
+&nbsp;    List&lt;TripMessage&gt; findTop50ByTripIdOrderByIdDesc(Long tripId);
+&nbsp;
+&nbsp;    // List by Id - the 50 messages right before the given beforeId
+&nbsp;    List&lt;TripMessage&gt; findTop50ByTripIdAndIdLessThanOrderByIdDesc(Long tripId, Long beforeId);
+&nbsp;
+&nbsp;    // helpers
+&nbsp;    boolean existsByIdAndTripId(Long id, Long tripId);
+&nbsp;    Optional&lt;TripMessage&gt; findByIdAndTripId(Long id, Long tripId);
+&nbsp;
+&nbsp;    // Count all messages newer than lastReadMessageId that aren&#39;t by the user
+&nbsp;    long countByTripIdAndIdGreaterThanAndSenderIdNotAndIsDeletedFalse(Long tripId, Long lastReadMessageId, Long notSenderId);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

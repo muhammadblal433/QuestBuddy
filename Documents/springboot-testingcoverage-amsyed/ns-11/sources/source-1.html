@@ -1,0 +1,258 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripEventMapper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.events.trip.mapper</a>
+</div>
+
+<h1>Coverage Summary for Class: TripEventMapper (com.questbuddy.events.trip.mapper)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripEventMapper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.8%
+  </span>
+  <span class="absValue">
+    (23/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90%
+  </span>
+  <span class="absValue">
+    (36/40)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TripEventMapper$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TripEventMapper$1 2</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.8%
+  </span>
+  <span class="absValue">
+    (23/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.1%
+  </span>
+  <span class="absValue">
+    (37/42)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.events.trip.mapper;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.core.type.TypeReference;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventCreateDTO;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventEditDTO;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventResponseDTO;
+&nbsp;import com.questbuddy.events.trip.model.TripEvent;
+&nbsp;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class does 3 things:
+&nbsp; *
+&nbsp; * 1) Creates an entity based on a CreateDTO
+&nbsp; *
+&nbsp; * 2) Create a ResponseDTO based on an entity
+&nbsp; *
+&nbsp; * 3) Apply an edit
+&nbsp; */
+&nbsp;public final class TripEventMapper {
+<b class="fc">&nbsp;    private static final ObjectMapper M = new ObjectMapper();</b>
+&nbsp;
+&nbsp;    private TripEventMapper() {}
+&nbsp;
+&nbsp;    // 1
+&nbsp;    public static TripEvent fromCreate(Long tripId, Long creatorId, TripEventCreateDTO in) {
+<b class="fc">&nbsp;        TripEvent e = new TripEvent();</b>
+<b class="fc">&nbsp;        e.setTripId(tripId);</b>
+<b class="fc">&nbsp;        e.setCreatorId(creatorId);</b>
+<b class="fc">&nbsp;        e.setName(in.name());</b>
+<b class="fc">&nbsp;        e.setStartsAt(in.startsAt());</b>
+<b class="fc">&nbsp;        e.setEndsAt(in.endsAt());</b>
+<b class="fc">&nbsp;        e.setLocation(in.location());</b>
+<b class="fc">&nbsp;        e.setNotes(in.notes());</b>
+<b class="fc">&nbsp;        e.setPosition(in.position());</b>
+<b class="fc">&nbsp;        e.setAttachmentRefsJson(toJson(in.attachmentRefs()));</b>
+<b class="fc">&nbsp;        return e;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 2
+&nbsp;    public static TripEventResponseDTO toDTO(TripEvent e) {
+<b class="fc">&nbsp;        return new TripEventResponseDTO(</b>
+<b class="fc">&nbsp;                e.getId(),</b>
+<b class="fc">&nbsp;                e.getTripId(),</b>
+<b class="fc">&nbsp;                e.getCreatorId(),</b>
+<b class="fc">&nbsp;                e.getName(),</b>
+<b class="fc">&nbsp;                e.getStartsAt(),</b>
+<b class="fc">&nbsp;                e.getEndsAt(),</b>
+<b class="fc">&nbsp;                e.getLocation(),</b>
+<b class="fc">&nbsp;                e.getNotes(),</b>
+<b class="fc">&nbsp;                e.getPosition(),</b>
+<b class="fc">&nbsp;                fromJson(e.getAttachmentRefsJson()),</b>
+<b class="fc">&nbsp;                e.getCreatedAt(),</b>
+<b class="fc">&nbsp;                e.getUpdatedAt(),</b>
+<b class="fc">&nbsp;                e.getDeletedAt() != null</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    // 3
+&nbsp;    public static void applyEdit(TripEvent e, TripEventEditDTO in) {
+<b class="pc">&nbsp;        if (in.name() != null) e.setName(in.name());</b>
+<b class="fc">&nbsp;        if (in.startsAt() != null) e.setStartsAt(in.startsAt());</b>
+<b class="fc">&nbsp;        if (in.endsAt() != null) e.setEndsAt(in.endsAt());</b>
+<b class="fc">&nbsp;        if (in.location() != null) e.setLocation(in.location());</b>
+<b class="fc">&nbsp;        if (in.notes() != null) e.setNotes(in.notes());</b>
+<b class="fc">&nbsp;        if (in.position() != null) e.setPosition(in.position());</b>
+<b class="fc">&nbsp;        if (in.attachmentRefs() != null) e.setAttachmentRefsJson(toJson(in.attachmentRefs()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // ...Helpers,,,
+&nbsp;    public static String toJson(List&lt;String&gt; refs) {
+&nbsp;        try {
+<b class="fc">&nbsp;            return (refs == null || refs.isEmpty()) ? null : M.writeValueAsString(refs);</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Failed to serialize attachmentRefs&quot;, ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static List&lt;String&gt; fromJson(String json) {
+<b class="fc">&nbsp;        if (json == null || json.isBlank()) return Collections.emptyList();</b>
+&nbsp;        try {
+<b class="pc">&nbsp;            return M.readValue(json, new TypeReference&lt;List&lt;String&gt;&gt;() {});</b>
+<b class="nc">&nbsp;        } catch (Exception ex) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Failed to parse attachmentRefs&quot;, ex);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>
