@@ -1,0 +1,369 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > FriendshipServiceImplemented</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.friends.service</a>
+</div>
+
+<h1>Coverage Summary for Class: FriendshipServiceImplemented (com.questbuddy.friends.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FriendshipServiceImplemented</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/52)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/109)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.friends.service;
+&nbsp;
+&nbsp;import com.questbuddy.friends.dto.FriendDTO;
+&nbsp;import com.questbuddy.friends.dto.FriendSuggestionDTO;
+&nbsp;import com.questbuddy.friends.model.Friendship;
+&nbsp;import com.questbuddy.friends.model.FriendshipStatus;
+&nbsp;import com.questbuddy.friends.repository.FriendshipRepository;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;
+&nbsp;import com.questbuddy.notification.NotificationService;
+&nbsp;import com.questbuddy.notification.NotificationType;
+&nbsp;import com.questbuddy.notification.dto.NotificationCreateDTO;
+&nbsp;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.util.*;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import static org.springframework.http.HttpStatus.*;
+&nbsp;
+&nbsp;@Service
+&nbsp;@Transactional
+&nbsp;public class FriendshipServiceImplemented implements FriendshipService {
+&nbsp;
+&nbsp;    private final FriendshipRepository friendshipRepo;
+&nbsp;    private final UserRepository userRepo;
+&nbsp;
+&nbsp;    private final NotificationService notificationService;
+&nbsp;
+&nbsp;    // constructor injection extended
+&nbsp;    public FriendshipServiceImplemented(FriendshipRepository friendshipRepo,
+&nbsp;                                        UserRepository userRepo,
+<b class="nc">&nbsp;                                        NotificationService notificationService) {</b>
+<b class="nc">&nbsp;        this.friendshipRepo = friendshipRepo;</b>
+<b class="nc">&nbsp;        this.userRepo = userRepo;</b>
+<b class="nc">&nbsp;        this.notificationService = notificationService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void sendRequest(Long meId, Long targetUserId) {
+<b class="nc">&nbsp;        requireUsersExist(meId, targetUserId);</b>
+<b class="nc">&nbsp;        if (Objects.equals(meId, targetUserId)) throw new ResponseStatusException(BAD_REQUEST, &quot;Cannot friend yourself&quot;);</b>
+<b class="nc">&nbsp;        if (friendshipRepo.existsBlockedEitherDirection(meId, targetUserId))</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(FORBIDDEN, &quot;One of you has blocked the other&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        var incoming = friendshipRepo.findByUser_IdAndFriend_Id(targetUserId, meId)</b>
+<b class="nc">&nbsp;                .filter(f -&gt; f.getStatus() == FriendshipStatus.PENDING)</b>
+<b class="nc">&nbsp;                .orElse(null);</b>
+<b class="nc">&nbsp;        if (incoming != null) {</b>
+<b class="nc">&nbsp;            incoming.setStatus(FriendshipStatus.ACCEPTED);</b>
+&nbsp;
+&nbsp;            // notify original requester that the receiver auto-accepted (mutual pending)
+<b class="nc">&nbsp;            User target = getUser(targetUserId);</b>
+<b class="nc">&nbsp;            notificationService.create(new NotificationCreateDTO(</b>
+&nbsp;                    meId,
+&nbsp;                    &quot;Friend Request Accepted&quot;,
+<b class="nc">&nbsp;                    userLabel(target) + &quot; accepted your request.&quot;,</b>
+&nbsp;                    // reuse an existing type to avoid enum changes
+&nbsp;                    NotificationType.REMINDER,
+&nbsp;                    null, null, null
+&nbsp;            ));
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        var existing = friendshipRepo.findEitherDirection(meId, targetUserId).orElse(null);</b>
+<b class="nc">&nbsp;        if (existing != null) {</b>
+<b class="nc">&nbsp;            if (existing.getStatus() == FriendshipStatus.ACCEPTED)</b>
+<b class="nc">&nbsp;                throw new ResponseStatusException(CONFLICT, &quot;Already friends&quot;);</b>
+<b class="nc">&nbsp;            if (existing.getStatus() == FriendshipStatus.PENDING &amp;&amp; Objects.equals(existing.getUser().getId(), meId))</b>
+<b class="nc">&nbsp;                throw new ResponseStatusException(CONFLICT, &quot;Request already sent&quot;);</b>
+<b class="nc">&nbsp;            if (existing.getStatus() == FriendshipStatus.BLOCKED)</b>
+<b class="nc">&nbsp;                throw new ResponseStatusException(FORBIDDEN, &quot;Blocked&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Friendship f = new Friendship();</b>
+<b class="nc">&nbsp;        f.setUser(getUser(meId));</b>
+<b class="nc">&nbsp;        f.setFriend(getUser(targetUserId));</b>
+<b class="nc">&nbsp;        f.setStatus(FriendshipStatus.PENDING);</b>
+<b class="nc">&nbsp;        friendshipRepo.save(f);</b>
+&nbsp;
+&nbsp;        // notify the recipient of the friend request
+<b class="nc">&nbsp;        User me = getUser(meId);</b>
+<b class="nc">&nbsp;        notificationService.create(new NotificationCreateDTO(</b>
+&nbsp;                targetUserId,
+&nbsp;                &quot;Friend Request&quot;,
+<b class="nc">&nbsp;                userLabel(me) + &quot; sent you a friend request.&quot;,</b>
+&nbsp;                NotificationType.INVITE,
+&nbsp;                null, null, null
+&nbsp;        ));
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void accept(Long meId, Long requesterId) {
+<b class="nc">&nbsp;        requireUsersExist(meId, requesterId);</b>
+<b class="nc">&nbsp;        Friendship f = friendshipRepo.findByUser_IdAndFriend_Id(requesterId, meId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;No incoming request&quot;));</b>
+<b class="nc">&nbsp;        if (f.getStatus() != FriendshipStatus.PENDING)</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(CONFLICT, &quot;Not pending&quot;);</b>
+<b class="nc">&nbsp;        f.setStatus(FriendshipStatus.ACCEPTED);</b>
+&nbsp;
+&nbsp;        // need to do this: hook chat/DM creation after acceptance
+&nbsp;
+&nbsp;        // notify original requester that their request was accepted
+<b class="nc">&nbsp;        User me = getUser(meId);</b>
+<b class="nc">&nbsp;        notificationService.create(new NotificationCreateDTO(</b>
+&nbsp;                requesterId,
+&nbsp;                &quot;Friend Request Accepted&quot;,
+<b class="nc">&nbsp;                userLabel(me) + &quot; accepted your request.&quot;,</b>
+&nbsp;                NotificationType.REMINDER,
+&nbsp;                null, null, null
+&nbsp;        ));
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void reject(Long meId, Long requesterId) {
+<b class="nc">&nbsp;        var f = friendshipRepo.findByUser_IdAndFriend_Id(requesterId, meId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;No incoming request&quot;));</b>
+<b class="nc">&nbsp;        if (f.getStatus() != FriendshipStatus.PENDING)</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(CONFLICT, &quot;Not pending&quot;);</b>
+<b class="nc">&nbsp;        friendshipRepo.delete(f);</b>
+&nbsp;
+&nbsp;        // No notification on reject (silent UX).
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void unfriend(Long meId, Long otherUserId) {
+<b class="nc">&nbsp;        Friendship f = friendshipRepo.findEitherDirection(meId, otherUserId)</b>
+<b class="nc">&nbsp;                .filter(x -&gt; x.getStatus() == FriendshipStatus.ACCEPTED)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;Not friends&quot;));</b>
+<b class="nc">&nbsp;        friendshipRepo.delete(f);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void block(Long meId, Long otherUserId) {
+<b class="nc">&nbsp;        requireUsersExist(meId, otherUserId);</b>
+<b class="nc">&nbsp;        Friendship f = friendshipRepo.findEitherDirection(meId, otherUserId).orElse(null);</b>
+<b class="nc">&nbsp;        if (f == null) {</b>
+<b class="nc">&nbsp;            f = new Friendship();</b>
+<b class="nc">&nbsp;            f.setUser(getUser(meId));</b>
+<b class="nc">&nbsp;            f.setFriend(getUser(otherUserId));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        f.setStatus(FriendshipStatus.BLOCKED);</b>
+<b class="nc">&nbsp;        friendshipRepo.save(f);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void unblock(Long meId, Long otherUserId) {
+<b class="nc">&nbsp;        Friendship f = friendshipRepo.findEitherDirection(meId, otherUserId)</b>
+<b class="nc">&nbsp;                .filter(x -&gt; x.getStatus() == FriendshipStatus.BLOCKED)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;No block exists&quot;));</b>
+<b class="nc">&nbsp;        friendshipRepo.delete(f);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;FriendDTO&gt; listFriends(Long meId) {
+<b class="nc">&nbsp;        return friendshipRepo.findAllAcceptedForUser(meId).stream()</b>
+<b class="nc">&nbsp;                .map(f -&gt; toFriendDTO(otherOf(f, meId), FriendshipStatus.ACCEPTED))</b>
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;FriendDTO&gt; incomingRequests(Long meId) {
+<b class="nc">&nbsp;        return friendshipRepo.findIncomingRequests(meId).stream()</b>
+<b class="nc">&nbsp;                .map(f -&gt; toFriendDTO(f.getUser(), f.getStatus()))</b>
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;FriendDTO&gt; outgoingRequests(Long meId) {
+<b class="nc">&nbsp;        return friendshipRepo.findOutgoingRequests(meId).stream()</b>
+<b class="nc">&nbsp;                .map(f -&gt; toFriendDTO(f.getFriend(), f.getStatus()))</b>
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;FriendSuggestionDTO&gt; suggestions(Long meId, int limit) {
+<b class="nc">&nbsp;        var myAccepted = friendshipRepo.findAllAcceptedForUser(meId);</b>
+<b class="nc">&nbsp;        Set&lt;Long&gt; myFriendIds = myAccepted.stream().map(f -&gt; otherOf(f, meId).getId()).collect(Collectors.toSet());</b>
+&nbsp;
+<b class="nc">&nbsp;        Map&lt;Long,Integer&gt; counts = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        if (!myFriendIds.isEmpty()) {</b>
+<b class="nc">&nbsp;            var friendsAccepted = friendshipRepo.findByUser_IdInAndStatus(myFriendIds, FriendshipStatus.ACCEPTED);</b>
+<b class="nc">&nbsp;            for (Friendship f : friendsAccepted) {</b>
+<b class="nc">&nbsp;                Long a = f.getUser().getId();</b>
+<b class="nc">&nbsp;                Long b = f.getFriend().getId();</b>
+<b class="nc">&nbsp;                if (myFriendIds.contains(a)) counts.merge(b, 1, Integer::sum);</b>
+<b class="nc">&nbsp;                if (myFriendIds.contains(b)) counts.merge(a, 1, Integer::sum);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Set&lt;Long&gt; excluded = new HashSet&lt;&gt;(myFriendIds);</b>
+<b class="nc">&nbsp;        excluded.add(meId);</b>
+&nbsp;        // Exclude anyone with any relationship (pending/blocked/accepted); reuse eitherDirection by scanning? Simplify by filtering later.
+&nbsp;
+<b class="nc">&nbsp;        return counts.entrySet().stream()</b>
+<b class="nc">&nbsp;                .sorted((x,y) -&gt; Integer.compare(y.getValue(), x.getValue()))</b>
+<b class="nc">&nbsp;                .limit(limit)</b>
+<b class="nc">&nbsp;                .map(e -&gt; {</b>
+<b class="nc">&nbsp;                    User u = getUser(e.getKey());</b>
+<b class="nc">&nbsp;                    return new FriendSuggestionDTO(u.getId(), displayName(u), usernameOrEmail(u), e.getValue());</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private User otherOf(Friendship f, Long meId) {
+<b class="nc">&nbsp;        return Objects.equals(f.getUser().getId(), meId) ? f.getFriend() : f.getUser();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private User getUser(Long id) {
+<b class="nc">&nbsp;        return userRepo.findById(id).orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;User not found: &quot; + id));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void requireUsersExist(Long... ids) {
+<b class="nc">&nbsp;        for (Long id : ids) getUser(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private FriendDTO toFriendDTO(User u, FriendshipStatus status) {
+<b class="nc">&nbsp;        return new FriendDTO(u.getId(), displayName(u), usernameOrEmail(u), status);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String displayName(User u) {
+<b class="nc">&nbsp;        String fn = safe(u.getFirstName());</b>
+<b class="nc">&nbsp;        String ln = safe(u.getLastName());</b>
+<b class="nc">&nbsp;        String combined = (fn + &quot; &quot; + ln).trim();</b>
+<b class="nc">&nbsp;        return combined.isBlank() ? usernameOrEmail(u) : combined;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String usernameOrEmail(User u) {
+<b class="nc">&nbsp;        String uname = safe(u.getUsername());</b>
+<b class="nc">&nbsp;        if (!uname.isBlank()) return uname;</b>
+<b class="nc">&nbsp;        String email = safe(u.getEmail());</b>
+<b class="nc">&nbsp;        return email;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Compact label for notifications (prefer username, else full name, else email, else &quot;User {id}&quot;)
+&nbsp;    private String userLabel(User u) {
+<b class="nc">&nbsp;        String uname = safe(u.getUsername());</b>
+<b class="nc">&nbsp;        if (!uname.isBlank()) return uname;</b>
+<b class="nc">&nbsp;        String dn = displayName(u);</b>
+<b class="nc">&nbsp;        if (!dn.isBlank()) return dn;</b>
+<b class="nc">&nbsp;        String email = safe(u.getEmail());</b>
+<b class="nc">&nbsp;        return email.isBlank() ? (&quot;User &quot; + u.getId()) : email;</b>
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    private static String safe(String s) { return s == null ? &quot;&quot; : s; }</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

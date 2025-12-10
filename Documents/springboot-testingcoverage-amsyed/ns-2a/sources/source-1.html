@@ -1,0 +1,214 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TaskServiceImplemented</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.service</a>
+</div>
+
+<h1>Coverage Summary for Class: TaskServiceImplemented (com.questbuddy.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TaskServiceImplemented</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/30)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.service;
+&nbsp;
+&nbsp;import com.questbuddy.task.model.Task;
+&nbsp;import com.questbuddy.task.repository.TaskRepository;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.NoSuchElementException;
+&nbsp;
+&nbsp;import com.questbuddy.notification.NotificationService;
+&nbsp;import com.questbuddy.notification.NotificationType;
+&nbsp;import com.questbuddy.notification.dto.NotificationCreateDTO;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class TaskServiceImplemented implements TaskService {
+&nbsp;
+&nbsp;    private final TaskRepository taskRepo;
+&nbsp;
+&nbsp;    private final NotificationService notificationService;
+&nbsp;
+&nbsp;    public TaskServiceImplemented(TaskRepository taskRepo,
+<b class="nc">&nbsp;                                  NotificationService notificationService) {</b>
+<b class="nc">&nbsp;        this.taskRepo = taskRepo;</b>
+<b class="nc">&nbsp;        this.notificationService = notificationService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public Task createTask(Task task) {
+<b class="nc">&nbsp;        Task saved = taskRepo.save(task);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (saved.getUser() != null &amp;&amp; saved.getUser().getId() != null) {</b>
+<b class="nc">&nbsp;            notificationService.create(new NotificationCreateDTO(</b>
+<b class="nc">&nbsp;                    saved.getUser().getId(),</b>
+&nbsp;                    &quot;Task Assigned&quot;,
+<b class="nc">&nbsp;                    &quot;You’ve been assigned: &quot; + saved.getTitle(),</b>
+&nbsp;                    NotificationType.TASK,
+<b class="nc">&nbsp;                    null, null, saved.getTaskId()</b>
+&nbsp;            ));
+&nbsp;        }
+<b class="nc">&nbsp;        return saved;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;Task&gt; getAllTasks() {
+<b class="nc">&nbsp;        return taskRepo.findAll();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Optional&lt;Task&gt; getTaskById(Long id) {
+<b class="nc">&nbsp;        return taskRepo.findById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;Task&gt; getTasksByUserId(Long userId) {
+<b class="nc">&nbsp;        return taskRepo.findByUser_Id(userId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public Task updateTask(Long id, Task updatedTask) {
+<b class="nc">&nbsp;        return taskRepo.findById(id)</b>
+<b class="nc">&nbsp;                .map(task -&gt; {</b>
+<b class="nc">&nbsp;                    if (updatedTask.getTitle() != null)       task.setTitle(updatedTask.getTitle());</b>
+<b class="nc">&nbsp;                    if (updatedTask.getDescription() != null)  task.setDescription(updatedTask.getDescription());</b>
+<b class="nc">&nbsp;                    if (updatedTask.getStatus() != null)       task.setStatus(updatedTask.getStatus());</b>
+<b class="nc">&nbsp;                    if (updatedTask.getDueDate() != null)      task.setDueDate(updatedTask.getDueDate());</b>
+&nbsp;                    // keep same user and setUser only if there is reassignment needed
+<b class="nc">&nbsp;                    Task saved = taskRepo.save(task);</b>
+&nbsp;
+<b class="nc">&nbsp;                    if (saved.getUser() != null &amp;&amp; saved.getUser().getId() != null) {</b>
+<b class="nc">&nbsp;                        notificationService.create(new NotificationCreateDTO(</b>
+<b class="nc">&nbsp;                                saved.getUser().getId(),</b>
+&nbsp;                                &quot;Task Updated&quot;,
+<b class="nc">&nbsp;                                &quot;Updated: &quot; + saved.getTitle(),</b>
+&nbsp;                                NotificationType.REMINDER,
+<b class="nc">&nbsp;                                null, null, saved.getTaskId()</b>
+&nbsp;                        ));
+&nbsp;                    }
+<b class="nc">&nbsp;                    return saved;</b>
+&nbsp;                })
+&nbsp;                // turns this into 404
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new NoSuchElementException(&quot;Task not found&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void deleteTask(Long id) {
+&nbsp;        // Check existence first to avoid EmptyResultDataAccessException -&gt; 500
+<b class="nc">&nbsp;        if (!taskRepo.existsById(id)) {</b>
+<b class="nc">&nbsp;            throw new NoSuchElementException(&quot;Task not found&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        taskRepo.deleteById(id);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

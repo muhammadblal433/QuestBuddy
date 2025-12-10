@@ -1,0 +1,316 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AuthController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.user.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: AuthController (com.questbuddy.user.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AuthController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.7%
+  </span>
+  <span class="absValue">
+    (16/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (30/30)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">AuthController$LoginRequest</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">AuthController$SignupRequest</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.7%
+  </span>
+  <span class="absValue">
+    (16/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (32/32)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.user.controller;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.service.UserService;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;/**
+&nbsp; * Controller specifically for login - to deal with credentials and tokens
+&nbsp; */
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v1/auth&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Auth&quot;,
+&nbsp;        description = &quot;Authentication endpoints for logging in and signing up users.&quot;
+&nbsp;)
+&nbsp;public class AuthController {
+&nbsp;    private final UserService users;
+&nbsp;    private final PasswordEncoder passwordEncoder;
+&nbsp;
+<b class="fc">&nbsp;    public AuthController(UserService users, PasswordEncoder passwordEncoder) {</b>
+<b class="fc">&nbsp;        this.users = users;</b>
+<b class="fc">&nbsp;        this.passwordEncoder = passwordEncoder;</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public record LoginRequest(String email, String password) {}</b>
+<b class="fc">&nbsp;    public record SignupRequest(String email, String username, String password,</b>
+&nbsp;                                String firstName, String lastName, String avatarUrl) {}
+&nbsp;
+&nbsp;    // POST /api/v1/auth/login  -&gt; { &quot;userId&quot;: 1 }
+&nbsp;    @PostMapping(value = &quot;/login&quot;, consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;User login&quot;,
+&nbsp;            description = &quot;Authenticates a user by email and password. Returns the userId on success.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Login successful; response body contains userId&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Missing email or password fields&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;401&quot;,
+&nbsp;                    description = &quot;Invalid credentials (email or password incorrect)&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; login(@RequestBody LoginRequest body) {
+<b class="pc">&nbsp;        if (body == null || body.email() == null || body.password() == null) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;missing_fields&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // If your UserService already checks BCrypt, keep using it:
+<b class="fc">&nbsp;        Optional&lt;User&gt; opt = users.login(body.email(), body.password());</b>
+<b class="fc">&nbsp;        if (opt.isEmpty()) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(401).body(Map.of(&quot;error&quot;, &quot;invalid_credentials&quot;));</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        User u = opt.get();</b>
+&nbsp;        // Return userId so the client can identify itself on subsequent calls
+<b class="fc">&nbsp;        return ResponseEntity.ok(Map.of(&quot;userId&quot;, u.getId()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST /api/v1/auth/signup  -&gt; { &quot;userId&quot;: 1 }
+&nbsp;    @PostMapping(value = &quot;/signup&quot;, consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;User signup&quot;,
+&nbsp;            description = &quot;Registers a new user. Performs duplicate email/username checks and returns the new userId.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;201&quot;,
+&nbsp;                    description = &quot;User created successfully; response body contains userId&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Missing required signup fields&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;409&quot;,
+&nbsp;                    description = &quot;Email or username already exists, or other constraint violation&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; signup(@RequestBody SignupRequest body) {
+<b class="pc">&nbsp;        if (body == null || body.email() == null || body.username() == null || body.password() == null) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;missing_fields&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Duplicate checks -&gt; 409 (avoid 500 on unique constraint)
+<b class="fc">&nbsp;        if (users.findByEmail(body.email()).isPresent()) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(409).body(Map.of(&quot;error&quot;, &quot;email_exists&quot;));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (users.findByUsername(body.username()).isPresent()) {</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(409).body(Map.of(&quot;error&quot;, &quot;username_exists&quot;));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Map request -&gt; entity (hash the password)
+<b class="fc">&nbsp;        User u = new User();</b>
+<b class="fc">&nbsp;        u.setEmail(body.email());</b>
+<b class="fc">&nbsp;        u.setUsername(body.username());</b>
+<b class="fc">&nbsp;        u.setFirstName(body.firstName());</b>
+<b class="fc">&nbsp;        u.setLastName(body.lastName());</b>
+<b class="fc">&nbsp;        u.setAvatarUrl(body.avatarUrl());</b>
+&nbsp;
+&nbsp;        // CRITICAL: set BOTH columns because DB has both NOT NULL
+<b class="fc">&nbsp;        String hash = passwordEncoder.encode(body.password());</b>
+<b class="fc">&nbsp;        u.setPasswordHash(hash);  // maps to password_hash</b>
+<b class="fc">&nbsp;        u.setPassword(hash);      // maps to password (legacy NOT NULL column)</b>
+&nbsp;
+<b class="fc">&nbsp;        User saved = users.save(u);</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(201).body(Map.of(&quot;userId&quot;, saved.getId()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+&nbsp;    public ResponseEntity&lt;?&gt; onIntegrity(org.springframework.dao.DataIntegrityViolationException e) {
+<b class="pc">&nbsp;        Throwable root = (e.getMostSpecificCause() != null) ? e.getMostSpecificCause() : e;</b>
+<b class="fc">&nbsp;        return ResponseEntity.status(409).body(java.util.Map.of(</b>
+&nbsp;                &quot;error&quot;, &quot;constraint_violation&quot;,
+<b class="fc">&nbsp;                &quot;message&quot;, root.getMessage()  // helps us see the exact column/constraint</b>
+&nbsp;        ));
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,106 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.user.service</a>
+</div>
+
+<h1>Coverage Summary for Class: UserService (com.questbuddy.user.service)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">UserService$MockitoMock$xGG51Rc8</td>
+  </tr>
+  <tr>
+    <td class="name">UserService$MockitoMock$xGG51Rc8$auxiliary$KM3uQqzz</td>
+  </tr>
+  <tr>
+    <td class="name">UserService$MockitoMock$xGG51Rc8$auxiliary$ZgZTjJFm</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.user.service;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Service boundary for user-related operations.
+&nbsp; * Defines registration, authentication, profile updates, lookups, and persistence helpers.
+&nbsp; * Implementations should handle validation, password hashing, and transactional consistency.
+&nbsp; */
+&nbsp;public interface UserService {
+&nbsp;    User signup(String email, String username, String password, String firstName, String lastName);
+&nbsp;
+&nbsp;    Optional&lt;User&gt; getById(Long id);
+&nbsp;
+&nbsp;    User updateProfile(Long id, String email, String username, String firstName, String lastName, String avatarUrl);
+&nbsp;
+&nbsp;    Optional&lt;User&gt; login(String email, String rawPassword);
+&nbsp;
+&nbsp;    Optional&lt;User&gt; findByEmail(String email);
+&nbsp;
+&nbsp;    Optional&lt;User&gt; findByUsername(String username);
+&nbsp;
+&nbsp;    User save(User user);
+&nbsp;
+&nbsp;    List&lt;User&gt; findPremiumUsers();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

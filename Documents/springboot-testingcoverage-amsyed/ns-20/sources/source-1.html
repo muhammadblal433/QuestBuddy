@@ -1,0 +1,441 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMessageController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.trip.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMessageController (com.questbuddy.messages.trip.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripMessageController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (1/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (12/12)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.trip.controller;
+&nbsp;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
+&nbsp;import com.questbuddy.messages.trip.service.TripMessageService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v9/trips&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Trip Messages&quot;,
+&nbsp;        description = &quot;Endpoints for trip group chat: listing, sending, editing, deleting, and reacting to messages.&quot;
+&nbsp;)
+&nbsp;public class TripMessageController {
+&nbsp;
+&nbsp;    private final TripMessageService service;
+&nbsp;
+<b class="fc">&nbsp;    public TripMessageController(TripMessageService service) {</b>
+<b class="fc">&nbsp;        this.service = service;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // PUT - edit a message
+&nbsp;    @PutMapping(&quot;/{tripId}/messages/{messageId}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Edit a trip message&quot;,
+&nbsp;            description = &quot;Edits the content of an existing message in a trip group chat. &quot;
+&nbsp;                    + &quot;The caller is identified by the X-User-Id header and is typically only allowed to edit their own messages.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Message edited successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripMessageResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Invalid request body (validation error)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to edit this message&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or message not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public TripMessageResponseDTO edit(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that owns the message&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the message to edit&quot;,
+&nbsp;                    example = &quot;1001&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long messageId,
+&nbsp;            @RequestBody @Valid TripMessageEditDTO in) {
+<b class="fc">&nbsp;        return service.edit(me, tripId, messageId, in);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST - send a message to a trip gc
+&nbsp;    @PostMapping(&quot;/{tripId}/messages&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Send a message to a trip chat&quot;,
+&nbsp;            description = &quot;Sends a new message to the group chat for the specified trip. &quot;
+&nbsp;                    + &quot;The caller is identified by the X-User-Id header and must be a member of the trip.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Message sent successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripMessageResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Invalid request body (validation error)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to send messages to this trip&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public TripMessageResponseDTO post(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user sending the message&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip whose chat is being used&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @RequestBody @Valid TripMessageCreateDTO in) {
+<b class="fc">&nbsp;        return service.post(me, tripId, in);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // POST - react to a message
+&nbsp;    @PostMapping(&quot;/{tripId}/messages/{messageId}/reactions&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Toggle a reaction on a trip message&quot;,
+&nbsp;            description = &quot;Adds or removes a reaction (emoji) by the authenticated user to a specific trip message. &quot;
+&nbsp;                    + &quot;If the emoji is already present from this user, it is removed; otherwise it is added.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Reaction toggled successfully; returns updated reaction counts&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or message not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public Map&lt;String, Integer&gt; react(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user reacting&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that owns the message&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the message to react to&quot;,
+&nbsp;                    example = &quot;1001&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long messageId,
+&nbsp;            @RequestBody Map&lt;String, String&gt; body) {
+<b class="fc">&nbsp;        String emoji = null;</b>
+<b class="pc">&nbsp;        if (body != null) {</b>
+<b class="fc">&nbsp;            emoji = body.get(&quot;emoji&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return service.toggleReaction(me, tripId, messageId, emoji);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // GET - List of &quot;limit&quot; messages before &quot;beforeId&quot; for a trip
+&nbsp;    @GetMapping(&quot;/{tripId}/messages&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List messages in a trip chat&quot;,
+&nbsp;            description = &quot;Lists up to &#39;limit&#39; messages for a given trip, optionally before a given message ID &quot;
+&nbsp;                    + &quot;(useful for pagination). The caller is identified by the X-User-Id header.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Messages returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripMessageResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip not found or user not allowed to view this chat&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public List&lt;TripMessageResponseDTO&gt; list(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip whose chat messages are being listed&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;If provided, only messages with ID less than this will be returned&quot;,
+&nbsp;                    example = &quot;1001&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestParam(required = false) Long beforeId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Maximum number of messages to return&quot;,
+&nbsp;                    example = &quot;50&quot;
+&nbsp;            )
+&nbsp;            @RequestParam(defaultValue = &quot;50&quot;) int limit) {
+<b class="fc">&nbsp;        return service.list(me, tripId, beforeId, limit);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/messages/ping&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Trip messages service health check&quot;,
+&nbsp;            description = &quot;Simple endpoint to verify that TripMessageController is alive.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Controller is alive&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public String ping() {
+<b class="fc">&nbsp;        return &quot;ok&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // DELETE - delete a message
+&nbsp;    @DeleteMapping(&quot;/{tripId}/messages/{messageId}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a trip message&quot;,
+&nbsp;            description = &quot;Deletes a message in a trip group chat, using an optimistic locking version field. &quot;
+&nbsp;                    + &quot;The caller is identified by the X-User-Id header.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Message deleted successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripMessageResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;409&quot;,
+&nbsp;                    description = &quot;Version conflict when attempting to delete the message&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or message not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public TripMessageResponseDTO delete(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that owns the message&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the message to delete&quot;,
+&nbsp;                    example = &quot;1001&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long messageId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Expected version of the message for optimistic locking&quot;,
+&nbsp;                    example = &quot;1&quot;
+&nbsp;            )
+&nbsp;            @RequestParam(&quot;version&quot;) Long version) {
+<b class="fc">&nbsp;        return service.delete(me, tripId, messageId, version);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // DELETE - delete a reaction
+&nbsp;    @DeleteMapping(&quot;/{tripId}/messages/{messageId}/reactions/{emoji}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Remove a reaction from a trip message&quot;,
+&nbsp;            description = &quot;Removes the specified emoji reaction from a message for the authenticated user.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Reaction removed; returns updated reaction counts&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or message not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public Map&lt;String, Integer&gt; unreact(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user removing the reaction&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that owns the message&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the message to remove the reaction from&quot;,
+&nbsp;                    example = &quot;1001&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long messageId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Emoji reaction to remove&quot;,
+&nbsp;                    example = &quot;👍&quot;
+&nbsp;            )
+&nbsp;            @RequestParam String emoji) {
+<b class="fc">&nbsp;        return service.toggleReaction(me, tripId, messageId, emoji);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

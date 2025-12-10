@@ -1,0 +1,289 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.trip</a>
+</div>
+
+<h1>Coverage Summary for Class: TripService (com.questbuddy.trip)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    59.1%
+  </span>
+  <span class="absValue">
+    (13/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.2%
+  </span>
+  <span class="absValue">
+    (40/42)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TripService$ResourceNotFound</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    59.1%
+  </span>
+  <span class="absValue">
+    (13/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.3%
+  </span>
+  <span class="absValue">
+    (41/43)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.trip;
+&nbsp;
+&nbsp;import jakarta.validation.ValidationException;
+&nbsp;import org.springframework.data.domain.Sort;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;// v12 membership
+&nbsp;import com.questbuddy.tripmember.service.TripMembershipService;
+&nbsp;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.Comparator;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;import com.questbuddy.tripmember.model.TripMember;
+&nbsp;
+&nbsp;/**
+&nbsp; * Service class to handle the logic of trips - such as sorting param, checking if starttime and endtime makes sense (in terms of end MUST be after start)
+&nbsp; */
+&nbsp;@Service
+&nbsp;public class TripService {
+&nbsp;
+&nbsp;    private final TripRepository repo;
+&nbsp;    private final TripMapper mapper;
+&nbsp;    // Trip membership seeding for v12
+&nbsp;    private final TripMembershipService tripMembershipService;
+&nbsp;
+<b class="fc">&nbsp;    public TripService(TripRepository repo, TripMapper mapper, TripMembershipService tripMembershipService) {</b>
+<b class="fc">&nbsp;        this.repo = repo;</b>
+<b class="fc">&nbsp;        this.mapper = mapper;</b>
+<b class="fc">&nbsp;        this.tripMembershipService = tripMembershipService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Helper Mtds - for sort and range (main logic metioned above)
+<b class="fc">&nbsp;    private static final Sort BY_START_ASC = Sort.by(Sort.Direction.ASC, &quot;startDate&quot;);</b>
+&nbsp;
+&nbsp;    private void checkRange(LocalDate start, LocalDate end) {
+&nbsp;        // if times aren&#39;t null but end is before start -&gt; doesnt make sense -&gt; throw error
+<b class="pc">&nbsp;        if (start != null &amp;&amp; end != null &amp;&amp; end.isBefore(start)) {</b>
+<b class="fc">&nbsp;            throw new ValidationException(&quot;endDate must be after startDate!&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // ensure both or neither of startLat/startLon are provided
+&nbsp;    private void checkStartPoint(Double lat, Double lon) {
+<b class="pc">&nbsp;        if ((lat == null) ^ (lon == null)) {</b>
+<b class="nc">&nbsp;            throw new ValidationException(&quot;Provide both startLat and startLon together, or leave both null.&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // Create a trip
+&nbsp;    @Transactional
+&nbsp;    public TripResponseDTO create(Long ownerId, TripCreateDTO dto) {
+<b class="fc">&nbsp;        checkRange(dto.startDate(), dto.endDate());</b>
+&nbsp;        // if your TripCreateDTO has startLat/startLon, validate the pair:
+&nbsp;        try {
+<b class="fc">&nbsp;            var latField = TripCreateDTO.class.getDeclaredMethod(&quot;startLat&quot;);</b>
+<b class="fc">&nbsp;            var lonField = TripCreateDTO.class.getDeclaredMethod(&quot;startLon&quot;);</b>
+<b class="fc">&nbsp;            Double lat = (Double) latField.invoke(dto);</b>
+<b class="fc">&nbsp;            Double lon = (Double) lonField.invoke(dto);</b>
+<b class="fc">&nbsp;            checkStartPoint(lat, lon);</b>
+<b class="nc">&nbsp;        } catch (Exception ignore) {</b>
+&nbsp;            /* if fields don&#39;t exist, skip */
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Trip t = mapper.toEntity(ownerId, dto);</b>
+&nbsp;
+&nbsp;        // save and then seed owner membership so v12 gate doesn&#39;t 403 the owner
+<b class="fc">&nbsp;        Trip saved = repo.save(t);</b>
+<b class="fc">&nbsp;        tripMembershipService.seedOwner(ownerId, saved.getId());</b>
+&nbsp;
+<b class="fc">&nbsp;        return mapper.toDto(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // List trips where user is OWNER or an ACCEPTED MEMBER
+&nbsp;    public List&lt;TripResponseDTO&gt; list(Long userId) {
+&nbsp;        // Trips I own, sorted by start date in the DB
+<b class="fc">&nbsp;        List&lt;Trip&gt; owned = repo.findAllByOwnerId(userId, BY_START_ASC);</b>
+&nbsp;
+&nbsp;        // Trips where I&#39;m an ACCEPTED member
+<b class="fc">&nbsp;        List&lt;Trip&gt; asMember = repo.findAllForUserAsMemberWithStatus(</b>
+&nbsp;                userId,
+&nbsp;                TripMember.Status.ACCEPTED
+&nbsp;        );
+&nbsp;
+&nbsp;        // Merge + dedupe by trip id, then sort by startDate
+<b class="fc">&nbsp;        var seenIds = new HashSet&lt;Long&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;        return Stream.concat(owned.stream(), asMember.stream())</b>
+<b class="fc">&nbsp;                .filter(t -&gt; seenIds.add(t.getId()))                  // remove duplicates</b>
+<b class="fc">&nbsp;                .sorted(Comparator.comparing(Trip::getStartDate))     // global sort by startDate</b>
+<b class="fc">&nbsp;                .map(mapper::toDto)</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Get a trip by id and ownerId
+&nbsp;    public TripResponseDTO get(Long ownerId, Long id) {
+<b class="fc">&nbsp;        Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -&gt; new ResourceNotFound(&quot;Trip not found!&quot;));</b>
+<b class="fc">&nbsp;        return mapper.toDto(t);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Delete an event
+&nbsp;    @Transactional
+&nbsp;    public void delete(Long ownerId, Long id) {
+<b class="fc">&nbsp;        long n = repo.deleteByIdAndOwnerId(id, ownerId);</b>
+&nbsp;        // n == 0 -&gt; the event is not found
+<b class="fc">&nbsp;        if (n == 0) {</b>
+<b class="fc">&nbsp;            throw new ResourceNotFound(&quot;Trip not found!&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // Update an event
+&nbsp;    @Transactional
+&nbsp;    public TripResponseDTO update(Long ownerId, Long id, TripUpdateDTO dto) {
+<b class="fc">&nbsp;        Trip t = repo.findByIdAndOwnerId(id, ownerId).orElseThrow(() -&gt; new ResourceNotFound(&quot;Trip not found!&quot;));</b>
+&nbsp;
+&nbsp;        // Compute new values for params
+<b class="pc">&nbsp;        LocalDate newstart = (dto.startDate() != null) ? dto.startDate() : t.getStartDate();</b>
+<b class="pc">&nbsp;        LocalDate newend   = (dto.endDate()   != null) ? dto.endDate()   : t.getEndDate();</b>
+<b class="fc">&nbsp;        checkRange(newstart, newend); // check logic</b>
+&nbsp;
+&nbsp;        // merge potential coordinates if your DTO supports them
+&nbsp;        // im going to start using ternary operatory ? for in line if-else
+<b class="pc">&nbsp;        Double newLat = (dto.startLat() != null) ? dto.startLat() : t.getStartLat();</b>
+<b class="pc">&nbsp;        Double newLon = (dto.startLon() != null) ? dto.startLon() : t.getStartLon();</b>
+<b class="fc">&nbsp;        checkStartPoint(newLat, newLon);</b>
+&nbsp;
+<b class="fc">&nbsp;        mapper.applyUpdate(t, dto);</b>
+<b class="fc">&nbsp;        return mapper.toDto(repo.save(t));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Local Exception
+&nbsp;    public static class ResourceNotFound extends RuntimeException {
+<b class="fc">&nbsp;        public ResourceNotFound(String message) { super(message); }</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

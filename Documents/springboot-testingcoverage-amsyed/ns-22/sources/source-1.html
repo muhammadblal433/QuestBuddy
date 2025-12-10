@@ -1,0 +1,286 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMessageMapper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.trip.mapper</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMessageMapper (com.questbuddy.messages.trip.mapper)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripMessageMapper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (15/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (58/58)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.trip.mapper;
+&nbsp;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
+&nbsp;import com.questbuddy.messages.trip.model.TripMessage;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;/**
+&nbsp; * This class does 3 things:
+&nbsp; *
+&nbsp; * 1) Creates an entity based on a CreateDTO
+&nbsp; *
+&nbsp; * 2) Create a ResponseDTO based on an entity
+&nbsp; *
+&nbsp; * 3) Apply an edit
+&nbsp; */
+&nbsp;@Component
+<b class="fc">&nbsp;public class TripMessageMapper {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * 1) CreateDTO -&gt; TripMessage Entity
+&nbsp;     *
+&nbsp;     * @param in               TripMessageCreateDTO from client
+&nbsp;     * @param tripId           from URL path
+&nbsp;     * @param senderId         from auth (current user)
+&nbsp;     * @param sentAtFallback   use if DTO.sentAt is null
+&nbsp;     * @param savedAt          server timestamp (now)
+&nbsp;     */
+&nbsp;    public TripMessage toEntity(TripMessageCreateDTO in,
+&nbsp;                                long tripId,
+&nbsp;                                long senderId,
+&nbsp;                                Instant sentAtFallback,
+&nbsp;                                Instant savedAt) {
+&nbsp;
+<b class="fc">&nbsp;        TripMessage m = new TripMessage();</b>
+<b class="fc">&nbsp;        m.setTripId(tripId);</b>
+<b class="fc">&nbsp;        m.setSenderId(senderId);</b>
+<b class="fc">&nbsp;        m.setContent(in.content());</b>
+<b class="fc">&nbsp;        m.setParentMessageId(in.parentMessageId());</b>
+<b class="fc">&nbsp;        m.setForwardFromMessageId(in.forwardFromMessageId());</b>
+<b class="fc">&nbsp;        m.setClientMessageId(in.clientMessageId());</b>
+&nbsp;
+<b class="fc">&nbsp;        if (in.sentAt() != null) {</b>
+<b class="fc">&nbsp;            m.setSentAt(in.sentAt());</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            m.setSentAt(sentAtFallback);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        m.setSavedAt(savedAt);</b>
+&nbsp;
+&nbsp;        // new flags default for fresh message
+<b class="fc">&nbsp;        m.setEdited(false);</b>
+<b class="fc">&nbsp;        m.setEditedAt(null);</b>
+<b class="fc">&nbsp;        m.setDeleted(false);</b>
+<b class="fc">&nbsp;        m.setDeletedAt(null);</b>
+<b class="fc">&nbsp;        m.setDeletedBy(null);</b>
+&nbsp;
+<b class="fc">&nbsp;        return m;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * TripMessage Entity -&gt; ResponseDTO
+&nbsp;     *
+&nbsp;     * @param m - entity
+&nbsp;     * @param reactionCounts - map of reaction to their count
+&nbsp;     * @param myReactions - user&#39;s reactions
+&nbsp;     * @return - ResponseDTO
+&nbsp;     */
+&nbsp;    public TripMessageResponseDTO toResponse(TripMessage m,
+&nbsp;                                             Map&lt;String, Integer&gt; reactionCounts,
+&nbsp;                                             Set&lt;String&gt; myReactions) {
+&nbsp;
+&nbsp;        Map&lt;String, Integer&gt; countsView;
+<b class="pc">&nbsp;        if (reactionCounts == null || reactionCounts.isEmpty()) {</b>
+<b class="fc">&nbsp;            countsView = Collections.emptyMap();</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            countsView = Collections.unmodifiableMap(new HashMap&lt;String, Integer&gt;(reactionCounts));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        Set&lt;String&gt; mineView;
+<b class="pc">&nbsp;        if (myReactions == null || myReactions.isEmpty()) {</b>
+<b class="fc">&nbsp;            mineView = Collections.emptySet();</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            mineView = Collections.unmodifiableSet(new HashSet&lt;String&gt;(myReactions));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // NOTE: constructor order must match TripMessageResponseDTO record/class
+<b class="fc">&nbsp;        return new TripMessageResponseDTO(</b>
+<b class="fc">&nbsp;                m.getId(),</b>
+<b class="fc">&nbsp;                m.getTripId(),</b>
+<b class="fc">&nbsp;                m.getSenderId(),</b>
+<b class="fc">&nbsp;                m.getContent(),</b>
+<b class="fc">&nbsp;                m.getParentMessageId(),</b>
+<b class="fc">&nbsp;                m.getForwardFromMessageId(),</b>
+<b class="fc">&nbsp;                m.getSentAt(),</b>
+<b class="fc">&nbsp;                m.getSavedAt(),</b>
+<b class="fc">&nbsp;                m.isEdited(),</b>
+<b class="fc">&nbsp;                m.getVersion(),</b>
+&nbsp;                countsView,
+&nbsp;                mineView,
+<b class="fc">&nbsp;                m.getEditedAt(),</b>
+<b class="fc">&nbsp;                m.isDeleted(),</b>
+<b class="fc">&nbsp;                m.getDeletedAt(),</b>
+<b class="fc">&nbsp;                m.getDeletedBy()</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Apply an edit (pure field updates).
+&nbsp;     */
+&nbsp;    public void applyEdit(TripMessage target,
+&nbsp;                          TripMessageEditDTO in,
+&nbsp;                          Instant editedAt) {
+&nbsp;
+&nbsp;        // content
+<b class="fc">&nbsp;        target.setContent(in.content());</b>
+&nbsp;
+&nbsp;        // flags
+<b class="fc">&nbsp;        target.setEdited(true);</b>
+<b class="fc">&nbsp;        target.setEditedAt(editedAt);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Batch mapping: keeps input order. countsByMsgId/myReactionsByMsgId may be null.
+&nbsp;     */
+&nbsp;    public List&lt;TripMessageResponseDTO&gt; toResponses(List&lt;TripMessage&gt; messages,
+&nbsp;                                                    Map&lt;Long, Map&lt;String, Integer&gt;&gt; countsByMsgId,
+&nbsp;                                                    Map&lt;Long, Set&lt;String&gt;&gt; myReactionsByMsgId) {
+&nbsp;
+<b class="pc">&nbsp;        if (messages == null || messages.isEmpty()) {</b>
+<b class="fc">&nbsp;            return Collections.emptyList();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;TripMessageResponseDTO&gt; out = new ArrayList&lt;TripMessageResponseDTO&gt;(messages.size());</b>
+&nbsp;
+<b class="fc">&nbsp;        int i = 0;</b>
+<b class="fc">&nbsp;        while (i &lt; messages.size()) {</b>
+<b class="fc">&nbsp;            TripMessage m = messages.get(i);</b>
+&nbsp;
+<b class="fc">&nbsp;            Map&lt;String, Integer&gt; counts = null;</b>
+<b class="pc">&nbsp;            if (countsByMsgId != null) {</b>
+<b class="fc">&nbsp;                counts = countsByMsgId.get(m.getId());</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            Set&lt;String&gt; mine = null;</b>
+<b class="pc">&nbsp;            if (myReactionsByMsgId != null) {</b>
+<b class="fc">&nbsp;                mine = myReactionsByMsgId.get(m.getId());</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            TripMessageResponseDTO dto = toResponse(m, counts, mine);</b>
+<b class="fc">&nbsp;            out.add(dto);</b>
+<b class="fc">&nbsp;            i = i + 1;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return out;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

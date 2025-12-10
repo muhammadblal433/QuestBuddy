@@ -1,0 +1,483 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > FriendshipController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.friends.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: FriendshipController (com.questbuddy.friends.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">FriendshipController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/23)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.friends.controller;
+&nbsp;
+&nbsp;import com.questbuddy.friends.dto.ApiMessage;
+&nbsp;import com.questbuddy.friends.dto.FriendDTO;
+&nbsp;import com.questbuddy.friends.dto.FriendSuggestionDTO;
+&nbsp;import com.questbuddy.friends.service.FriendshipService;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v8&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Friendships&quot;,
+&nbsp;        description = &quot;Manage friend requests, friends lists, blocks, and suggestions using username-based endpoints.&quot;
+&nbsp;)
+&nbsp;public class FriendshipController {
+&nbsp;
+&nbsp;    private final FriendshipService service;
+&nbsp;    private final UserRepository users;
+&nbsp;
+<b class="nc">&nbsp;    public FriendshipController(FriendshipService service, UserRepository users) {</b>
+<b class="nc">&nbsp;        this.service = service;</b>
+<b class="nc">&nbsp;        this.users = users;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Username-based Requests
+&nbsp;
+&nbsp;    @PostMapping(&quot;/users/{meUsername}/friends/requests/{targetUsername}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Send a friend request&quot;,
+&nbsp;            description = &quot;Sends a friend request from one user to another, both identified by usernames.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Friend request sent&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = ApiMessage.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;One or both users not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;ApiMessage&gt; send(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user sending the friend request&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the target user&quot;,
+&nbsp;                    example = &quot;friend_user&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String targetUsername) {
+<b class="nc">&nbsp;        service.sendRequest(idOf(meUsername), idOf(targetUsername));</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(new ApiMessage(&quot;Friend request sent&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/users/{meUsername}/friends/requests/{requesterUsername}/accept&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Accept a friend request&quot;,
+&nbsp;            description = &quot;Accepts an incoming friend request from requesterUsername to meUsername.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Friend request accepted&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = ApiMessage.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;One or both users or the request not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;ApiMessage&gt; accept(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user accepting the request&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user who sent the request&quot;,
+&nbsp;                    example = &quot;friend_user&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String requesterUsername) {
+<b class="nc">&nbsp;        service.accept(idOf(meUsername), idOf(requesterUsername));</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(new ApiMessage(&quot;Friend request accepted&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/users/{meUsername}/friends/requests/{requesterUsername}/reject&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Reject a friend request&quot;,
+&nbsp;            description = &quot;Rejects an incoming friend request from requesterUsername to meUsername.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Friend request rejected&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = ApiMessage.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;One or both users or the request not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;ApiMessage&gt; reject(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user rejecting the request&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user who sent the request&quot;,
+&nbsp;                    example = &quot;friend_user&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String requesterUsername) {
+<b class="nc">&nbsp;        service.reject(idOf(meUsername), idOf(requesterUsername));</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(new ApiMessage(&quot;Friend request rejected&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Block / Unblock / Unfriend
+&nbsp;
+&nbsp;    @PostMapping(&quot;/users/{meUsername}/friends/{otherUsername}/block&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Block a user&quot;,
+&nbsp;            description = &quot;Blocks another user, preventing further friend requests or interactions as defined by the service.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User blocked&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = ApiMessage.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;One or both users not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;ApiMessage&gt; block(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user performing the block&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user being blocked&quot;,
+&nbsp;                    example = &quot;annoying_guy&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String otherUsername) {
+<b class="nc">&nbsp;        service.block(idOf(meUsername), idOf(otherUsername));</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(new ApiMessage(&quot;User blocked&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Lists
+&nbsp;
+&nbsp;    @GetMapping(&quot;/friends/ping&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Friendship service health check&quot;,
+&nbsp;            description = &quot;Simple endpoint to verify that FriendshipController v8 is alive and reachable.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Controller is alive&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public String ping() {
+<b class="nc">&nbsp;        return &quot;FriendshipController v8 is alive again!&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/users/{meUsername}/friends&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List friends&quot;,
+&nbsp;            description = &quot;Returns the list of friends for the given username.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Friends list returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = FriendDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public List&lt;FriendDTO&gt; list(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username whose friends are being listed&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername) {
+<b class="nc">&nbsp;        return service.listFriends(idOf(meUsername));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/users/{meUsername}/friends/requests/incoming&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List incoming friend requests&quot;,
+&nbsp;            description = &quot;Returns the list of incoming friend requests for the given username.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Incoming friend requests returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = FriendDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public List&lt;FriendDTO&gt; incoming(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username whose incoming friend requests are being listed&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername) {
+<b class="nc">&nbsp;        return service.incomingRequests(idOf(meUsername));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/users/{meUsername}/friends/requests/outgoing&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List outgoing friend requests&quot;,
+&nbsp;            description = &quot;Returns the list of outgoing friend requests from the given username.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Outgoing friend requests returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = FriendDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public List&lt;FriendDTO&gt; outgoing(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username whose outgoing friend requests are being listed&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername) {
+<b class="nc">&nbsp;        return service.outgoingRequests(idOf(meUsername));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Suggestions
+&nbsp;
+&nbsp;    @GetMapping(&quot;/users/{meUsername}/friends/suggestions&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Friend suggestions&quot;,
+&nbsp;            description = &quot;Returns friend suggestions for the given username, limited by the &#39;limit&#39; query parameter.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Friend suggestions returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = FriendSuggestionDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public List&lt;FriendSuggestionDTO&gt; suggestions(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username for which to compute friend suggestions&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Maximum number of suggestions to return&quot;,
+&nbsp;                    example = &quot;20&quot;
+&nbsp;            )
+&nbsp;            @RequestParam(defaultValue = &quot;20&quot;) int limit) {
+<b class="nc">&nbsp;        return service.suggestions(idOf(meUsername), limit);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/users/{meUsername}/friends/{otherUsername}/block&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Unblock a user&quot;,
+&nbsp;            description = &quot;Removes an existing block between meUsername and otherUsername.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User unblocked&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = ApiMessage.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;One or both users not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;ApiMessage&gt; unblock(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user performing the unblock&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user being unblocked&quot;,
+&nbsp;                    example = &quot;annoying_guy&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String otherUsername) {
+<b class="nc">&nbsp;        service.unblock(idOf(meUsername), idOf(otherUsername));</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(new ApiMessage(&quot;User unblocked&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/users/{meUsername}/friends/{otherUsername}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Unfriend a user&quot;,
+&nbsp;            description = &quot;Removes an existing friendship between meUsername and otherUsername.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;User unfriended&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = ApiMessage.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;One or both users not found, or friendship does not exist&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;ApiMessage&gt; unfriend(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user performing the unfriend&quot;,
+&nbsp;                    example = &quot;ayaan&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String meUsername,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Username of the user being unfriended&quot;,
+&nbsp;                    example = &quot;ex_friend&quot;
+&nbsp;            )
+&nbsp;            @PathVariable String otherUsername) {
+<b class="nc">&nbsp;        service.unfriend(idOf(meUsername), idOf(otherUsername));</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(new ApiMessage(&quot;User unfriended&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Long idOf(String username) {
+<b class="nc">&nbsp;        User u = users.findByUsernameIgnoreCase(username)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;user_not_found: &quot; + username));</b>
+<b class="nc">&nbsp;        return u.getId();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

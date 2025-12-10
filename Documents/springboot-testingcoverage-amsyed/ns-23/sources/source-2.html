@@ -1,0 +1,213 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMessage</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.trip.model</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMessage (com.questbuddy.messages.trip.model)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripMessage</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (30/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (32/32)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.trip.model;
+&nbsp;
+&nbsp;import jakarta.persistence.*;
+&nbsp;import java.time.Instant;
+&nbsp;
+&nbsp;@Entity
+&nbsp;@Table(name = &quot;messages&quot;,
+&nbsp;        uniqueConstraints = @UniqueConstraint(name=&quot;uq_msg_sender_client&quot;,
+&nbsp;                columnNames = {&quot;sender_id&quot;,&quot;client_message_id&quot;}),
+&nbsp;        indexes = {
+&nbsp;                @Index(name=&quot;idx_msg_trip_saved&quot;, columnList=&quot;trip_id,saved_at DESC&quot;),
+&nbsp;                @Index(name=&quot;idx_msg_trip_id&quot;, columnList=&quot;trip_id,id DESC&quot;)
+&nbsp;        })
+<b class="fc">&nbsp;public class TripMessage {</b>
+&nbsp;    @Id
+&nbsp;    @GeneratedValue(strategy = GenerationType.IDENTITY)
+&nbsp;    private Long id; // id of message
+&nbsp;
+&nbsp;    @Column(name=&quot;trip_id&quot;, nullable=false)
+&nbsp;    private Long tripId; // id of trip associated w/ message
+&nbsp;
+&nbsp;    @Column(name=&quot;sender_id&quot;, nullable=false)
+&nbsp;    private Long senderId; // id of person who sent this message
+&nbsp;
+&nbsp;    @Column(nullable=false, length=2000)
+&nbsp;    private String content; // what the message says
+&nbsp;
+&nbsp;    // reply / forward (nullable)
+&nbsp;    @Column(name=&quot;parent_message_id&quot;)
+&nbsp;    private Long parentMessageId; // the id of the message we might be replying to
+&nbsp;
+&nbsp;    @Column(name=&quot;forward_from_message_id&quot;)
+&nbsp;    private Long forwardFromMessageId; // the id of the message we are forwarding from
+&nbsp;
+&nbsp;    // client vs server times
+&nbsp;    @Column(name=&quot;sent_at&quot;, nullable=false)
+&nbsp;    private Instant sentAt;
+&nbsp;
+&nbsp;    @Column(name=&quot;saved_at&quot;, nullable=false)
+&nbsp;    private Instant savedAt;
+&nbsp;
+&nbsp;    @Column(name=&quot;edited_at&quot;)
+&nbsp;    private Instant editedAt;
+&nbsp;
+<b class="fc">&nbsp;    @Column(name=&quot;is_deleted&quot;, nullable = false)</b>
+&nbsp;    private boolean isDeleted = false;
+&nbsp;
+&nbsp;    @Column(name=&quot;deleted_at&quot;)
+&nbsp;    private Instant deletedAt;
+&nbsp;
+&nbsp;    @Column(name=&quot;deleted_by&quot;)
+&nbsp;    private Long deletedBy;
+&nbsp;
+<b class="fc">&nbsp;    @Column(name=&quot;is_edited&quot;, nullable=false)</b>
+&nbsp;    private boolean edited = false;
+&nbsp;
+&nbsp;    // for idempotency
+&nbsp;    @Column(name=&quot;client_message_id&quot;, length=64, nullable=false)
+&nbsp;    private String clientMessageId;
+&nbsp;
+&nbsp;    // to handle the &quot;last edit wins&quot; cases
+&nbsp;    @Version
+&nbsp;    private Long version;
+&nbsp;
+&nbsp;    // getters/setters
+<b class="fc">&nbsp;    public Long getId() { return id; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Long getTripId() { return tripId; }</b>
+<b class="fc">&nbsp;    public void setTripId(Long tripId) { this.tripId = tripId; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Long getSenderId() { return senderId; }</b>
+<b class="fc">&nbsp;    public void setSenderId(Long senderId) { this.senderId = senderId; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public String getContent() { return content; }</b>
+<b class="fc">&nbsp;    public void setContent(String content) { this.content = content; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Long getParentMessageId() { return parentMessageId; }</b>
+<b class="fc">&nbsp;    public void setParentMessageId(Long parentMessageId) { this.parentMessageId = parentMessageId; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Long getForwardFromMessageId() { return forwardFromMessageId; }</b>
+<b class="fc">&nbsp;    public void setForwardFromMessageId(Long forwardFromMessageId) { this.forwardFromMessageId = forwardFromMessageId; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Instant getSentAt() { return sentAt; }</b>
+<b class="fc">&nbsp;    public void setSentAt(Instant sentAt) { this.sentAt = sentAt; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Instant getSavedAt() { return savedAt; }</b>
+<b class="fc">&nbsp;    public void setSavedAt(Instant savedAt) { this.savedAt = savedAt; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public boolean isEdited() { return edited; }</b>
+<b class="fc">&nbsp;    public void setEdited(boolean edited) { this.edited = edited; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Instant getEditedAt() { return editedAt; }</b>
+<b class="fc">&nbsp;    public void setEditedAt(Instant editedAt) { this.editedAt = editedAt; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public boolean isDeleted() { return isDeleted; }</b>
+<b class="fc">&nbsp;    public void setDeleted(boolean deleted) { this.isDeleted = deleted; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Instant getDeletedAt() { return deletedAt; }</b>
+<b class="fc">&nbsp;    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Long getDeletedBy() { return deletedBy; }</b>
+<b class="fc">&nbsp;    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public String getClientMessageId() { return clientMessageId; }</b>
+<b class="fc">&nbsp;    public void setClientMessageId(String clientMessageId) { this.clientMessageId = clientMessageId; }</b>
+&nbsp;
+<b class="fc">&nbsp;    public Long getVersion() { return version; }</b>
+<b class="fc">&nbsp;    public void setVersion(Long version) { this.version = version; }</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

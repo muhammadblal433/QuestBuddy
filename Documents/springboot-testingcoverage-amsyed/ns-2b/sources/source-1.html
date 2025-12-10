@@ -1,0 +1,466 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TaskController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.task.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: TaskController (com.questbuddy.task.controller)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TaskController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/39)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TaskController$TaskReq</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TaskController$TaskRes</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TaskController$UserLite</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/42)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.task.controller;
+&nbsp;
+&nbsp;import com.questbuddy.task.model.Task;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import com.questbuddy.service.TaskService;
+&nbsp;import jakarta.persistence.Converts;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.List;
+&nbsp;import java.util.NoSuchElementException;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v3/tasks&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Tasks&quot;,
+&nbsp;        description = &quot;Endpoints for creating, reading, updating, and deleting tasks.&quot;
+&nbsp;)
+&nbsp;public class TaskController {
+&nbsp;
+&nbsp;    private final TaskService taskService;
+&nbsp;    private final UserRepository userRepo; // use repo directly to resolve userId
+&nbsp;
+<b class="nc">&nbsp;    public TaskController(TaskService taskService, UserRepository userRepo) {</b>
+<b class="nc">&nbsp;        this.taskService = taskService;</b>
+<b class="nc">&nbsp;        this.userRepo = userRepo;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // DTOs
+&nbsp;    // Request body for create/update operations (flat userId; not nested)
+<b class="nc">&nbsp;    public record TaskReq(Long userId, String title, String description, String status, java.time.LocalDate dueDate) {}</b>
+&nbsp;
+&nbsp;    // Minimal user info included on task responses (no secrets)
+<b class="nc">&nbsp;    public record UserLite(Long id, String email, String username, String firstName, String lastName) {}</b>
+&nbsp;
+&nbsp;    // Outbound shape returned to clients
+<b class="nc">&nbsp;    public record TaskRes(Long taskId, UserLite user, String title, String description, String status, java.time.LocalDate dueDate) {}</b>
+&nbsp;
+&nbsp;    // Maps a Task entity to its response DTO (User goes to UserLite)
+&nbsp;    private TaskRes toRes(com.questbuddy.task.model.Task t) {
+<b class="nc">&nbsp;        var u = t.getUser();</b>
+<b class="nc">&nbsp;        var owner = (u == null) ? null : new UserLite(u.getId(), u.getEmail(), u.getUsername(), u.getFirstName(), u.getLastName());</b>
+<b class="nc">&nbsp;        return new TaskRes(t.getTaskId(), owner, t.getTitle(), t.getDescription(), t.getStatus(), t.getDueDate());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private User requireUser(Long userId) {
+<b class="nc">&nbsp;        return userRepo.findById(userId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new NoSuchElementException(&quot;User not found&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // UPDATE (full PUT, null-safe via service)
+&nbsp;    @PutMapping(value = &quot;/{id}&quot;, consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Update an existing task&quot;,
+&nbsp;            description = &quot;Performs a full update of an existing task by ID. &quot;
+&nbsp;                    + &quot;Fields that are null are handled in the service layer.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Task updated successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TaskRes.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Invalid update payload&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Task not found&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; updateTask(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the task to update&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id,
+&nbsp;            @RequestBody TaskReq body) {
+<b class="nc">&nbsp;        var patch = new com.questbuddy.task.model.Task();</b>
+<b class="nc">&nbsp;        patch.setTitle(body.title());</b>
+<b class="nc">&nbsp;        patch.setDescription(body.description());</b>
+<b class="nc">&nbsp;        patch.setStatus(body.status());</b>
+<b class="nc">&nbsp;        patch.setDueDate(body.dueDate());</b>
+&nbsp;
+<b class="nc">&nbsp;        var saved = taskService.updateTask(id, patch);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(toRes(saved));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // CREATE TASK for the given user. If status is missing/blank, defaults to &quot;Pending&quot;
+&nbsp;    // The errors that can occur are 400 if required fields are missing (userId, title), 404 if the userId does not exist, Returns: 201 + TaskRes
+&nbsp;    @PostMapping(consumes = &quot;application/json&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Create a new task&quot;,
+&nbsp;            description = &quot;Creates a new task for the given user. If status is missing or blank, it defaults to &#39;Pending&#39;.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;201&quot;,
+&nbsp;                    description = &quot;Task created successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TaskRes.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Missing required fields (userId or title)&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;User not found for the given userId&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; createTask(@RequestBody TaskReq body) {
+<b class="nc">&nbsp;        if (body == null || body.userId() == null || body.title() == null) {</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().body(java.util.Map.of(&quot;error&quot;, &quot;missing_fields&quot;));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        var user = userRepo.findById(body.userId())</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new java.util.NoSuchElementException(&quot;User not found&quot;));</b>
+&nbsp;
+<b class="nc">&nbsp;        var task = new com.questbuddy.task.model.Task(</b>
+&nbsp;                user,
+<b class="nc">&nbsp;                body.title(),</b>
+<b class="nc">&nbsp;                body.description(),</b>
+<b class="nc">&nbsp;                (body.status() == null || body.status().isBlank()) ? &quot;Pending&quot; : body.status(),</b>
+<b class="nc">&nbsp;                body.dueDate()</b>
+&nbsp;        );
+<b class="nc">&nbsp;        var saved = taskService.createTask(task);</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(toRes(saved));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // READ ALL TASKS
+&nbsp;    @GetMapping(produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List all tasks&quot;,
+&nbsp;            description = &quot;Returns a list of all tasks in the system.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Tasks returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TaskRes.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;java.util.List&lt;TaskRes&gt;&gt; getAllTasks() {
+<b class="nc">&nbsp;        var out = taskService.getAllTasks().stream().map(this::toRes).toList();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // READ BY TASK ID
+&nbsp;    @GetMapping(value = &quot;/{id}&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Get task by ID&quot;,
+&nbsp;            description = &quot;Returns a single task by its ID.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Task returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TaskRes.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Task not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; getTaskById(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the task to retrieve&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id) {
+<b class="nc">&nbsp;        return taskService.getTaskById(id)</b>
+<b class="nc">&nbsp;                .map(this::toRes)</b>
+<b class="nc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // READ BY USER
+&nbsp;    @GetMapping(value = &quot;/user/{userId}&quot;, produces = &quot;application/json&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List tasks for a specific user&quot;,
+&nbsp;            description = &quot;Returns all tasks that belong to the given userId.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Tasks returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TaskRes.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;java.util.List&lt;TaskRes&gt;&gt; getTasksByUser(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user whose tasks are being listed&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long userId) {
+<b class="nc">&nbsp;        var out = taskService.getTasksByUserId(userId).stream().map(this::toRes).toList();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(out);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // HEALTH CHECK TO MAKE SURE IF THIS FILE IS EVEN BEING READ
+&nbsp;    @GetMapping(&quot;/ping&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Task service health check&quot;,
+&nbsp;            description = &quot;Simple endpoint to verify that TaskController is alive and reachable.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Task controller is alive&quot;
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public String ping() {
+<b class="nc">&nbsp;        return &quot;TaskController DTO v3&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // DELETE TASK
+&nbsp;    @DeleteMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a task&quot;,
+&nbsp;            description = &quot;Deletes a task by its ID.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Task deleted successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = Map.class))
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public ResponseEntity&lt;?&gt; deleteTask(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the task to delete&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long id) {
+<b class="nc">&nbsp;        taskService.deleteTask(id);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(Map.of(&quot;message&quot;, &quot;Task deleted successfully&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Converts thrown NoSuchElementException into a 404 JSON body
+&nbsp;    @ExceptionHandler(NoSuchElementException.class)
+&nbsp;    public ResponseEntity&lt;?&gt; onNotFound(NoSuchElementException e) {
+<b class="nc">&nbsp;        return ResponseEntity.status(404).body(Map.of(&quot;error&quot;, &quot;not_found&quot;, &quot;message&quot;, e.getMessage()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Converts IllegalArgumentException into a 400 JSON body
+&nbsp;    @ExceptionHandler(IllegalArgumentException.class)
+&nbsp;    public ResponseEntity&lt;?&gt; onBadRequest(IllegalArgumentException e) {
+<b class="nc">&nbsp;        return ResponseEntity.badRequest().body(Map.of(&quot;error&quot;, &quot;bad_request&quot;, &quot;message&quot;, e.getMessage()));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,423 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripChatEndpoint</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.messages.ws</a>
+</div>
+
+<h1>Coverage Summary for Class: TripChatEndpoint (com.questbuddy.messages.ws)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripChatEndpoint</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    4.5%
+  </span>
+  <span class="absValue">
+    (1/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2.1%
+  </span>
+  <span class="absValue">
+    (2/97)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.messages.ws;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.databind.JsonNode;
+&nbsp;import com.fasterxml.jackson.databind.ObjectMapper;
+&nbsp;import com.questbuddy.config.SpringContext;
+&nbsp;import com.questbuddy.messages.guard.TripMembershipGate;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageCreateDTO;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageEditDTO;
+&nbsp;import com.questbuddy.messages.trip.dto.TripMessageResponseDTO;
+&nbsp;import com.questbuddy.messages.trip.service.TripMessageService;
+&nbsp;import jakarta.websocket.*;
+&nbsp;import jakarta.websocket.server.*;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.concurrent.ConcurrentHashMap;
+&nbsp;
+&nbsp;/**
+&nbsp; * Two-way Trip chat WebSocket endpoint.
+&nbsp; * Connect to: ws://coms-3090-026.class.las.iastate.edu:8080/ws/messages/trips/{tripId}/{userId}
+&nbsp; *
+&nbsp; * This endpoint takes into account for creating messages, editing and deleting them,
+&nbsp; * reacting and toggling reactions to a message, and &quot;is typing&quot;.
+&nbsp; */
+&nbsp;@Component
+&nbsp;@ServerEndpoint(&quot;/ws/messages/trips/{tripId}/{userId}&quot;)
+<b class="nc">&nbsp;public class TripChatEndpoint {</b>
+&nbsp;
+<b class="fc">&nbsp;    private static final Map&lt;Long, Set&lt;Session&gt;&gt; BY_TRIP = new ConcurrentHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    private static final ObjectMapper OM = new ObjectMapper();</b>
+&nbsp;
+<b class="nc">&nbsp;    private TripMessageService tripSvc() { return SpringContext.getBean(TripMessageService.class); }</b>
+<b class="nc">&nbsp;    private TripMembershipGate membership() { return SpringContext.getBean(TripMembershipGate.class); }</b>
+&nbsp;
+&nbsp;    @OnOpen
+&nbsp;    public void onOpen(Session session,
+&nbsp;                       @PathParam(&quot;tripId&quot;) Long tripId,
+&nbsp;                       @PathParam(&quot;userId&quot;) Long userId) {
+&nbsp;        try {
+<b class="nc">&nbsp;            if (!membership().isMember(tripId, userId)) {</b>
+<b class="nc">&nbsp;                session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, &quot;Not a member of this trip&quot;));</b>
+&nbsp;                return;
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            try { session.close(new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, &quot;Handshake error&quot;)); } catch (Exception ignored) {}</b>
+&nbsp;            return;
+&nbsp;        }
+<b class="nc">&nbsp;        BY_TRIP.computeIfAbsent(tripId, k -&gt; ConcurrentHashMap.newKeySet()).add(session);</b>
+<b class="nc">&nbsp;        sendSafe(session, json(Map.of(</b>
+&nbsp;                &quot;event&quot;, &quot;HELLO&quot;,
+&nbsp;                &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                &quot;channelId&quot;, tripId,
+<b class="nc">&nbsp;                &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;        )));
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnMessage
+&nbsp;    public void onMessage(String msg,
+&nbsp;                          Session session,
+&nbsp;                          @PathParam(&quot;tripId&quot;) Long tripId,
+&nbsp;                          @PathParam(&quot;userId&quot;) Long userId) {
+<b class="nc">&nbsp;        if (msg != null &amp;&amp; msg.length() &gt; 64_000) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;payload too large&quot;)));</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;        try {
+<b class="nc">&nbsp;            JsonNode root = OM.readTree(msg);</b>
+<b class="nc">&nbsp;            String event = optText(root, &quot;event&quot;);</b>
+<b class="nc">&nbsp;            String clientMsgId = optText(root, &quot;clientMsgId&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;            if (&quot;PING&quot;.equalsIgnoreCase(event)) {</b>
+<b class="nc">&nbsp;                sendSafe(session, json(Map.of(&quot;event&quot;, &quot;PONG&quot;)));</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            switch (event) {</b>
+&nbsp;                case &quot;MESSAGE_NEW&quot;:
+<b class="nc">&nbsp;                    handleCreate(session, userId, tripId, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;EDIT&quot;:
+<b class="nc">&nbsp;                    handleEdit(session, userId, tripId, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;DELETE&quot;:
+<b class="nc">&nbsp;                    handleDelete(session, userId, tripId, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;REACTION_ADD&quot;:
+&nbsp;                case &quot;REACTION_REMOVE&quot;:
+<b class="nc">&nbsp;                    handleReaction(session, userId, tripId, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                case &quot;TYPING_START&quot;:
+&nbsp;                case &quot;TYPING_STOP&quot;:
+<b class="nc">&nbsp;                    handleTyping(userId, tripId, event);</b>
+&nbsp;                    break;
+&nbsp;                case &quot;READ_RECEIPT&quot;:
+<b class="nc">&nbsp;                    handleReadReceipt(session, userId, tripId, clientMsgId, root.path(&quot;payload&quot;));</b>
+&nbsp;                    break;
+&nbsp;                default:
+<b class="nc">&nbsp;                    sendSafe(session, json(java.util.Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;unknown event&quot;)));</b>
+&nbsp;                    break;
+&nbsp;            }
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, &quot;bad JSON&quot;)));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnClose
+&nbsp;    public void onClose(Session session,
+&nbsp;                        @PathParam(&quot;tripId&quot;) Long tripId,
+&nbsp;                        @PathParam(&quot;userId&quot;) Long userId) {
+<b class="nc">&nbsp;        var set = BY_TRIP.get(tripId);</b>
+<b class="nc">&nbsp;        if (set != null) {</b>
+<b class="nc">&nbsp;            set.remove(session);</b>
+<b class="nc">&nbsp;            if (set.isEmpty()) BY_TRIP.remove(tripId);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnError
+&nbsp;    public void onError(Session session, Throwable t,
+&nbsp;                        @PathParam(&quot;tripId&quot;) Long tripId,
+&nbsp;                        @PathParam(&quot;userId&quot;) Long userId) {
+<b class="nc">&nbsp;        onClose(session, tripId, userId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // functions to handle create, edit and deleting of a trip message
+&nbsp;
+&nbsp;    private void handleCreate(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            TripMessageCreateDTO in = new TripMessageCreateDTO(</b>
+<b class="nc">&nbsp;                    textOrNull(p, &quot;content&quot;),</b>
+<b class="nc">&nbsp;                    longOrNull(p, &quot;parentMessageId&quot;),</b>
+<b class="nc">&nbsp;                    longOrNull(p, &quot;forwardFromMessageId&quot;),</b>
+<b class="nc">&nbsp;                    textOrNull(p, &quot;clientMessageId&quot;) != null ? textOrNull(p, &quot;clientMessageId&quot;) : clientMsgId,</b>
+<b class="nc">&nbsp;                    instantOrNull(p, &quot;sentAt&quot;)</b>
+&nbsp;            );
+<b class="nc">&nbsp;            TripMessageResponseDTO saved = tripSvc().post(me, tripId, in);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+<b class="nc">&nbsp;                    &quot;serverMsgId&quot;, saved.id()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;            sendToTrip(tripId, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;MESSAGE_NEW&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;message&quot;, saved,
+<b class="nc">&nbsp;                    &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleEdit(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);</b>
+<b class="nc">&nbsp;            TripMessageEditDTO in = new TripMessageEditDTO(</b>
+<b class="nc">&nbsp;                    textOrNull(p, &quot;content&quot;),</b>
+<b class="nc">&nbsp;                    longOrNull(p, &quot;version&quot;)</b>
+&nbsp;            );
+<b class="nc">&nbsp;            TripMessageResponseDTO updated = tripSvc().edit(me, tripId, messageId, in);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+<b class="nc">&nbsp;                    &quot;serverMsgId&quot;, updated.id()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;            sendToTrip(tripId, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;EDIT&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;message&quot;, updated,
+<b class="nc">&nbsp;                    &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleDelete(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);</b>
+<b class="nc">&nbsp;            Long version   = longOrNull(p, &quot;version&quot;); // REQUIRED by your service</b>
+<b class="nc">&nbsp;            TripMessageResponseDTO deleted = tripSvc().delete(me, tripId, messageId, version);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+<b class="nc">&nbsp;                    &quot;serverMsgId&quot;, deleted.id()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;            sendToTrip(tripId, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;DELETE&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;message&quot;, deleted,
+<b class="nc">&nbsp;                    &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleReaction(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long messageId = longOrNull(p, &quot;messageId&quot;);</b>
+<b class="nc">&nbsp;            String emoji   = textOrNull(p, &quot;emoji&quot;);</b>
+<b class="nc">&nbsp;            tripSvc().toggleReaction(me, tripId, messageId, emoji);</b>
+&nbsp;
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+&nbsp;                    &quot;serverMsgId&quot;, messageId
+&nbsp;            )));
+<b class="nc">&nbsp;            sendToTrip(tripId, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;REACTION_TOGGLE&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;messageId&quot;, messageId,
+&nbsp;                    &quot;emoji&quot;, emoji,
+<b class="nc">&nbsp;                    &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleTyping(Long me, Long tripId, String event) {
+<b class="nc">&nbsp;        sendToTrip(tripId, json(Map.of(</b>
+&nbsp;                &quot;event&quot;, event,
+&nbsp;                &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                &quot;channelId&quot;, tripId,
+&nbsp;                &quot;senderId&quot;, me,
+<b class="nc">&nbsp;                &quot;timestamp&quot;, Instant.now().toString()</b>
+&nbsp;        )));
+&nbsp;    }
+&nbsp;
+&nbsp;    private void handleReadReceipt(Session session, Long me, Long tripId, String clientMsgId, JsonNode p) {
+&nbsp;        try {
+<b class="nc">&nbsp;            Long upTo = longOrNull(p, &quot;messageId&quot;);</b>
+&nbsp;            // Service updates per-user pointer and BROADCASTS to the trip
+<b class="nc">&nbsp;            tripSvc().markReadProgress(me, tripId, upTo);</b>
+&nbsp;
+&nbsp;            // ACK only from the endpoint
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(</b>
+&nbsp;                    &quot;event&quot;, &quot;ACK&quot;,
+&nbsp;                    &quot;channelType&quot;, &quot;TRIP&quot;,
+&nbsp;                    &quot;channelId&quot;, tripId,
+&nbsp;                    &quot;clientMsgId&quot;, clientMsgId,
+&nbsp;                    &quot;serverMsgId&quot;, upTo
+&nbsp;            )));
+<b class="nc">&nbsp;        } catch (Exception e) {</b>
+<b class="nc">&nbsp;            sendSafe(session, json(Map.of(&quot;event&quot;, &quot;ERROR&quot;, &quot;reason&quot;, safeReason(e))));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // helper functions
+&nbsp;
+&nbsp;    public static void sendToTrip(Long tripId, String json) {
+<b class="nc">&nbsp;        var set = BY_TRIP.get(tripId);</b>
+<b class="nc">&nbsp;        if (set == null) return;</b>
+<b class="nc">&nbsp;        for (Session s : set) {</b>
+<b class="nc">&nbsp;            if (s.isOpen()) sendSafe(s, json);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static void sendSafe(Session s, String json) {
+<b class="nc">&nbsp;        if (s == null || json == null) return;</b>
+<b class="nc">&nbsp;        try { s.getBasicRemote().sendText(json); } catch (Exception ignored) {}</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String json(Map&lt;String, Object&gt; map) {
+<b class="nc">&nbsp;        try { return OM.writeValueAsString(map); } catch (Exception e) { return null; }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String optText(JsonNode n, String field) {
+<b class="nc">&nbsp;        return n.hasNonNull(field) ? n.get(field).asText() : null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String textOrNull(JsonNode n, String field) {
+<b class="nc">&nbsp;        return optText(n, field);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Long longOrNull(JsonNode n, String field) {
+<b class="nc">&nbsp;        return n.hasNonNull(field) ? n.get(field).asLong() : null;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Instant instantOrNull(JsonNode n, String field) {
+<b class="nc">&nbsp;        String t = textOrNull(n, field);</b>
+<b class="nc">&nbsp;        try { return (t != null) ? Instant.parse(t) : null; } catch (Exception e) { return null; }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String safeReason(Exception e) {
+<b class="nc">&nbsp;        String m = e.getMessage();</b>
+<b class="nc">&nbsp;        if (m == null || m.isBlank()) return &quot;server error&quot;;</b>
+<b class="nc">&nbsp;        return m.length() &gt; 256 ? m.substring(0, 256) : m;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

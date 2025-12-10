@@ -1,0 +1,378 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripMembershipService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.tripmember.service</a>
+</div>
+
+<h1>Coverage Summary for Class: TripMembershipService (com.questbuddy.tripmember.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripMembershipService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (14/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.9%
+  </span>
+  <span class="absValue">
+    (35/48)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.2%
+  </span>
+  <span class="absValue">
+    (94/102)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.tripmember.service;
+&nbsp;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import com.questbuddy.tripmember.model.TripMember;
+&nbsp;import com.questbuddy.tripmember.model.TripMember.Role;
+&nbsp;import com.questbuddy.tripmember.model.TripMember.Status;
+&nbsp;import com.questbuddy.tripmember.repository.TripMemberRepository;
+&nbsp;import com.questbuddy.tripmember.security.TripMembershipGate;
+&nbsp;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.trip.Trip;
+&nbsp;
+&nbsp;import com.questbuddy.trip.TripRepository;
+&nbsp;
+&nbsp;import com.questbuddy.notification.NotificationService;
+&nbsp;import com.questbuddy.notification.NotificationType;
+&nbsp;import com.questbuddy.notification.dto.NotificationCreateDTO;
+&nbsp;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class TripMembershipService {
+&nbsp;
+&nbsp;    private final TripMemberRepository members;
+&nbsp;    private final TripRepository trips;
+&nbsp;    private final UserRepository users;
+&nbsp;    private final TripMembershipGate gate;
+&nbsp;    private final NotificationService notifications;
+&nbsp;
+&nbsp;    public TripMembershipService(TripMemberRepository members,
+&nbsp;                                 TripRepository trips,
+&nbsp;                                 UserRepository users,
+&nbsp;                                 TripMembershipGate gate,
+<b class="fc">&nbsp;                                 NotificationService notifications) {</b>
+<b class="fc">&nbsp;        this.members = members;</b>
+<b class="fc">&nbsp;        this.trips = trips;</b>
+<b class="fc">&nbsp;        this.users = users;</b>
+<b class="fc">&nbsp;        this.gate = gate;</b>
+<b class="fc">&nbsp;        this.notifications = notifications;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Owner invites a user to a trip (idempotent). */
+&nbsp;    @Transactional
+&nbsp;    public void invite(Long inviterId, Long tripId, Long userId) {
+&nbsp;        // must be owner
+<b class="fc">&nbsp;        if (!gate.isOwner(tripId, inviterId)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;not_owner&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Trip trip = trips.findById(tripId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;trip_not_found&quot;));</b>
+<b class="fc">&nbsp;        User invitee = users.findById(userId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;user_not_found&quot;));</b>
+<b class="fc">&nbsp;        User inviter = users.findById(inviterId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;inviter_not_found&quot;));</b>
+&nbsp;
+&nbsp;        // Idempotent: do nothing if there&#39;s already a row (pending or accepted)
+<b class="fc">&nbsp;        if (members.findByTrip_IdAndUser_Id(tripId, userId).isPresent()) return;</b>
+&nbsp;
+<b class="fc">&nbsp;        TripMember m = new TripMember();</b>
+<b class="fc">&nbsp;        m.setTrip(trip);</b>
+<b class="fc">&nbsp;        m.setUser(invitee);</b>
+<b class="fc">&nbsp;        m.setRole(Role.MEMBER);</b>
+<b class="fc">&nbsp;        m.setStatus(Status.PENDING);</b>
+<b class="fc">&nbsp;        m.setInvitedBy(inviter);</b>
+<b class="fc">&nbsp;        members.save(m);</b>
+&nbsp;
+&nbsp;        // Notification  ➜ invitee (real-time WS to /ws/notifications/{inviteeId})
+<b class="fc">&nbsp;        notifyNow(</b>
+<b class="fc">&nbsp;                invitee.getId(),</b>
+&nbsp;                &quot;Trip invite&quot;,
+<b class="fc">&nbsp;                display(inviter) + &quot; invited you to &quot; + tripLabel(trip),</b>
+&nbsp;                NotificationType.INVITE,
+<b class="fc">&nbsp;                null, trip.getId(), null</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Invitee approves (accepts) their own pending invite. */
+&nbsp;    @Transactional
+&nbsp;    public void approve(Long approverId, Long tripId) {
+<b class="fc">&nbsp;        TripMember m = members.findByTrip_IdAndUser_Id(tripId, approverId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;membership_not_found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (m.getStatus() == Status.ACCEPTED) return; // do nth as already accepted invite</b>
+&nbsp;
+<b class="fc">&nbsp;        m.setStatus(Status.ACCEPTED);</b>
+<b class="fc">&nbsp;        members.save(m);</b>
+&nbsp;
+&nbsp;        // notification ➜ inviter/owner
+<b class="fc">&nbsp;        User approver = m.getUser();</b>
+<b class="fc">&nbsp;        User inviter  = m.getInvitedBy();</b>
+<b class="fc">&nbsp;        Trip trip     = m.getTrip();</b>
+&nbsp;
+<b class="fc">&nbsp;        notifyNow(</b>
+<b class="fc">&nbsp;                inviter.getId(),</b>
+&nbsp;                &quot;Invite accepted&quot;,
+<b class="fc">&nbsp;                display(approver) + &quot; joined &quot; + tripLabel(trip),</b>
+&nbsp;                NotificationType.APPROVAL,
+<b class="fc">&nbsp;                null, trip.getId(), null</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    // Invitee declines (rejects) their pending invite
+&nbsp;    @Transactional
+&nbsp;    public void decline(Long userId, Long tripId) {
+<b class="fc">&nbsp;        TripMember m = members.findByTrip_IdAndUser_Id(tripId, userId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;membership_not_found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (m.getStatus() == Status.ACCEPTED) {</b>
+&nbsp;            // If already accepted, treat as no-op or enforce a different flow (leave/remove)
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        User invitee = m.getUser();</b>
+<b class="fc">&nbsp;        User inviter = m.getInvitedBy();</b>
+<b class="fc">&nbsp;        Trip trip    = m.getTrip();</b>
+&nbsp;
+&nbsp;        // Remove the pending invite row on decline
+<b class="fc">&nbsp;        members.delete(m);</b>
+&nbsp;
+&nbsp;        // Notify the owner/inviter that the invitee declined
+<b class="fc">&nbsp;        notifyNow(</b>
+<b class="fc">&nbsp;                inviter.getId(),</b>
+&nbsp;                &quot;Invite declined&quot;,
+<b class="fc">&nbsp;                display(invitee) + &quot; declined &quot; + tripLabel(trip),</b>
+&nbsp;                // Using REMINDER for decline with your current enum
+&nbsp;                NotificationType.REMINDER,
+<b class="fc">&nbsp;                null, trip.getId(), null</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove a member (owner can remove anyone; a user can remove themselves = leave).
+&nbsp;     * NOTE: removing a non-existent membership --&gt; no operation due to @Transactional.
+&nbsp;     */
+&nbsp;    @Transactional
+&nbsp;    public void remove(Long actorId, Long tripId, Long targetUserId) {
+<b class="fc">&nbsp;        boolean owner = gate.isOwner(tripId, actorId);</b>
+<b class="pc">&nbsp;        boolean self = actorId != null &amp;&amp; actorId.equals(targetUserId);</b>
+<b class="fc">&nbsp;        if (!(owner || self)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;forbidden&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        members.deleteByTrip_IdAndUser_Id(tripId, targetUserId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** List accepted members (requester must be an accepted member). */
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;User&gt; listAccepted(Long requesterId, Long tripId) {
+<b class="fc">&nbsp;        if (!gate.isMember(tripId, requesterId)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;not_member&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return members.findAllByTrip_IdAndStatusOrderByUser_IdAsc(tripId, Status.ACCEPTED)</b>
+<b class="fc">&nbsp;                .stream()</b>
+<b class="fc">&nbsp;                .map(TripMember::getUser)</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Seed the OWNER membership on trip creation.
+&nbsp;     * Call this once after saving a new Trip.
+&nbsp;     */
+&nbsp;    @Transactional
+&nbsp;    public void seedOwner(Long ownerId, Long tripId) {
+<b class="fc">&nbsp;        if (members.findByTrip_IdAndUser_Id(tripId, ownerId).isPresent()) return;</b>
+&nbsp;
+<b class="fc">&nbsp;        Trip trip = trips.findById(tripId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;trip_not_found&quot;));</b>
+<b class="fc">&nbsp;        User owner = users.findById(ownerId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;user_not_found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        TripMember tm = new TripMember();</b>
+<b class="fc">&nbsp;        tm.setTrip(trip);</b>
+<b class="fc">&nbsp;        tm.setUser(owner);</b>
+<b class="fc">&nbsp;        tm.setRole(Role.OWNER);</b>
+<b class="fc">&nbsp;        tm.setStatus(Status.ACCEPTED);</b>
+<b class="fc">&nbsp;        tm.setInvitedBy(owner);</b>
+<b class="fc">&nbsp;        members.save(tm);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** List all pending invites for a user (only the user themself can view). */
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TripMember&gt; listPendingInvitesForUser(Long requesterId, Long targetUserId) {
+&nbsp;        // Only allow the user themself to see their invites
+<b class="pc">&nbsp;        if (requesterId == null || !requesterId.equals(targetUserId)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;forbidden&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Make sure the target user exists (nice error for 404)
+<b class="fc">&nbsp;        users.findById(targetUserId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;user_not_found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        return members.findAllByUser_IdAndStatusOrderByTrip_IdAsc(targetUserId, Status.PENDING);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // helpers
+&nbsp;
+&nbsp;    private static String display(User u) {
+<b class="fc">&nbsp;        String first = safe(u.getFirstName());</b>
+<b class="fc">&nbsp;        String last  = safe(u.getLastName());</b>
+<b class="pc">&nbsp;        if (first != null &amp;&amp; last != null) return first + &quot; &quot; + last;</b>
+<b class="fc">&nbsp;        if (first != null) return first;</b>
+<b class="pc">&nbsp;        if (last  != null) return last;</b>
+<b class="fc">&nbsp;        String uname = safe(u.getUsername());</b>
+<b class="pc">&nbsp;        if (uname != null) return uname;</b>
+<b class="nc">&nbsp;        String email = safe(u.getEmail());</b>
+<b class="nc">&nbsp;        if (email != null) return email;</b>
+<b class="nc">&nbsp;        return &quot;User#&quot; + u.getId();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String tripLabel(Trip t) {
+&nbsp;        // Prefer name; else destination; else fallback to #id
+&nbsp;        try {
+<b class="fc">&nbsp;            String name = safe(t.getName());</b>
+<b class="pc">&nbsp;            if (name != null) return &quot;“&quot; + name + &quot;”&quot;;</b>
+<b class="nc">&nbsp;        } catch (NoSuchMethodError | Exception ignored) {}</b>
+&nbsp;        try {
+<b class="nc">&nbsp;            String dest = safe(t.getDestination());</b>
+<b class="nc">&nbsp;            if (dest != null) return &quot;Trip to &quot; + dest;</b>
+<b class="nc">&nbsp;        } catch (NoSuchMethodError | Exception ignored) {}</b>
+<b class="nc">&nbsp;        return &quot;Trip #&quot; + t.getId();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // check for string
+&nbsp;    private static String safe(String s) {
+<b class="fc">&nbsp;        if (s == null) return null;</b>
+<b class="fc">&nbsp;        String t = s.trim();</b>
+<b class="pc">&nbsp;        return t.isEmpty() ? null : t;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /** Send a notification immediately (no swallowing). */
+&nbsp;    private void notifyNow(Long recipientUserId,
+&nbsp;                           String title,
+&nbsp;                           String message,
+&nbsp;                           NotificationType type,
+&nbsp;                           Long eventId,
+&nbsp;                           Long tripId,
+&nbsp;                           Long taskId) {
+<b class="pc">&nbsp;        if (notifications == null || recipientUserId == null) return;</b>
+<b class="fc">&nbsp;        notifications.create(new NotificationCreateDTO(</b>
+&nbsp;                recipientUserId, title, message, type, eventId, tripId, taskId
+&nbsp;        ));
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public void ensureMember(Long userId, Long tripId) {
+<b class="fc">&nbsp;        if (!gate.isMember(tripId, userId)) {</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;not_member&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean isOwner(Long userId, Long tripId) {
+<b class="fc">&nbsp;        return gate.isOwner(tripId, userId);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

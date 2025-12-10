@@ -1,0 +1,489 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BudgetServiceImplemented</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.budget.service</a>
+</div>
+
+<h1>Coverage Summary for Class: BudgetServiceImplemented (com.questbuddy.budget.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BudgetServiceImplemented</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/140)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/179)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.budget.service;
+&nbsp;
+&nbsp;import com.questbuddy.budget.BudgetMapper;
+&nbsp;import com.questbuddy.budget.dto.*;
+&nbsp;import com.questbuddy.budget.model.Budget;
+&nbsp;import com.questbuddy.budget.model.BudgetSplit;
+&nbsp;import com.questbuddy.budget.repository.BudgetRepository;
+&nbsp;import com.questbuddy.budget.repository.BudgetSplitRepository;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import jakarta.validation.ValidationException;
+&nbsp;import org.springframework.data.domain.Sort;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.*;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+&nbsp;import static org.springframework.http.HttpStatus.NOT_FOUND;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class BudgetServiceImplemented implements BudgetService {
+&nbsp;
+&nbsp;    private final BudgetRepository budgets;
+&nbsp;    private final BudgetSplitRepository splits;
+&nbsp;    private final UserRepository users;
+<b class="nc">&nbsp;    private final BudgetMapper mapper = new BudgetMapper();</b>
+&nbsp;
+&nbsp;    public BudgetServiceImplemented(BudgetRepository budgets,
+&nbsp;                                    BudgetSplitRepository splits,
+<b class="nc">&nbsp;                                    UserRepository users) {</b>
+<b class="nc">&nbsp;        this.budgets = budgets;</b>
+<b class="nc">&nbsp;        this.splits = splits;</b>
+<b class="nc">&nbsp;        this.users = users;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public BudgetResponseDTO create(Long ownerId, BudgetCreateDTO body) {
+<b class="nc">&nbsp;        if (body == null || body.splits() == null || body.splits().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new ValidationException(&quot;splits required&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Budget b = new Budget();</b>
+<b class="nc">&nbsp;        b.setOwner(requireUser(ownerId));</b>
+<b class="nc">&nbsp;        b.setName(requireNonBlank(body.name()));</b>
+&nbsp;
+&nbsp;        // build splits
+<b class="nc">&nbsp;        Map&lt;Long, Boolean&gt; seen = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        List&lt;BudgetSplit&gt; splitEntities = new ArrayList&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (BudgetSplitCreateDTO s : body.splits()) {</b>
+<b class="nc">&nbsp;            User u = users.findByUsernameIgnoreCase(s.username())</b>
+<b class="nc">&nbsp;                    .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;user_not_found: &quot; + s.username()));</b>
+<b class="nc">&nbsp;            if (seen.putIfAbsent(u.getId(), true) != null) {</b>
+<b class="nc">&nbsp;                throw new ValidationException(&quot;duplicate participant: &quot; + s.username());</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            BudgetSplit be = new BudgetSplit();</b>
+<b class="nc">&nbsp;            be.setBudget(b);</b>
+<b class="nc">&nbsp;            be.setUser(u);</b>
+<b class="nc">&nbsp;            be.setShareAmount(nz(s.shareAmount()));</b>
+<b class="nc">&nbsp;            be.setPaidAmount(nz(s.paidAmount()));</b>
+<b class="nc">&nbsp;            splitEntities.add(be);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        b.setSplits(splitEntities);</b>
+&nbsp;
+<b class="nc">&nbsp;        Budget saved = budgets.save(b);</b>
+<b class="nc">&nbsp;        return mapper.toResponse(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;BudgetResponseDTO&gt; list(Long ownerId) {
+<b class="nc">&nbsp;        return budgets.findAllByOwner_Id(ownerId, Sort.by(&quot;createdAt&quot;).descending())</b>
+<b class="nc">&nbsp;                .stream().map(mapper::toResponse).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;BudgetResponseDTO&gt; list(Long ownerId, String requesterUsername) {
+&nbsp;        // If requester is null/blank, treat as not authorized (should be handled by controller)
+<b class="nc">&nbsp;        if (requesterUsername == null || requesterUsername.isBlank()) {</b>
+<b class="nc">&nbsp;            return List.of();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Treat requesterUsername as the &quot;viewer&quot;. Return every budget where that viewer
+&nbsp;        // is either the owner or a participant, regardless of the ownerId path value.
+<b class="nc">&nbsp;        User viewer = users.findByUsernameIgnoreCase(requesterUsername)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;user_not_found: &quot; + requesterUsername));</b>
+<b class="nc">&nbsp;        Long viewerId = viewer.getId();</b>
+&nbsp;
+&nbsp;        // Budgets the viewer owns
+<b class="nc">&nbsp;        List&lt;Budget&gt; owned = budgets.findAllByOwner_Id(viewerId, Sort.by(&quot;createdAt&quot;).descending());</b>
+&nbsp;
+&nbsp;        // Budgets where the viewer is a participant
+<b class="nc">&nbsp;        List&lt;BudgetSplit&gt; participantSplits = splits.findAllByUser_Id(viewerId);</b>
+&nbsp;
+&nbsp;        // Combine &amp; de-duplicate
+<b class="nc">&nbsp;        Map&lt;Long, Budget&gt; combined = new HashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;        for (Budget b : owned) {</b>
+<b class="nc">&nbsp;            if (b.getId() != null) {</b>
+<b class="nc">&nbsp;                combined.put(b.getId(), b);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="nc">&nbsp;        for (BudgetSplit s : participantSplits) {</b>
+<b class="nc">&nbsp;            Budget b = s.getBudget();</b>
+<b class="nc">&nbsp;            if (b != null &amp;&amp; b.getId() != null) {</b>
+<b class="nc">&nbsp;                combined.put(b.getId(), b);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Budget&gt; result = new ArrayList&lt;&gt;(combined.values());</b>
+&nbsp;        // Sort newest first (same as original owner-list behavior)
+<b class="nc">&nbsp;        result.sort(Comparator.comparing(Budget::getCreatedAt).reversed());</b>
+&nbsp;
+<b class="nc">&nbsp;        return result.stream()</b>
+<b class="nc">&nbsp;                .map(mapper::toResponse)</b>
+<b class="nc">&nbsp;                .toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public BudgetResponseDTO get(Long ownerId, Long budgetId) {
+<b class="nc">&nbsp;        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+<b class="nc">&nbsp;        return mapper.toResponse(b);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public BudgetResponseDTO get(Long ownerId, Long budgetId, String requesterUsername) {
+&nbsp;        // If no viewer is provided, keep the original strict owner behavior
+<b class="nc">&nbsp;        if (requesterUsername == null || requesterUsername.isBlank()) {</b>
+<b class="nc">&nbsp;            Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)</b>
+<b class="nc">&nbsp;                    .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+<b class="nc">&nbsp;            return mapper.toResponse(b);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Viewer-based semantics: allow if viewer is owner OR participant
+<b class="nc">&nbsp;        Budget b = budgets.findById(budgetId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+&nbsp;
+<b class="nc">&nbsp;        String viewer = requesterUsername.trim().toLowerCase();</b>
+<b class="nc">&nbsp;        String ownerUsername = b.getOwner() != null &amp;&amp; b.getOwner().getUsername() != null</b>
+<b class="nc">&nbsp;                ? b.getOwner().getUsername().trim().toLowerCase()</b>
+<b class="nc">&nbsp;                : null;</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean isOwner = ownerUsername != null &amp;&amp; ownerUsername.equals(viewer);</b>
+<b class="nc">&nbsp;        boolean isParticipant = canViewAsParticipant(b, requesterUsername);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!isOwner &amp;&amp; !isParticipant) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;forbidden&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return mapper.toResponse(b);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body) {
+<b class="nc">&nbsp;        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+&nbsp;
+&nbsp;        // Optional: rename
+<b class="nc">&nbsp;        if (body.name() != null) {</b>
+<b class="nc">&nbsp;            String nm = body.name().trim();</b>
+<b class="nc">&nbsp;            if (nm.isEmpty()) throw new ValidationException(&quot;name cannot be blank&quot;);</b>
+<b class="nc">&nbsp;            b.setName(nm);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Optional: replace splits (upsert listed, prune unlisted)
+<b class="nc">&nbsp;        if (body.splits() != null) {</b>
+&nbsp;            // resolve desired participants (username -&gt; userId), enforce no duplicates
+<b class="nc">&nbsp;            Set&lt;String&gt; seenUsernames = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;            Map&lt;Long, BudgetSplitCreateDTO&gt; desiredByUserId = new LinkedHashMap&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (BudgetSplitCreateDTO s : body.splits()) {</b>
+<b class="nc">&nbsp;                String uname = s.username();</b>
+<b class="nc">&nbsp;                if (uname == null || uname.isBlank())</b>
+<b class="nc">&nbsp;                    throw new ValidationException(&quot;username required in split&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;                String key = uname.toLowerCase();</b>
+<b class="nc">&nbsp;                if (!seenUsernames.add(key))</b>
+<b class="nc">&nbsp;                    throw new ValidationException(&quot;duplicate participant: &quot; + uname);</b>
+&nbsp;
+<b class="nc">&nbsp;                User u = users.findByUsernameIgnoreCase(uname)</b>
+<b class="nc">&nbsp;                        .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;user_not_found: &quot; + uname));</b>
+<b class="nc">&nbsp;                desiredByUserId.put(u.getId(), s);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // index existing splits by userId
+<b class="nc">&nbsp;            Map&lt;Long, BudgetSplit&gt; existingByUserId = b.getSplits().stream()</b>
+<b class="nc">&nbsp;                    .collect(Collectors.toMap(s -&gt; s.getUser().getId(), s -&gt; s));</b>
+&nbsp;
+&nbsp;            // upsert/update for each desired participant
+<b class="nc">&nbsp;            Set&lt;Long&gt; keepUserIds = new HashSet&lt;&gt;();</b>
+<b class="nc">&nbsp;            for (Map.Entry&lt;Long, BudgetSplitCreateDTO&gt; e : desiredByUserId.entrySet()) {</b>
+<b class="nc">&nbsp;                Long userId = e.getKey();</b>
+<b class="nc">&nbsp;                BudgetSplitCreateDTO dto = e.getValue();</b>
+&nbsp;
+<b class="nc">&nbsp;                BigDecimal share = nz(dto.shareAmount());</b>
+<b class="nc">&nbsp;                BigDecimal paid  = nz(dto.paidAmount());</b>
+<b class="nc">&nbsp;                if (share.signum() &lt; 0 || paid.signum() &lt; 0)</b>
+<b class="nc">&nbsp;                    throw new ValidationException(&quot;amounts cannot be negative&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;                BudgetSplit exist = existingByUserId.get(userId);</b>
+<b class="nc">&nbsp;                if (exist == null) {</b>
+&nbsp;                    // create new split
+<b class="nc">&nbsp;                    User u = users.findById(userId).orElseThrow();</b>
+<b class="nc">&nbsp;                    BudgetSplit ns = new BudgetSplit();</b>
+<b class="nc">&nbsp;                    ns.setBudget(b);</b>
+<b class="nc">&nbsp;                    ns.setUser(u);</b>
+<b class="nc">&nbsp;                    ns.setShareAmount(share);</b>
+<b class="nc">&nbsp;                    ns.setPaidAmount(paid);</b>
+<b class="nc">&nbsp;                    b.getSplits().add(ns);</b>
+&nbsp;                } else {
+&nbsp;                    // update existing
+<b class="nc">&nbsp;                    exist.setShareAmount(share);</b>
+<b class="nc">&nbsp;                    exist.setPaidAmount(paid);</b>
+&nbsp;                }
+<b class="nc">&nbsp;                keepUserIds.add(userId);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // prune participants not listed in the update
+<b class="nc">&nbsp;            b.getSplits().removeIf(s -&gt; !keepUserIds.contains(s.getUser().getId()));</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Budget saved = budgets.save(b);</b>
+<b class="nc">&nbsp;        return mapper.toResponse(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // participant update - requesterUsername is not the owner; can only edit their own split amounts
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public BudgetResponseDTO update(Long ownerId, Long budgetId, BudgetUpdateDTO body, String requesterUsername) {
+<b class="nc">&nbsp;        if (requesterUsername == null || requesterUsername.isBlank()) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;forbidden&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+&nbsp;
+&nbsp;        // Must be a listed participant
+<b class="nc">&nbsp;        BudgetSplit self = findSplitByUsername(b, requesterUsername);</b>
+<b class="nc">&nbsp;        if (self == null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;forbidden&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Participants cannot rename the budget
+<b class="nc">&nbsp;        if (body.name() != null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;participants_cannot_rename&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Participants can only modify their own split amounts.
+<b class="nc">&nbsp;        if (body.splits() == null || body.splits().isEmpty()) {</b>
+&nbsp;            // No changes; return current state
+<b class="nc">&nbsp;            return mapper.toResponse(b);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Only accept a single entry that matches the requester
+<b class="nc">&nbsp;        BudgetSplitCreateDTO mine = null;</b>
+<b class="nc">&nbsp;        for (BudgetSplitCreateDTO s : body.splits()) {</b>
+<b class="nc">&nbsp;            if (s.username() == null || s.username().isBlank()) {</b>
+<b class="nc">&nbsp;                throw new ValidationException(&quot;username required in split&quot;);</b>
+&nbsp;            }
+<b class="nc">&nbsp;            String uname = s.username().trim();</b>
+<b class="nc">&nbsp;            if (uname.equalsIgnoreCase(requesterUsername)) {</b>
+<b class="nc">&nbsp;                if (mine != null) {</b>
+<b class="nc">&nbsp;                    throw new ValidationException(&quot;duplicate self entry&quot;);</b>
+&nbsp;                }
+<b class="nc">&nbsp;                mine = s;</b>
+&nbsp;            } else {
+&nbsp;                // participants cannot modify others
+<b class="nc">&nbsp;                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;participants_can_only_update_self&quot;);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (mine == null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;missing_self_split_update&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Apply changes to own split (only fields provided)
+<b class="nc">&nbsp;        if (mine.shareAmount() != null) {</b>
+<b class="nc">&nbsp;            if (mine.shareAmount().signum() &lt; 0) throw new ValidationException(&quot;amounts cannot be negative&quot;);</b>
+<b class="nc">&nbsp;            self.setShareAmount(mine.shareAmount());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (mine.paidAmount() != null) {</b>
+<b class="nc">&nbsp;            if (mine.paidAmount().signum() &lt; 0) throw new ValidationException(&quot;amounts cannot be negative&quot;);</b>
+<b class="nc">&nbsp;            self.setPaidAmount(mine.paidAmount());</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Budget saved = budgets.save(b);</b>
+<b class="nc">&nbsp;        return mapper.toResponse(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void delete(Long ownerId, Long budgetId) {
+<b class="nc">&nbsp;        long n = budgets.deleteByIdAndOwner_Id(budgetId, ownerId);</b>
+<b class="nc">&nbsp;        if (n == 0) throw new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;BudgetBalanceDTO&gt; balances(Long ownerId, Long budgetId) {
+<b class="nc">&nbsp;        Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+<b class="nc">&nbsp;        return mapper.toBalances(b);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;BudgetBalanceDTO&gt; balances(Long ownerId, Long budgetId, String requesterUsername) {
+&nbsp;        // If no viewer is provided, keep the original strict owner behavior
+<b class="nc">&nbsp;        if (requesterUsername == null || requesterUsername.isBlank()) {</b>
+<b class="nc">&nbsp;            Budget b = budgets.findByIdAndOwner_Id(budgetId, ownerId)</b>
+<b class="nc">&nbsp;                    .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+<b class="nc">&nbsp;            return mapper.toBalances(b);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Budget b = budgets.findById(budgetId)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;budget_not_found&quot;));</b>
+&nbsp;
+<b class="nc">&nbsp;        String viewer = requesterUsername.trim().toLowerCase();</b>
+<b class="nc">&nbsp;        String ownerUsername = b.getOwner() != null &amp;&amp; b.getOwner().getUsername() != null</b>
+<b class="nc">&nbsp;                ? b.getOwner().getUsername().trim().toLowerCase()</b>
+<b class="nc">&nbsp;                : null;</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean isOwner = ownerUsername != null &amp;&amp; ownerUsername.equals(viewer);</b>
+<b class="nc">&nbsp;        boolean isParticipant = canViewAsParticipant(b, requesterUsername);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (!isOwner &amp;&amp; !isParticipant) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;forbidden&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return mapper.toBalances(b);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // helpers
+&nbsp;    private User requireUser(Long id) {
+<b class="nc">&nbsp;        return users.findById(id).orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;user_not_found: &quot; + id));</b>
+&nbsp;    }
+&nbsp;    private static String requireNonBlank(String s) {
+<b class="nc">&nbsp;        if (s == null || s.trim().isEmpty()) throw new ValidationException(&quot;name required&quot;);</b>
+<b class="nc">&nbsp;        return s.trim();</b>
+&nbsp;    }
+<b class="nc">&nbsp;    private static BigDecimal nz(BigDecimal x) { return x == null ? BigDecimal.ZERO : x; }</b>
+&nbsp;
+&nbsp;    /** True if requesterUsername matches any split participant (by username, case-insensitive). */
+&nbsp;    private static boolean canViewAsParticipant(Budget b, String requesterUsername) {
+<b class="nc">&nbsp;        if (requesterUsername == null || requesterUsername.isBlank()) return false;</b>
+<b class="nc">&nbsp;        String req = requesterUsername.trim().toLowerCase();</b>
+<b class="nc">&nbsp;        for (BudgetSplit s : b.getSplits()) {</b>
+<b class="nc">&nbsp;            String uname = s.getUser() != null &amp;&amp; s.getUser().getUsername() != null</b>
+<b class="nc">&nbsp;                    ? s.getUser().getUsername().trim().toLowerCase() : null;</b>
+<b class="nc">&nbsp;            if (uname != null &amp;&amp; uname.equals(req)) return true;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static BudgetSplit findSplitByUsername(Budget b, String username) {
+<b class="nc">&nbsp;        if (username == null) return null;</b>
+<b class="nc">&nbsp;        String req = username.trim().toLowerCase();</b>
+<b class="nc">&nbsp;        for (BudgetSplit s : b.getSplits()) {</b>
+<b class="nc">&nbsp;            String uname = s.getUser() != null &amp;&amp; s.getUser().getUsername() != null</b>
+<b class="nc">&nbsp;                    ? s.getUser().getUsername().trim().toLowerCase() : null;</b>
+<b class="nc">&nbsp;            if (uname != null &amp;&amp; uname.equals(req)) return s;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

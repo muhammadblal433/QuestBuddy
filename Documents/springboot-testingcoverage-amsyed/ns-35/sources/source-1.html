@@ -1,0 +1,232 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserServiceImplemented</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.user.service</a>
+</div>
+
+<h1>Coverage Summary for Class: UserServiceImplemented (com.questbuddy.user.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserServiceImplemented</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    78%
+  </span>
+  <span class="absValue">
+    (39/50)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (48/48)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.user.service;
+&nbsp;
+&nbsp;import com.questbuddy.user.model.Role;
+&nbsp;import com.questbuddy.user.model.User;
+&nbsp;import com.questbuddy.user.repository.UserRepository;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.NoSuchElementException;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class UserServiceImplemented implements UserService {
+&nbsp;
+&nbsp;    private final UserRepository user_repo;
+&nbsp;    private final PasswordEncoder encoder;
+&nbsp;
+<b class="fc">&nbsp;    public UserServiceImplemented(UserRepository users, PasswordEncoder encoder) {</b>
+<b class="fc">&nbsp;        this.user_repo = users;</b>
+<b class="fc">&nbsp;        this.encoder = encoder;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public User signup(String email, String username, String password, String firstName, String lastName) {
+<b class="fc">&nbsp;        String e = email == null ? null : email.trim();</b>
+<b class="fc">&nbsp;        String u = username == null ? null : username.trim();</b>
+<b class="pc">&nbsp;        if (e == null || e.isBlank()) throw new IllegalArgumentException(&quot;email required&quot;);</b>
+<b class="pc">&nbsp;        if (u == null || u.isBlank()) throw new IllegalArgumentException(&quot;username required&quot;);</b>
+<b class="pc">&nbsp;        if (password == null || password.isBlank()) throw new IllegalArgumentException(&quot;password required&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (user_repo.existsByEmail(e)) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;User with email &quot; + e + &quot; already exists&quot;);</b>
+<b class="fc">&nbsp;        } else if (user_repo.existsByUsername(u)) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;User with username &quot; + u + &quot; already exists&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        User x = new User();</b>
+<b class="fc">&nbsp;        x.setEmail(e);</b>
+<b class="fc">&nbsp;        x.setUsername(u);</b>
+<b class="fc">&nbsp;        String hash = encoder.encode(password);</b>
+<b class="fc">&nbsp;        x.setPasswordHash(hash);          // required by DB</b>
+<b class="fc">&nbsp;        x.setPassword(hash);              // required by DB (legacy NOT NULL column)</b>
+&nbsp;
+<b class="pc">&nbsp;        if (firstName != null) x.setFirstName(firstName);</b>
+<b class="pc">&nbsp;        if (lastName  != null) x.setLastName(lastName);</b>
+<b class="fc">&nbsp;        x.setRole(Role.TRIP_MEMBER);</b>
+<b class="fc">&nbsp;        x.setActive(true);</b>
+<b class="fc">&nbsp;        return user_repo.save(x);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Optional&lt;User&gt; getById(Long id) {
+<b class="fc">&nbsp;        return user_repo.findById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public User updateProfile(Long id, String email, String username, String firstName, String lastName, String avatarUrl) {
+<b class="fc">&nbsp;        User x = user_repo.findById(id).orElseThrow(() -&gt; new NoSuchElementException(&quot;No such user found.&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        if (email != null) {</b>
+<b class="fc">&nbsp;            String e = email.trim();</b>
+<b class="pc">&nbsp;            if (!e.equalsIgnoreCase(x.getEmail())) {</b>
+<b class="fc">&nbsp;                if (user_repo.existsByEmail(e)) throw new IllegalArgumentException(&quot;This email has been taken.&quot;);</b>
+<b class="fc">&nbsp;                x.setEmail(e);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="pc">&nbsp;        if (username != null) {</b>
+<b class="fc">&nbsp;            String u = username.trim();</b>
+<b class="pc">&nbsp;            if (!u.equalsIgnoreCase(x.getUsername())) {</b>
+<b class="fc">&nbsp;                if (user_repo.existsByUsername(u)) throw new IllegalArgumentException(&quot;This username has been taken.&quot;);</b>
+<b class="fc">&nbsp;                x.setUsername(u);</b>
+&nbsp;            }
+&nbsp;        }
+<b class="pc">&nbsp;        if (firstName != null) x.setFirstName(firstName);</b>
+<b class="pc">&nbsp;        if (lastName  != null) x.setLastName(lastName);</b>
+<b class="pc">&nbsp;        if (avatarUrl != null) x.setAvatarUrl(avatarUrl);</b>
+&nbsp;
+<b class="fc">&nbsp;        return user_repo.save(x);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Optional&lt;User&gt; login(String email, String rawPassword) {
+<b class="fc">&nbsp;        if (email == null || rawPassword == null) return Optional.empty();</b>
+<b class="fc">&nbsp;        return user_repo.findByEmailIgnoreCase(email.trim())</b>
+<b class="fc">&nbsp;                .filter(u -&gt; encoder.matches(rawPassword, u.getPasswordHash()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Methods required by UserService interface
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Optional&lt;User&gt; findByEmail(String email) {
+<b class="fc">&nbsp;        if (email == null) return Optional.empty();</b>
+<b class="fc">&nbsp;        return user_repo.findByEmailIgnoreCase(email.trim());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Optional&lt;User&gt; findByUsername(String username) {
+<b class="fc">&nbsp;        if (username == null) return Optional.empty();</b>
+<b class="fc">&nbsp;        return user_repo.findByUsernameIgnoreCase(username.trim());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public User save(User user) {
+<b class="fc">&nbsp;        return user_repo.save(user);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;User&gt; findPremiumUsers() {
+<b class="fc">&nbsp;        return user_repo.findAllByIsPremiumTrueOrderByIdAsc();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

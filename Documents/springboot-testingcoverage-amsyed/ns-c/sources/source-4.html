@@ -1,0 +1,333 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > EventService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.calendar</a>
+</div>
+
+<h1>Coverage Summary for Class: EventService (com.questbuddy.calendar)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EventService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (12/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.7%
+  </span>
+  <span class="absValue">
+    (33/46)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.8%
+  </span>
+  <span class="absValue">
+    (60/62)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">EventService$ResourceNotFound</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    71.7%
+  </span>
+  <span class="absValue">
+    (33/46)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.8%
+  </span>
+  <span class="absValue">
+    (61/63)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.calendar;
+&nbsp;
+&nbsp;import com.questbuddy.calendar.dto.*;
+&nbsp;import jakarta.validation.ValidationException;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.data.domain.Sort;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import com.questbuddy.notification.NotificationService;
+&nbsp;import com.questbuddy.notification.NotificationType;
+&nbsp;import com.questbuddy.notification.dto.NotificationCreateDTO;
+&nbsp;
+&nbsp;/**
+&nbsp; * Service Class to handle logic of events
+&nbsp; */
+&nbsp;@Service
+&nbsp;public class EventService {
+&nbsp;    private final EventRepository repo;
+&nbsp;    private final EventMapper mapper;
+&nbsp;
+&nbsp;    private final NotificationService notificationService;
+&nbsp;
+&nbsp;    // constructor
+&nbsp;    public EventService (EventRepository repo, EventMapper mapper,
+<b class="fc">&nbsp;                         NotificationService notificationService) {</b>
+<b class="fc">&nbsp;        this.repo = repo;</b>
+<b class="fc">&nbsp;        this.mapper = mapper;</b>
+<b class="fc">&nbsp;        this.notificationService = notificationService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Helper methods
+<b class="fc">&nbsp;    private static final Sort BY_START_ASC = Sort.by(Sort.Direction.ASC, &quot;startAt&quot;);</b>
+&nbsp;
+&nbsp;    private void checkRange(Instant start, Instant end) {
+<b class="pc">&nbsp;        if (start != null &amp;&amp; end != null &amp;&amp; end.isBefore(start)) {</b>
+<b class="fc">&nbsp;            throw new ValidationException(&quot;End time cannot be before start time!&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional // if it fails, do nothing
+&nbsp;    public EventResponseDTO create(Long userId, EventCreateDTO dto) {
+<b class="fc">&nbsp;        checkRange(dto.startAt(), dto.endAt());</b>
+<b class="fc">&nbsp;        Event e = mapper.toEntity(userId, dto);</b>
+<b class="fc">&nbsp;        Event saved = repo.save(e);</b>
+&nbsp;
+&nbsp;        // notify owner of creation (best-effort; do not fail the txn if notifications have an issue)
+&nbsp;        try {
+<b class="pc">&nbsp;            String title = (saved.getTitle() == null || saved.getTitle().isBlank()) ? &quot;(untitled)&quot; : saved.getTitle();</b>
+<b class="fc">&nbsp;            notificationService.create(new NotificationCreateDTO(</b>
+&nbsp;                    userId,
+&nbsp;                    &quot;Event Created&quot;,
+<b class="fc">&nbsp;                    &quot;“&quot; + title + &quot;” on &quot; + saved.getStartAt(),</b>
+&nbsp;                    NotificationType.EVENT_CREATED,
+<b class="fc">&nbsp;                    saved.getId(),   // eventId</b>
+&nbsp;                    null,            // tripId
+&nbsp;                    null             // taskId
+&nbsp;            ));
+<b class="fc">&nbsp;        } catch (Exception ignored) { /* best effort */ }</b>
+&nbsp;
+<b class="fc">&nbsp;        return mapper.toDto(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // list (by user w/ optional range)
+&nbsp;    public List&lt;EventResponseDTO&gt; list(Long userId, Instant from, Instant to) {
+<b class="pc">&nbsp;        if (from == null &amp;&amp; to == null) {</b>
+<b class="fc">&nbsp;            return repo.findAllByUserId(userId, BY_START_ASC).stream().map(mapper::toDto).toList();</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (from == null || to == null) {</b>
+<b class="fc">&nbsp;            throw new ValidationException(&quot;Both &#39;from&#39; and &#39;to&#39; are required.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        checkRange(from, to);</b>
+<b class="fc">&nbsp;        return repo.findAllByUserIdAndStartAtBetween(userId, from, to, BY_START_ASC).stream().map(mapper::toDto).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // list ALL events by everyone
+&nbsp;    public List&lt;EventResponseDTO&gt; listAll() {
+<b class="fc">&nbsp;        return repo.findAll(BY_START_ASC).stream().map(mapper::toDto).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // list ALL events by everyone in a time t = [from, to]
+&nbsp;    public List&lt;EventResponseDTO&gt; listAllBetween(Instant from, Instant to) {
+<b class="pc">&nbsp;        if (from == null || to == null) {</b>
+<b class="nc">&nbsp;            throw new ValidationException(&quot;Both &#39;from&#39; and &#39;to&#39; are required.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        checkRange(from, to);</b>
+<b class="fc">&nbsp;        return repo.findAllByStartAtBetween(from, to, BY_START_ASC)</b>
+<b class="fc">&nbsp;                .stream().map(mapper::toDto).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // events by userId (explicit)
+&nbsp;    public List&lt;EventResponseDTO&gt; listByUser(Long userId) {
+<b class="fc">&nbsp;        return repo.findAllByUserId(userId, BY_START_ASC)</b>
+<b class="fc">&nbsp;                .stream().map(mapper::toDto).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // events by userId AND start to end (explicit)
+&nbsp;    public List&lt;EventResponseDTO&gt; listByUserBetween(Long userId, Instant from, Instant to) {
+<b class="pc">&nbsp;        if (from == null || to == null) {</b>
+<b class="nc">&nbsp;            throw new ValidationException(&quot;Both &#39;from&#39; and &#39;to&#39; are required.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        checkRange(from, to);</b>
+<b class="fc">&nbsp;        return repo.findAllByUserIdAndStartAtBetween(userId, from, to, BY_START_ASC).stream().map(mapper::toDto).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // New Error for if event not found
+&nbsp;    public static class ResourceNotFound extends RuntimeException {
+&nbsp;        public ResourceNotFound(String m) {
+<b class="fc">&nbsp;            super(m);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public EventResponseDTO get(Long userId, Long id) {
+<b class="fc">&nbsp;        var opt = repo.findByIdAndUserId(id, userId);</b>
+<b class="fc">&nbsp;        if (opt.isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new ResourceNotFound(&quot;No such event found.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return mapper.toDto(opt.get());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public EventResponseDTO update(Long userId, Long id, EventUpdateDTO dto) {
+<b class="fc">&nbsp;        var opt = repo.findByIdAndUserId(id, userId);</b>
+<b class="fc">&nbsp;        if (opt.isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new ResourceNotFound(&quot;No such event found.&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Event e = opt.get();</b>
+&nbsp;        // Validate final time range after applying partial updates
+<b class="fc">&nbsp;        Instant newStart = (dto.startAt() != null) ? dto.startAt() : e.getStartAt();</b>
+<b class="fc">&nbsp;        Instant newEnd   = (dto.endAt()   != null) ? dto.endAt()   : e.getEndAt();</b>
+<b class="fc">&nbsp;        checkRange(newStart, newEnd);</b>
+&nbsp;
+<b class="fc">&nbsp;        mapper.applyUpdate(e, dto);</b>
+<b class="fc">&nbsp;        Event saved = repo.save(e);</b>
+&nbsp;
+&nbsp;        // notify owner of update (best-effort)
+&nbsp;        try {
+<b class="pc">&nbsp;            String title = (saved.getTitle() == null || saved.getTitle().isBlank()) ? &quot;(untitled)&quot; : saved.getTitle();</b>
+<b class="fc">&nbsp;            notificationService.create(new NotificationCreateDTO(</b>
+&nbsp;                    userId,
+&nbsp;                    &quot;Event Updated&quot;,
+&nbsp;                    &quot;“&quot; + title + &quot;” was updated.&quot;,
+&nbsp;                    NotificationType.EVENT_UPDATED,
+<b class="fc">&nbsp;                    saved.getId(),   // eventId</b>
+&nbsp;                    null,            // tripId
+&nbsp;                    null             // taskId
+&nbsp;            ));
+<b class="fc">&nbsp;        } catch (Exception ignored) { /* best effort */ }</b>
+&nbsp;
+<b class="fc">&nbsp;        return mapper.toDto(saved);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public void delete(Long userId, Long id) {
+&nbsp;        // Try to load for a better message before deletion
+<b class="fc">&nbsp;        var opt = repo.findByIdAndUserId(id, userId);</b>
+<b class="fc">&nbsp;        if (opt.isEmpty()) {</b>
+<b class="fc">&nbsp;            throw new ResourceNotFound(&quot;Event not found&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        Event e = opt.get();</b>
+&nbsp;
+&nbsp;        // notify owner of deletion (send before delete so eventId is still valid) - best-effort
+&nbsp;        try {
+<b class="pc">&nbsp;            String title = (e.getTitle() == null || e.getTitle().isBlank()) ? &quot;(untitled)&quot; : e.getTitle();</b>
+<b class="fc">&nbsp;            notificationService.create(new NotificationCreateDTO(</b>
+&nbsp;                    userId,
+&nbsp;                    &quot;Event Deleted&quot;,
+&nbsp;                    &quot;“&quot; + title + &quot;” was deleted.&quot;,
+&nbsp;                    NotificationType.EVENT_CANCELLED,
+&nbsp;                    null,   // eventId
+&nbsp;                    null,        // tripId
+&nbsp;                    null         // taskId
+&nbsp;            ));
+<b class="fc">&nbsp;        } catch (Exception ignored) { /* best effort */ }</b>
+&nbsp;
+<b class="fc">&nbsp;        long n = repo.deleteByIdAndUserId(id, userId);</b>
+<b class="fc">&nbsp;        if (n == 0) {</b>
+<b class="fc">&nbsp;            throw new ResourceNotFound(&quot;Event not found&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>

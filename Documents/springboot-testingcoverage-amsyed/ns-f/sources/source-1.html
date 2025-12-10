@@ -1,0 +1,326 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TripEventController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.questbuddy.events.trip.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: TripEventController (com.questbuddy.events.trip.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TripEventController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.questbuddy.events.trip.controller;
+&nbsp;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventCreateDTO;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventEditDTO;
+&nbsp;import com.questbuddy.events.trip.dto.TripEventResponseDTO;
+&nbsp;import com.questbuddy.events.trip.service.TripEventService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/v13/trips/{tripId}/events&quot;)
+&nbsp;@Tag(
+&nbsp;        name = &quot;Trip Events&quot;,
+&nbsp;        description = &quot;CRUD operations for events attached to a specific trip, including listing with optional date range and pagination.&quot;
+&nbsp;)
+&nbsp;public class TripEventController {
+&nbsp;
+&nbsp;    private final TripEventService service;
+&nbsp;
+<b class="fc">&nbsp;    public TripEventController(TripEventService service) {</b>
+<b class="fc">&nbsp;        this.service = service;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/{eventId}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Edit a trip event&quot;,
+&nbsp;            description = &quot;Edits an existing event within a trip. The caller must be a member/owner of the trip, &quot;
+&nbsp;                    + &quot;identified by the X-User-Id header.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Event updated successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripEventResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to edit events for this trip&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or event not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public TripEventResponseDTO edit(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that owns the event&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the event to edit&quot;,
+&nbsp;                    example = &quot;3&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long eventId,
+&nbsp;            @RequestBody @Valid TripEventEditDTO in) {
+<b class="fc">&nbsp;        return service.edit(me, tripId, eventId, in);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Create a new trip event&quot;,
+&nbsp;            description = &quot;Creates a new event within a specific trip. The caller must be a member/owner of the trip, &quot;
+&nbsp;                    + &quot;identified by the X-User-Id header.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Event created successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripEventResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;400&quot;,
+&nbsp;                    description = &quot;Invalid request body (validation error)&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to create events for this trip&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public TripEventResponseDTO create(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that will own the new event&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @RequestBody @Valid TripEventCreateDTO in) {
+<b class="fc">&nbsp;        return service.create(me, tripId, in);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;List trip events&quot;,
+&nbsp;            description = &quot;Lists events for a trip, optionally filtered by a time range and paginated.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Events returned successfully&quot;,
+&nbsp;                    content = @Content(mediaType = &quot;application/json&quot;,
+&nbsp;                            schema = @Schema(implementation = TripEventResponseDTO.class))
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to view events for this trip&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public Page&lt;TripEventResponseDTO&gt; list(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip whose events are being listed&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Optional start of the time range (inclusive), ISO-8601&quot;,
+&nbsp;                    example = &quot;2025-11-20T00:00:00Z&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestParam(required = false) Instant from,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Optional end of the time range (inclusive), ISO-8601&quot;,
+&nbsp;                    example = &quot;2025-11-21T00:00:00Z&quot;,
+&nbsp;                    required = false
+&nbsp;            )
+&nbsp;            @RequestParam(required = false) Instant to,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Zero-based page index&quot;,
+&nbsp;                    example = &quot;0&quot;
+&nbsp;            )
+&nbsp;            @RequestParam(defaultValue = &quot;0&quot;) int page,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;Number of events per page&quot;,
+&nbsp;                    example = &quot;50&quot;
+&nbsp;            )
+&nbsp;            @RequestParam(defaultValue = &quot;50&quot;) int size) {
+<b class="fc">&nbsp;        return service.list(me, tripId, from, to, page, size);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/{eventId}&quot;)
+&nbsp;    @Operation(
+&nbsp;            summary = &quot;Delete a trip event&quot;,
+&nbsp;            description = &quot;Deletes an event within a trip. The caller must be a member/owner of the trip.&quot;
+&nbsp;    )
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;200&quot;,
+&nbsp;                    description = &quot;Event deleted successfully&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;403&quot;,
+&nbsp;                    description = &quot;User is not allowed to delete events for this trip&quot;,
+&nbsp;                    content = @Content
+&nbsp;            ),
+&nbsp;            @ApiResponse(
+&nbsp;                    responseCode = &quot;404&quot;,
+&nbsp;                    description = &quot;Trip or event not found&quot;,
+&nbsp;                    content = @Content
+&nbsp;            )
+&nbsp;    })
+&nbsp;    public void delete(
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the user making the request&quot;,
+&nbsp;                    example = &quot;5&quot;
+&nbsp;            )
+&nbsp;            @RequestHeader(&quot;X-User-Id&quot;) Long me,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the trip that owns the event&quot;,
+&nbsp;                    example = &quot;10&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long tripId,
+&nbsp;            @Parameter(
+&nbsp;                    description = &quot;ID of the event to delete&quot;,
+&nbsp;                    example = &quot;3&quot;
+&nbsp;            )
+&nbsp;            @PathVariable Long eventId) {
+<b class="fc">&nbsp;        service.delete(me, tripId, eventId);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-09 19:14</div>
+</div>
+</body>
+</html>
