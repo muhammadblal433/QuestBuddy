@@ -1,3 +1,4 @@
+
 package com.questbuddy.events.trip.service;
 
 import com.questbuddy.events.trip.dto.TripEventCreateDTO;
@@ -85,23 +86,8 @@ public class TripEventService {
         TripEvent e = TripEventMapper.fromCreate(tripId, me, in);
         TripEvent saved = repo.save(e);
 
-        // mirror this trip event into the calendar for all accepted trip members
-        try {
-            for (User u : membership.listAccepted(me, tripId)) {
-                EventCreateDTO calendarDto = new EventCreateDTO(
-                        saved.getName(),
-                        saved.getNotes(),          // use notes as description (can be null)
-                        saved.getStartsAt(),
-                        saved.getEndsAt(),
-                        saved.getLocation(),       // can be null
-                        false                      // not an all-day event
-                );
-                eventService.create(u.getId(), calendarDto);
-            }
-        } catch (Exception ex) {
-            // best-effort: do not fail trip-event creation if calendar sync has issues
-            System.err.println("[TripEventService] calendar sync failed: " + ex.getMessage());
-        }
+        // mirror this trip event into the calendar for the creator AND all accepted trip members
+        mirrorTripEventToCalendars(me, tripId, saved);
 
         notifyTripMembers(me, tripId, saved.getId(),
                 "New itinerary event",
@@ -160,5 +146,33 @@ public class TripEventService {
         if (e.getCreatorId() != null && e.getCreatorId().equals(me)) return;
         if (membership.isOwner(me, tripId)) return;
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "only owner or creator can modify");
+    }
+
+    // helper to create matching calendar events for creator + all accepted trip members
+    private void mirrorTripEventToCalendars(Long actorId, Long tripId, TripEvent saved) {
+        if (eventService == null) return; // defensive, though it should be injected
+
+        try {
+            EventCreateDTO dto = new EventCreateDTO(
+                    saved.getName(),
+                    saved.getNotes(),     // use notes as description (can be null)
+                    saved.getStartsAt(),
+                    saved.getEndsAt(),
+                    saved.getLocation(),  // can be null
+                    false                 // not an all-day event
+            );
+
+            // ensure creator gets a calendar event
+            eventService.create(actorId, dto);
+
+            // also add to all accepted trip members (except creator to avoid duplicates)
+            for (User u : membership.listAccepted(actorId, tripId)) {
+                if (u.getId() == null) continue;
+                if (u.getId().equals(actorId)) continue;
+                eventService.create(u.getId(), dto);
+            }
+        } catch (Exception ex) {
+            System.err.println("[TripEventService] calendar sync failed: " + ex.getMessage());
+        }
     }
 }
