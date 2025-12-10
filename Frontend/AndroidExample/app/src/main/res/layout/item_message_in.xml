@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="6dp"
+    android:orientation="vertical"
     android:gravity="start">
 
     <TextView
@@ -17,6 +18,7 @@
         android:paddingBottom="4dp" />
 
     <LinearLayout
+        android:id="@+id/message_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -29,7 +31,7 @@
             android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="17dp"
+            android:textSize="17sp"
             android:textColor="#FFFFFF" />
 
         <!-- time + (edited) on its own line -->
@@ -49,6 +51,8 @@
             android:textSize="12sp"
             android:textColor="#FFFFFF"
             android:layout_marginTop="6dp"
+            android:clickable="true"
+            android:focusable="true"
             android:visibility="gone"/>
     </LinearLayout>
 </LinearLayout>
