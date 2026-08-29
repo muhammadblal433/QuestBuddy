@@ -200,3 +200,33 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 .DS_Store
+
+### Sensitive Configuration Files ###
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Spring Boot configuration files with credentials
+application-local.properties
+application-dev.properties
+application-remote-local.properties
+application-*.local.properties
+
+# Database credentials
+db.properties
+database.properties
+
+# API Keys and secrets
+*.key
+*.pem
+*.p12
+*.pfx
+
+# IDE secrets
+.idea/vcs.xml
+.idea/dataSources/
+
+# OS specific
+.DS_Store
+Thumbs.db
